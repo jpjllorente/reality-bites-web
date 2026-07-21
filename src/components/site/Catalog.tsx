@@ -251,23 +251,87 @@ export function Catalog() {
                   {formatPrice(cart.total)}
                 </span>
               </div>
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noreferrer"
-                className={`block w-full rounded-sm bg-secondary py-3 text-center text-sm font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 ${
-                  cart.items.length === 0 ? "pointer-events-none opacity-40" : ""
-                }`}
+              <button
+                disabled={cart.items.length === 0}
+                onClick={() => setCheckoutOpen(true)}
+                className="block w-full rounded-sm bg-secondary py-3 text-center text-sm font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 disabled:pointer-events-none disabled:opacity-40"
               >
-                Enviar pedido por WhatsApp
-              </a>
+                Continuar pedido
+              </button>
               <p className="mt-3 text-center text-[11px] text-muted-foreground">
-                Te contestamos para confirmar recogida o entrega. Sin pago online.
+                Te pedimos unos datos y abrimos WhatsApp para confirmar.
               </p>
             </div>
           </aside>
         </div>
       )}
+
+      {/* Checkout modal */}
+      {checkoutOpen && (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-primary/70 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-sm border border-foreground/15 bg-background p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-secondary">— Confirmar pedido</p>
+                <h3 className="mt-1 font-display text-3xl text-primary">Tus datos</h3>
+              </div>
+              <button onClick={() => setCheckoutOpen(false)} className="rounded-sm p-2 text-foreground/60 hover:bg-muted" aria-label="Cerrar">✕</button>
+            </div>
+            <div className="mt-5 space-y-3">
+              <Field label="Nombre *" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
+              <Field label="Teléfono *" value={form.phone} onChange={(v) => setForm((f) => ({ ...f, phone: v }))} type="tel" />
+              <Field label="Email (opcional)" value={form.email} onChange={(v) => setForm((f) => ({ ...f, email: v }))} type="email" />
+              <label className="block">
+                <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Notas (opcional)</span>
+                <textarea
+                  value={form.notes}
+                  onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+                  rows={3}
+                  className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                  placeholder="Recogida, entrega, hora preferida…"
+                />
+              </label>
+            </div>
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <span className="font-display text-2xl text-primary">{formatPrice(cart.total)}</span>
+              <button
+                disabled={submitting}
+                onClick={onConfirmOrder}
+                className="rounded-sm bg-secondary px-5 py-3 text-xs font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 disabled:opacity-50"
+              >
+                {submitting ? "Enviando…" : "Guardar y abrir WhatsApp"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+      />
+    </label>
+  );
+}
     </section>
   );
 }
