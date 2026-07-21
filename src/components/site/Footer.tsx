@@ -8,6 +8,7 @@ export function Footer() {
         <p className="font-mono">Hecho con harina, café y acero.</p>
         <div className="flex gap-6">
           <Link to="/tienda" className="hover:text-secondary">Tienda</Link>
+          <Link to="/galeria" className="hover:text-secondary">Galería</Link>
           <Link to="/encargos" className="hover:text-secondary">Encargos</Link>
           <Link to="/contacto" className="hover:text-secondary">Contacto</Link>
           <a

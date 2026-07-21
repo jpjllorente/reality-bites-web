@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TiendaRouteImport } from './routes/tienda'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as GaleriaRouteImport } from './routes/galeria'
 import { Route as EncargosRouteImport } from './routes/encargos'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,11 @@ const TiendaRoute = TiendaRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GaleriaRoute = GaleriaRouteImport.update({
+  id: '/galeria',
+  path: '/galeria',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EncargosRoute = EncargosRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/contacto': typeof ContactoRoute
   '/encargos': typeof EncargosRoute
+  '/galeria': typeof GaleriaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tienda': typeof TiendaRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contacto': typeof ContactoRoute
   '/encargos': typeof EncargosRoute
+  '/galeria': typeof GaleriaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tienda': typeof TiendaRoute
 }
@@ -60,21 +68,36 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/contacto': typeof ContactoRoute
   '/encargos': typeof EncargosRoute
+  '/galeria': typeof GaleriaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tienda': typeof TiendaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/contacto' | '/encargos' | '/sitemap.xml' | '/tienda'
+  fullPaths:
+    | '/'
+    | '/contacto'
+    | '/encargos'
+    | '/galeria'
+    | '/sitemap.xml'
+    | '/tienda'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/contacto' | '/encargos' | '/sitemap.xml' | '/tienda'
-  id: '__root__' | '/' | '/contacto' | '/encargos' | '/sitemap.xml' | '/tienda'
+  to: '/' | '/contacto' | '/encargos' | '/galeria' | '/sitemap.xml' | '/tienda'
+  id:
+    | '__root__'
+    | '/'
+    | '/contacto'
+    | '/encargos'
+    | '/galeria'
+    | '/sitemap.xml'
+    | '/tienda'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContactoRoute: typeof ContactoRoute
   EncargosRoute: typeof EncargosRoute
+  GaleriaRoute: typeof GaleriaRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TiendaRoute: typeof TiendaRoute
 }
@@ -93,6 +116,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/galeria': {
+      id: '/galeria'
+      path: '/galeria'
+      fullPath: '/galeria'
+      preLoaderRoute: typeof GaleriaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/encargos': {
@@ -123,6 +153,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContactoRoute: ContactoRoute,
   EncargosRoute: EncargosRoute,
+  GaleriaRoute: GaleriaRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TiendaRoute: TiendaRoute,
 }
