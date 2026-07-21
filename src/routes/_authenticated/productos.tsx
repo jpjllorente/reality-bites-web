@@ -376,7 +376,10 @@ function ProductsPage() {
                       rows={2}
                       maxLength={200}
                       value={editing.seo_description}
-                      onChange={(e) => setEditing((s) => (s ? { ...s, seo_description: e.target.value } : s))}
+                      onChange={(e) => {
+                        setDirty((d) => ({ ...d, seo_description: true }));
+                        setEditing((s) => (s ? { ...s, seo_description: e.target.value } : s));
+                      }}
                       placeholder="Frase corta y única que aparecerá en Google."
                       className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
                     />
