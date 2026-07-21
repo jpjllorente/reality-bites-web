@@ -1,7 +1,7 @@
 import { useState } from "react";
 import customCake from "@/assets/custom-cake.jpg";
 
-const WHATSAPP_NUMBER = "34600000000";
+const WHATSAPP_NUMBER = "34681634623";
 const EMAIL = "hola@144reality.com";
 
 export function CustomOrders() {

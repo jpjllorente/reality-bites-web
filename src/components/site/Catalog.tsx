@@ -4,7 +4,7 @@ import { useCart } from "@/hooks/use-cart";
 
 const categories: Array<Category | "Todo"> = ["Todo", "Repostería", "Café", "Bites"];
 
-const WHATSAPP_NUMBER = "34600000000"; // placeholder — reemplázalo
+const WHATSAPP_NUMBER = "34681634623";
 
 function formatPrice(v: number) {
   return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
