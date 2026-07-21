@@ -19,9 +19,9 @@ export function Contact() {
 
             <dl className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
               <InfoBlock label="Dirección">
-                Calle Reality, 144
+                Calle Francisco González Conde, 37
                 <br />
-                28000 Madrid
+                30180 Bullas, Murcia
               </InfoBlock>
               <InfoBlock label="Horario">
                 Lun – Vie · 08:00 – 20:00
@@ -29,9 +29,9 @@ export function Contact() {
                 Sáb – Dom · 09:30 – 21:00
               </InfoBlock>
               <InfoBlock label="Contacto">
-                +34 600 000 000
+                +34 681 63 46 23
                 <br />
-                hola@144reality.com
+                WhatsApp disponible
               </InfoBlock>
               <InfoBlock label="Sígue­nos">
                 @144reality
@@ -46,7 +46,7 @@ export function Contact() {
             <div className="overflow-hidden rounded-sm border border-foreground/10 shadow-[var(--shadow-plate)]">
               <iframe
                 title="Mapa 144 Reality"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=-3.71%2C40.41%2C-3.69%2C40.43&layer=mapnik"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=-1.6725%2C38.0430%2C-1.6635%2C38.0490&layer=mapnik&marker=38.0460%2C-1.6680"
                 className="h-[420px] w-full grayscale-[0.4]"
                 loading="lazy"
               />
