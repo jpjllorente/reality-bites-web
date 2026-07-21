@@ -360,7 +360,10 @@ function ProductsPage() {
                       type="text"
                       maxLength={70}
                       value={editing.seo_title}
-                      onChange={(e) => setEditing((s) => (s ? { ...s, seo_title: e.target.value } : s))}
+                      onChange={(e) => {
+                        setDirty((d) => ({ ...d, seo_title: true }));
+                        setEditing((s) => (s ? { ...s, seo_title: e.target.value } : s));
+                      }}
                       placeholder="Ej: Tartaleta de pistacho artesanal en Bullas"
                       className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
                     />
