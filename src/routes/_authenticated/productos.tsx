@@ -296,17 +296,25 @@ function ProductsPage() {
                 <label className="block">
                   <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Precio (€)</span>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={(editing.price_cents / 100).toString()}
-                    onChange={(e) =>
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]+([.,][0-9]{1,2})?"
+                    value={priceInput}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(",", ".");
+                      if (raw !== "" && !/^\d*\.?\d{0,2}$/.test(raw)) return;
+                      setPriceInput(raw);
+                      const parsed = parseFloat(raw);
                       setEditing((s) =>
-                        s ? { ...s, price_cents: Math.round(parseFloat(e.target.value || "0") * 100) } : s,
-                      )
-                    }
+                        s ? { ...s, price_cents: isNaN(parsed) ? 0 : Math.round(parsed * 100) } : s,
+                      );
+                    }}
+                    onBlur={() => {
+                      setPriceInput((editing.price_cents / 100).toFixed(2));
+                    }}
                     className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
                   />
+
                 </label>
                 <label className="block">
                   <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Categoría</span>
