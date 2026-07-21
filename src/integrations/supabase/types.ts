@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      custom_orders: {
+        Row: {
+          allergens: string | null
+          budget_range: string | null
+          created_at: string
+          email: string
+          event_date: string | null
+          flavors: string | null
+          id: string
+          message: string | null
+          name: string
+          order_type: string
+          phone: string | null
+          servings: number | null
+          status: Database["public"]["Enums"]["custom_order_status"]
+        }
+        Insert: {
+          allergens?: string | null
+          budget_range?: string | null
+          created_at?: string
+          email: string
+          event_date?: string | null
+          flavors?: string | null
+          id?: string
+          message?: string | null
+          name: string
+          order_type: string
+          phone?: string | null
+          servings?: number | null
+          status?: Database["public"]["Enums"]["custom_order_status"]
+        }
+        Update: {
+          allergens?: string | null
+          budget_range?: string | null
+          created_at?: string
+          email?: string
+          event_date?: string | null
+          flavors?: string | null
+          id?: string
+          message?: string | null
+          name?: string
+          order_type?: string
+          phone?: string | null
+          servings?: number | null
+          status?: Database["public"]["Enums"]["custom_order_status"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +70,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      custom_order_status: "new" | "reviewing" | "confirmed" | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +197,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      custom_order_status: ["new", "reviewing", "confirmed", "declined"],
+    },
   },
 } as const
