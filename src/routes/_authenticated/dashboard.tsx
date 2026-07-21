@@ -218,7 +218,7 @@ function StatusSelect<T extends AnyStatus>({
 type CustomRow = {
   id: string;
   created_at: string;
-  status: Status;
+  status: CustomStatus;
   name: string;
   email: string;
   phone: string | null;
@@ -236,7 +236,7 @@ function CustomOrdersTable({
   onStatus,
 }: {
   rows: CustomRow[];
-  onStatus: (id: string, s: Status) => void;
+  onStatus: (id: string, s: CustomStatus) => void;
 }) {
   if (rows.length === 0)
     return <p className="mt-10 text-sm text-muted-foreground">Sin encargos todavía.</p>;
@@ -258,7 +258,11 @@ function CustomOrdersTable({
               </p>
             </div>
             <div onClick={(e) => e.preventDefault()}>
-              <StatusSelect value={r.status} onChange={(s) => onStatus(r.id, s)} />
+              <StatusSelect
+                value={r.status}
+                options={CUSTOM_STATUSES}
+                onChange={(s) => onStatus(r.id, s)}
+              />
             </div>
           </summary>
           <dl className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
@@ -288,12 +292,12 @@ type ShopItem = { id: string; name: string; qty: number; price_cents: number };
 type ShopRow = {
   id: string;
   created_at: string;
-  status: Status;
+  status: ShopStatus;
   name: string;
   phone: string;
   email: string | null;
   notes: string | null;
-  items: ShopItem[];
+  items: unknown;
   total_cents: number;
 };
 
@@ -302,54 +306,61 @@ function ShopOrdersTable({
   onStatus,
 }: {
   rows: ShopRow[];
-  onStatus: (id: string, s: Status) => void;
+  onStatus: (id: string, s: ShopStatus) => void;
 }) {
   if (rows.length === 0)
     return <p className="mt-10 text-sm text-muted-foreground">Sin pedidos todavía.</p>;
   return (
     <div className="mt-8 space-y-3">
-      {rows.map((r) => (
-        <details
-          key={r.id}
-          className="group rounded-sm border border-foreground/15 bg-card p-4 open:border-primary"
-        >
-          <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="font-serif text-base font-semibold text-foreground">
-                {r.name}{" "}
-                <span className="text-secondary">· {formatEUR(r.total_cents)}</span>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {formatDate(r.created_at)} · {r.phone}
-                {r.email ? ` · ${r.email}` : ""}
-              </p>
-            </div>
-            <div onClick={(e) => e.preventDefault()}>
-              <StatusSelect value={r.status} onChange={(s) => onStatus(r.id, s)} />
-            </div>
-          </summary>
-          <ul className="mt-4 divide-y divide-foreground/10 text-sm">
-            {(Array.isArray(r.items) ? r.items : []).map((it, i) => (
-              <li key={i} className="flex items-center justify-between py-2">
-                <span>
-                  {it.qty} × {it.name}
-                </span>
-                <span className="font-mono">{formatEUR(it.qty * it.price_cents)}</span>
-              </li>
-            ))}
-          </ul>
-          {r.notes && (
-            <div className="mt-3">
-              <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                Notas
-              </p>
-              <p className="mt-1 whitespace-pre-wrap rounded-sm bg-muted/50 p-3 text-sm">
-                {r.notes}
-              </p>
-            </div>
-          )}
-        </details>
-      ))}
+      {rows.map((r) => {
+        const items = (Array.isArray(r.items) ? r.items : []) as ShopItem[];
+        return (
+          <details
+            key={r.id}
+            className="group rounded-sm border border-foreground/15 bg-card p-4 open:border-primary"
+          >
+            <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="font-serif text-base font-semibold text-foreground">
+                  {r.name}{" "}
+                  <span className="text-secondary">· {formatEUR(r.total_cents)}</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(r.created_at)} · {r.phone}
+                  {r.email ? ` · ${r.email}` : ""}
+                </p>
+              </div>
+              <div onClick={(e) => e.preventDefault()}>
+                <StatusSelect
+                  value={r.status}
+                  options={SHOP_STATUSES}
+                  onChange={(s) => onStatus(r.id, s)}
+                />
+              </div>
+            </summary>
+            <ul className="mt-4 divide-y divide-foreground/10 text-sm">
+              {items.map((it, i) => (
+                <li key={i} className="flex items-center justify-between py-2">
+                  <span>
+                    {it.qty} × {it.name}
+                  </span>
+                  <span className="font-mono">{formatEUR(it.qty * it.price_cents)}</span>
+                </li>
+              ))}
+            </ul>
+            {r.notes && (
+              <div className="mt-3">
+                <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                  Notas
+                </p>
+                <p className="mt-1 whitespace-pre-wrap rounded-sm bg-muted/50 p-3 text-sm">
+                  {r.notes}
+                </p>
+              </div>
+            )}
+          </details>
+        );
+      })}
     </div>
   );
 }
