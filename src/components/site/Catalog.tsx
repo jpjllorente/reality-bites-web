@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { products, type Category } from "@/lib/products";
 import { useCart } from "@/hooks/use-cart";
+import { submitShopOrder } from "@/lib/shop-orders.functions";
+import { toast } from "sonner";
 
 const categories: Array<Category | "Todo"> = ["Todo", "Repostería", "Café", "Bites"];
 
@@ -13,6 +15,9 @@ function formatPrice(v: number) {
 export function Catalog() {
   const [filter, setFilter] = useState<Category | "Todo">("Todo");
   const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "" });
   const cart = useCart();
 
   const list = useMemo(
@@ -20,17 +25,55 @@ export function Catalog() {
     [filter],
   );
 
-  const whatsappHref = useMemo(() => {
-    if (cart.items.length === 0) return `https://wa.me/${WHATSAPP_NUMBER}`;
+  function buildWhatsappHref() {
     const lines = cart.items.map(
       (i) => `• ${i.qty} × ${i.product.name} — ${formatPrice(i.qty * i.product.price)}`,
     );
     const msg =
-      `Hola 144 Reality, me gustaría hacer este pedido:%0A%0A` +
+      `Hola 144 Reality, soy ${form.name}. Me gustaría hacer este pedido:%0A%0A` +
       lines.join("%0A") +
-      `%0A%0ATotal: ${formatPrice(cart.total)}`;
+      `%0A%0ATotal: ${formatPrice(cart.total)}` +
+      (form.notes ? `%0A%0ANotas: ${encodeURIComponent(form.notes)}` : "");
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
-  }, [cart.items, cart.total]);
+  }
+
+  async function onConfirmOrder() {
+    if (!form.name.trim() || !form.phone.trim()) {
+      toast.error("Nombre y teléfono son obligatorios");
+      return;
+    }
+    if (cart.items.length === 0) return;
+    setSubmitting(true);
+    try {
+      await submitShopOrder({
+        data: {
+          name: form.name.trim(),
+          phone: form.phone.trim(),
+          email: form.email.trim() || null,
+          notes: form.notes.trim() || null,
+          items: cart.items.map((i) => ({
+            id: i.product.id,
+            name: i.product.name,
+            qty: i.qty,
+            price_cents: Math.round(i.product.price * 100),
+          })),
+          total_cents: Math.round(cart.total * 100),
+        },
+      });
+      const href = buildWhatsappHref();
+      cart.clear();
+      setCheckoutOpen(false);
+      setCartOpen(false);
+      setForm({ name: "", phone: "", email: "", notes: "" });
+      toast.success("Pedido registrado. Abriendo WhatsApp…");
+      window.open(href, "_blank", "noopener");
+    } catch {
+      toast.error("No se pudo registrar el pedido. Inténtalo de nuevo.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
 
   return (
     <section id="catalogo" className="relative bg-background py-20 sm:py-28">
@@ -208,23 +251,84 @@ export function Catalog() {
                   {formatPrice(cart.total)}
                 </span>
               </div>
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noreferrer"
-                className={`block w-full rounded-sm bg-secondary py-3 text-center text-sm font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 ${
-                  cart.items.length === 0 ? "pointer-events-none opacity-40" : ""
-                }`}
+              <button
+                disabled={cart.items.length === 0}
+                onClick={() => setCheckoutOpen(true)}
+                className="block w-full rounded-sm bg-secondary py-3 text-center text-sm font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 disabled:pointer-events-none disabled:opacity-40"
               >
-                Enviar pedido por WhatsApp
-              </a>
+                Continuar pedido
+              </button>
               <p className="mt-3 text-center text-[11px] text-muted-foreground">
-                Te contestamos para confirmar recogida o entrega. Sin pago online.
+                Te pedimos unos datos y abrimos WhatsApp para confirmar.
               </p>
             </div>
           </aside>
         </div>
       )}
+
+      {/* Checkout modal */}
+      {checkoutOpen && (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-primary/70 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-sm border border-foreground/15 bg-background p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-secondary">— Confirmar pedido</p>
+                <h3 className="mt-1 font-display text-3xl text-primary">Tus datos</h3>
+              </div>
+              <button onClick={() => setCheckoutOpen(false)} className="rounded-sm p-2 text-foreground/60 hover:bg-muted" aria-label="Cerrar">✕</button>
+            </div>
+            <div className="mt-5 space-y-3">
+              <Field label="Nombre *" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
+              <Field label="Teléfono *" value={form.phone} onChange={(v) => setForm((f) => ({ ...f, phone: v }))} type="tel" />
+              <Field label="Email (opcional)" value={form.email} onChange={(v) => setForm((f) => ({ ...f, email: v }))} type="email" />
+              <label className="block">
+                <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Notas (opcional)</span>
+                <textarea
+                  value={form.notes}
+                  onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+                  rows={3}
+                  className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                  placeholder="Recogida, entrega, hora preferida…"
+                />
+              </label>
+            </div>
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <span className="font-display text-2xl text-primary">{formatPrice(cart.total)}</span>
+              <button
+                disabled={submitting}
+                onClick={onConfirmOrder}
+                className="rounded-sm bg-secondary px-5 py-3 text-xs font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 disabled:opacity-50"
+              >
+                {submitting ? "Enviando…" : "Guardar y abrir WhatsApp"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+      />
+    </label>
   );
 }

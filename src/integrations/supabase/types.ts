@@ -62,6 +62,42 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_orders: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          items: Json
+          name: string
+          notes: string | null
+          phone: string
+          status: Database["public"]["Enums"]["shop_order_status"]
+          total_cents: number
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          items: Json
+          name: string
+          notes?: string | null
+          phone: string
+          status?: Database["public"]["Enums"]["shop_order_status"]
+          total_cents: number
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          items?: Json
+          name?: string
+          notes?: string | null
+          phone?: string
+          status?: Database["public"]["Enums"]["shop_order_status"]
+          total_cents?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -71,6 +107,12 @@ export type Database = {
     }
     Enums: {
       custom_order_status: "new" | "reviewing" | "confirmed" | "declined"
+      shop_order_status:
+        | "new"
+        | "contacted"
+        | "confirmed"
+        | "completed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -199,6 +241,13 @@ export const Constants = {
   public: {
     Enums: {
       custom_order_status: ["new", "reviewing", "confirmed", "declined"],
+      shop_order_status: [
+        "new",
+        "contacted",
+        "confirmed",
+        "completed",
+        "cancelled",
+      ],
     },
   },
 } as const
