@@ -4,7 +4,6 @@ import { fetchPublicProducts, products as fallback, type Category, type Product 
 import { useCart } from "@/hooks/use-cart";
 import { submitShopOrder } from "@/lib/shop-orders.functions";
 import { toast } from "sonner";
-import { toast } from "sonner";
 
 const categories: Array<Category | "Todo"> = ["Todo", "Repostería", "Café", "Bites"];
 
