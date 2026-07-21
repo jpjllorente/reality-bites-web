@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "reality-bites-web"
+const SITE_NAME = "144 Reality — Bites & Coffee"
 const SENDER_DOMAIN = "notify.144reality.com"
 const ROOT_DOMAIN = "144reality.com"
 const FROM_DOMAIN = "notify.144reality.com"
