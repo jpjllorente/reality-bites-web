@@ -76,11 +76,10 @@ export const listAllOrders = createServerFn({ method: "GET" })
     return { custom: custom.data ?? [], shop: shop.data ?? [] };
   });
 
-const UpdateStatusSchema = z.object({
-  kind: z.enum(["custom", "shop"]),
-  id: z.string().uuid(),
-  status: StatusSchema,
-});
+const UpdateStatusSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("shop"), id: z.string().uuid(), status: SHOP_STATUS }),
+  z.object({ kind: z.literal("custom"), id: z.string().uuid(), status: CUSTOM_STATUS }),
+]);
 
 export const updateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -94,9 +93,7 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
       "@/integrations/supabase/client.server"
     );
     const table = data.kind === "custom" ? "custom_orders" : "shop_orders";
-    // custom_orders uses same status enum values (new, contacted, ...); confirm both share the set.
-    const { error } = await supabaseAdmin
-      .from(table)
+    const { error } = await (supabaseAdmin.from(table) as any)
       .update({ status: data.status })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
