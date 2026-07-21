@@ -112,8 +112,8 @@ export function HomeTeasers() {
             <span className="text-secondary-foreground">Murcia.</span>
           </h3>
           <p className="mt-5 max-w-md text-primary/80">
-            Un espacio industrial con tubos vistos, ladrillo, madera natural y buena
-            luz. Ven, huele el pan recién hecho y quédate a un café.
+            Un espacio confortable y acogedor, con madera natural y buena luz.
+            Ven, disfruta de nuestra repostería y quédate a un café.
           </p>
           <Link
             to="/contacto"

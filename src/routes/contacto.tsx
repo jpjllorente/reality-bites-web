@@ -27,7 +27,7 @@ export const Route = createFileRoute("/contacto")({
         { property: "og:type", content: "website" },
         { property: "og:url", content: "/contacto" },
         { property: "og:image", content: absImage },
-        { property: "og:image:alt", content: "Interior industrial de 144 Reality" },
+        { property: "og:image:alt", content: "Interior acogedor de 144 Reality" },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:title", content: "Contacto — 144 Reality" },
         {
