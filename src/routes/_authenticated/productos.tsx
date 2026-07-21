@@ -67,6 +67,8 @@ function ProductsPage() {
     seo_title: false,
     seo_description: false,
   });
+  const [priceInput, setPriceInput] = useState("0.00");
+
 
   function slugify(s: string) {
     return s
