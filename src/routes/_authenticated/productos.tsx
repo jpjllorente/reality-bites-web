@@ -89,12 +89,15 @@ function ProductsPage() {
   }
   function openNew() {
     setDirty({ slug: false, seo_title: false, seo_description: false });
+    setPriceInput("0.00");
     setEditing({ ...EMPTY });
   }
   function openEdit(r: Row) {
     setDirty({ slug: true, seo_title: true, seo_description: true });
+    setPriceInput((r.price_cents / 100).toFixed(2));
     setEditing(r);
   }
+
   function onNameChange(v: string) {
     setEditing((s) => {
       if (!s) return s;
