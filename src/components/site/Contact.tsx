@@ -13,8 +13,8 @@ export function Contact() {
               Nos encontrarás <br /> en la <span className="text-secondary">calle 144</span>
             </h2>
             <p className="mt-6 max-w-lg text-muted-foreground">
-              Un espacio industrial con tubos vistos, ladrillo, madera natural y buena luz.
-              Ven, huele el pan recién hecho y quédate a un café.
+              Un espacio confortable y acogedor, con madera natural y buena luz.
+              Ven, disfruta de nuestra repostería y quédate a un café.
             </p>
 
             <dl className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
