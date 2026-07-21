@@ -231,6 +231,16 @@ function GalleryAdminPage() {
                   />
                   <span className="text-xs uppercase tracking-widest">Visible</span>
                 </label>
+                <label className="col-span-2 flex items-center gap-2 rounded-sm border border-secondary/40 bg-secondary/10 px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={editing.is_featured}
+                    onChange={(e) => setEditing((s) => (s ? { ...s, is_featured: e.target.checked } : s))}
+                  />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-primary">
+                    ★ Nuestros favoritos (portada)
+                  </span>
+                </label>
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
