@@ -10,6 +10,14 @@ export function Footer() {
           <Link to="/tienda" className="hover:text-secondary">Tienda</Link>
           <Link to="/encargos" className="hover:text-secondary">Encargos</Link>
           <Link to="/contacto" className="hover:text-secondary">Contacto</Link>
+          <a
+            href="https://instagram.com/144reality_bitesandcoffee"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-secondary"
+          >
+            Instagram
+          </a>
         </div>
       </div>
     </footer>
