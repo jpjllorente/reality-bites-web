@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import logoAsset from "@/assets/logo-144reality.jpeg.asset.json";
+import { Link } from "@tanstack/react-router";
 import hero1 from "@/assets/hero-1.jpg";
 import hero2 from "@/assets/hero-2.jpg";
 import hero3 from "@/assets/hero-3.jpg";
+import { Header } from "./Header";
 
 const slides = [
   {
@@ -34,7 +35,7 @@ export function Hero() {
   }, []);
 
   return (
-    <section id="inicio" className="relative isolate overflow-hidden bg-primary text-primary-foreground">
+    <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
       {/* Slides */}
       <div className="absolute inset-0">
         {slides.map((s, i) => (
@@ -55,37 +56,11 @@ export function Hero() {
             />
           </div>
         ))}
-        {/* Vignette + green wash to blend the vintage industrial vibe */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/40 to-primary/85" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,oklch(0.22_0.03_145_/0.7)_100%)]" />
       </div>
 
-      {/* Top bar with logo + nav */}
-      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-4 py-5 sm:px-6 lg:px-10">
-        <a href="#inicio" className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-background/95 ring-2 ring-secondary/70">
-            <img
-              src={logoAsset.url}
-              alt="144 Reality Bites & Coffee"
-              className="h-9 w-9 rounded-full object-cover"
-            />
-          </span>
-          <span className="hidden font-display text-2xl tracking-widest text-primary-foreground sm:inline">
-            144 REALITY
-          </span>
-        </a>
-        <nav className="hidden items-center gap-8 text-sm font-medium uppercase tracking-widest md:flex">
-          <a href="#catalogo" className="hover:text-secondary">Catálogo</a>
-          <a href="#encargos" className="hover:text-secondary">Encargos</a>
-          <a href="#contacto" className="hover:text-secondary">Contacto</a>
-        </nav>
-        <a
-          href="#catalogo"
-          className="hidden rounded-sm border border-secondary bg-secondary px-4 py-2 text-xs font-semibold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 md:inline-block"
-        >
-          Pedir online
-        </a>
-      </header>
+      <Header variant="overlay" />
 
       {/* Hero copy */}
       <div className="relative z-10 mx-auto flex min-h-[82vh] max-w-7xl flex-col justify-end px-4 pb-16 sm:px-6 lg:px-10 lg:pb-24">
@@ -101,22 +76,21 @@ export function Hero() {
             {slides[idx].caption}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a
-              href="#catalogo"
+            <Link
+              to="/tienda"
               className="rounded-sm bg-secondary px-6 py-3 text-sm font-semibold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90"
             >
               Ver catálogo
-            </a>
-            <a
-              href="#encargos"
+            </Link>
+            <Link
+              to="/encargos"
               className="rounded-sm border border-primary-foreground/40 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-primary-foreground transition hover:border-secondary hover:text-secondary"
             >
               Encargos a medida
-            </a>
+            </Link>
           </div>
         </div>
 
-        {/* Slide indicators */}
         <div className="mt-10 flex items-center gap-3">
           {slides.map((_, i) => (
             <button
@@ -134,7 +108,6 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Ticker */}
       <div className="relative z-10 border-y border-primary-foreground/15 bg-primary/60 py-3 backdrop-blur">
         <div className="marquee-track flex whitespace-nowrap font-display text-lg tracking-[0.25em] text-primary-foreground/80">
           {Array.from({ length: 2 }).map((_, r) => (
