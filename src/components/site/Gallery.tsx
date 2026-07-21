@@ -1,10 +1,15 @@
-import { useState } from "react";
-import { galleryItems, type GalleryItem } from "@/lib/gallery";
+import { useEffect, useState } from "react";
+import { fetchPublicGallery, galleryItems as fallback, type GalleryItem } from "@/lib/gallery";
 
 const INSTAGRAM_URL = "https://instagram.com/144reality_bitesandcoffee";
 
 export function Gallery() {
   const [active, setActive] = useState<GalleryItem | null>(null);
+  const [items, setItems] = useState<GalleryItem[]>(fallback);
+
+  useEffect(() => {
+    fetchPublicGallery().then(setItems).catch(() => setItems(fallback));
+  }, []);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
@@ -32,8 +37,8 @@ export function Gallery() {
       </header>
 
       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
-        {galleryItems.map((item, i) => (
-          <li key={item.src}>
+        {items.map((item, i) => (
+          <li key={`${item.src}-${i}`}>
             <button
               type="button"
               onClick={() => setActive(item)}

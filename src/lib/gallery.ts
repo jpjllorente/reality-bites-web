@@ -6,6 +6,7 @@ import g5 from "@/assets/gallery-5.jpg";
 import g6 from "@/assets/gallery-6.jpg";
 import g7 from "@/assets/gallery-7.jpg";
 import g8 from "@/assets/gallery-8.jpg";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface GalleryItem {
   src: string;
@@ -15,52 +16,27 @@ export interface GalleryItem {
 }
 
 export const galleryItems: GalleryItem[] = [
-  {
-    src: g1,
-    alt: "Tartaleta de pistacho y frambuesa",
-    caption: "Tartaleta de pistacho & frambuesa recién horneada.",
-    tag: "#Repostería",
-  },
-  {
-    src: g2,
-    alt: "Barista preparando café",
-    caption: "El café de especialidad es una liturgia diaria.",
-    tag: "#Barismo",
-  },
-  {
-    src: g3,
-    alt: "Esfera de chocolate con caramelo",
-    caption: "Esfera 70% + caramelo salado. Momento show.",
-    tag: "#Chocolate",
-  },
-  {
-    src: g4,
-    alt: "Croissants recién horneados",
-    caption: "72 horas de fermentación. Cada mañana.",
-    tag: "#Bites",
-  },
-  {
-    src: g5,
-    alt: "Cheesecake de frutos rojos",
-    caption: "Cheesecake, frutos del bosque y luz de tarde.",
-    tag: "#Repostería",
-  },
-  {
-    src: g6,
-    alt: "Tarta personalizada con flores",
-    caption: "Encargo especial: tarta minimal con flores naturales.",
-    tag: "#Encargos",
-  },
-  {
-    src: g7,
-    alt: "Cookies con sal marina",
-    caption: "Cookies de choco & sal Maldon.",
-    tag: "#Bites",
-  },
-  {
-    src: g8,
-    alt: "Interior del local",
-    caption: "Nuestra casa: ladrillo, acero y madera.",
-    tag: "#144Reality",
-  },
+  { src: g1, alt: "Tartaleta de pistacho y frambuesa", caption: "Tartaleta de pistacho & frambuesa recién horneada.", tag: "#Repostería" },
+  { src: g2, alt: "Barista preparando café", caption: "El café de especialidad es una liturgia diaria.", tag: "#Barismo" },
+  { src: g3, alt: "Esfera de chocolate con caramelo", caption: "Esfera 70% + caramelo salado. Momento show.", tag: "#Chocolate" },
+  { src: g4, alt: "Croissants recién horneados", caption: "72 horas de fermentación. Cada mañana.", tag: "#Bites" },
+  { src: g5, alt: "Cheesecake de frutos rojos", caption: "Cheesecake, frutos del bosque y luz de tarde.", tag: "#Repostería" },
+  { src: g6, alt: "Tarta personalizada con flores", caption: "Encargo especial: tarta minimal con flores naturales.", tag: "#Encargos" },
+  { src: g7, alt: "Cookies con sal marina", caption: "Cookies de choco & sal Maldon.", tag: "#Bites" },
+  { src: g8, alt: "Interior del local", caption: "Nuestra casa: ladrillo, acero y madera.", tag: "#144Reality" },
 ];
+
+export async function fetchPublicGallery(): Promise<GalleryItem[]> {
+  const { data, error } = await supabase
+    .from("gallery_items")
+    .select("image_url, alt, caption, tag, sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+  if (error || !data || data.length === 0) return galleryItems;
+  return data.map((r) => ({
+    src: r.image_url,
+    alt: r.alt ?? "",
+    caption: r.caption ?? "",
+    tag: r.tag ?? "",
+  }));
+}
