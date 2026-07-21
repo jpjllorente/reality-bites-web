@@ -234,7 +234,7 @@ function ProductsPage() {
                   )}
                   <div className="mt-auto flex gap-2 pt-2">
                     <button
-                      onClick={() => setEditing(r)}
+                      onClick={() => openEdit(r)}
                       className="rounded-sm border border-foreground/20 px-2 py-1 text-[11px] uppercase tracking-widest hover:border-primary hover:text-primary"
                     >
                       Editar
