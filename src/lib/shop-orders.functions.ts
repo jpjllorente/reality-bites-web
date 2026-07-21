@@ -13,8 +13,8 @@ const ItemSchema = z.object({
 const ShopOrderSchema = z.object({
   name: z.string().trim().min(1).max(120),
   phone: z.string().trim().min(3).max(40),
-  email: z.string().trim().email().max(254).optional().or(z.literal("")),
-  notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  email: z.string().trim().email().max(254).nullable().optional().or(z.literal("")),
+  notes: z.string().trim().max(1000).nullable().optional().or(z.literal("")),
   items: z.array(ItemSchema).min(1).max(100),
   total_cents: z.number().int().min(0).max(100_000_000),
 });
