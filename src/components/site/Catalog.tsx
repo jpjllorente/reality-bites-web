@@ -332,6 +332,3 @@ function Field({
     </label>
   );
 }
-    </section>
-  );
-}
