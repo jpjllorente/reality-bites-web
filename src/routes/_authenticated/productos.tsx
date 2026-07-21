@@ -177,8 +177,13 @@ function ProductsPage() {
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {r.category} · {(r.price_cents / 100).toFixed(2)} €
+                    {r.category} · {(r.price_cents / 100).toFixed(2)} € · orden {r.sort_order}
                   </p>
+                  {r.tags?.length > 0 && (
+                    <p className="mt-1 text-[10px] uppercase tracking-widest text-secondary">
+                      {r.tags.join(" · ")}
+                    </p>
+                  )}
                   <div className="mt-auto flex gap-2 pt-2">
                     <button
                       onClick={() => setEditing(r)}
