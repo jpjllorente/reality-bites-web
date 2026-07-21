@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { fetchPublicProducts, products as fallback, type Category, type Product } from "@/lib/products";
 import { useCart } from "@/hooks/use-cart";
 import { submitShopOrder } from "@/lib/shop-orders.functions";
+import { toast } from "sonner";
 import { toast } from "sonner";
 
 const categories: Array<Category | "Todo"> = ["Todo", "Repostería", "Café", "Bites"];
@@ -153,12 +155,30 @@ export function Catalog() {
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="font-serif text-lg font-bold leading-tight text-foreground">
-                    {p.name}
+                    <Link
+                      to="/tienda/$slug"
+                      params={{ slug: p.slug }}
+                      className="hover:text-primary hover:underline underline-offset-4"
+                    >
+                      {p.name}
+                    </Link>
                   </h3>
                   <span className="shrink-0 font-display text-2xl text-secondary">
                     {formatPrice(p.price)}
                   </span>
                 </div>
+                {p.tags && p.tags.length > 0 && (
+                  <ul className="flex flex-wrap gap-1.5">
+                    {p.tags.map((t) => (
+                      <li
+                        key={t}
+                        className="rounded-sm border border-secondary/40 bg-secondary/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-secondary"
+                      >
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <p className="text-sm text-muted-foreground">{p.description}</p>
                 <button
                   onClick={() => {
