@@ -278,6 +278,48 @@ function ProductsPage() {
                   <span className="text-xs uppercase tracking-widest">Visible</span>
                 </label>
               </div>
+              <Text
+                label="Etiquetas (separadas por comas)"
+                value={editing.tags.join(", ")}
+                onChange={(v) =>
+                  setEditing((s) =>
+                    s ? { ...s, tags: v.split(",").map((t) => t.trim()).filter(Boolean) } : s,
+                  )
+                }
+              />
+              <div className="rounded-sm border border-dashed border-foreground/20 p-3">
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-secondary">
+                  SEO — se usa en la ficha del producto
+                </p>
+                <div className="space-y-3">
+                  <label className="block">
+                    <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Título SEO ({editing.seo_title.length}/70)
+                    </span>
+                    <input
+                      type="text"
+                      maxLength={70}
+                      value={editing.seo_title}
+                      onChange={(e) => setEditing((s) => (s ? { ...s, seo_title: e.target.value } : s))}
+                      placeholder="Ej: Tartaleta de pistacho artesanal en Bullas"
+                      className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Meta descripción ({editing.seo_description.length}/200)
+                    </span>
+                    <textarea
+                      rows={2}
+                      maxLength={200}
+                      value={editing.seo_description}
+                      onChange={(e) => setEditing((s) => (s ? { ...s, seo_description: e.target.value } : s))}
+                      placeholder="Frase corta y única que aparecerá en Google."
+                      className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button
