@@ -3,6 +3,7 @@ import { Gallery } from "@/components/site/Gallery";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { getRequestOrigin } from "@/lib/origin.functions";
+import { breadcrumbJsonLd } from "@/lib/breadcrumbs";
 import ogImage from "@/assets/gallery-1.jpg";
 
 export const Route = createFileRoute("/galeria")({
@@ -37,6 +38,12 @@ export const Route = createFileRoute("/galeria")({
         { name: "twitter:image", content: absImage },
       ],
       links: [{ rel: "canonical", href: "/galeria" }],
+      scripts: [
+        breadcrumbJsonLd(origin, [
+          { name: "Inicio", path: "/" },
+          { name: "Galería", path: "/galeria" },
+        ]),
+      ],
     };
   },
   component: GaleriaPage,

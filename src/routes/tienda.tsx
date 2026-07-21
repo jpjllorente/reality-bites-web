@@ -3,6 +3,7 @@ import { Catalog } from "@/components/site/Catalog";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { getRequestOrigin } from "@/lib/origin.functions";
+import { breadcrumbJsonLd } from "@/lib/breadcrumbs";
 import { products } from "@/lib/products";
 import ogImage from "@/assets/product-1.jpg";
 
@@ -100,6 +101,10 @@ export const Route = createFileRoute("/tienda")({
             ],
           }),
         },
+        breadcrumbJsonLd(origin, [
+          { name: "Inicio", path: "/" },
+          { name: "Tienda", path: "/tienda" },
+        ]),
       ],
     };
   },

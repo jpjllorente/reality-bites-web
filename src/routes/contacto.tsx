@@ -3,6 +3,7 @@ import { Contact } from "@/components/site/Contact";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { getRequestOrigin } from "@/lib/origin.functions";
+import { breadcrumbJsonLd } from "@/lib/breadcrumbs";
 import ogImage from "@/assets/hero-3.jpg";
 
 export const Route = createFileRoute("/contacto")({
@@ -99,6 +100,10 @@ export const Route = createFileRoute("/contacto")({
             },
           }),
         },
+        breadcrumbJsonLd(origin, [
+          { name: "Inicio", path: "/" },
+          { name: "Contacto", path: "/contacto" },
+        ]),
       ],
     };
   },
