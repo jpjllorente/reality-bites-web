@@ -88,6 +88,7 @@ function GalleryAdminPage() {
           tag: editing.tag,
           sort_order: editing.sort_order,
           is_active: editing.is_active,
+          is_featured: editing.is_featured,
         },
       });
       toast.success("Guardado");
