@@ -1,9 +1,23 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { products } from "@/lib/products";
 import customCake from "@/assets/custom-cake.jpg";
+import { fetchPublicGallery, galleryItems, type GalleryItem } from "@/lib/gallery";
+
+const TEASER_COUNT = 3;
 
 export function HomeTeasers() {
-  const featured = products.slice(0, 3);
+  const [featured, setFeatured] = useState<GalleryItem[]>(() => galleryItems.slice(0, TEASER_COUNT));
+
+  useEffect(() => {
+    let alive = true;
+    fetchPublicGallery().then((all) => {
+      if (!alive || all.length === 0) return;
+      setFeatured(all.slice(0, TEASER_COUNT));
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
     <>
@@ -29,33 +43,36 @@ export function HomeTeasers() {
           </div>
 
           <ul className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((p) => (
+            {featured.map((item, i) => (
               <li
-                key={p.id}
+                key={`${item.src}-${i}`}
                 className="group relative flex flex-col overflow-hidden rounded-sm border border-foreground/10 bg-card shadow-[var(--shadow-card)]"
               >
                 <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                   <img
-                    src={p.image}
-                    alt={p.name}
+                    src={item.src}
+                    alt={item.alt}
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <span className="absolute left-3 top-3 rounded-sm bg-background/90 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-primary">
-                    {p.category}
-                  </span>
+                  {item.tag ? (
+                    <span className="absolute left-3 top-3 rounded-sm bg-background/90 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-primary">
+                      {item.tag}
+                    </span>
+                  ) : null}
                 </div>
                 <div className="flex flex-1 flex-col gap-2 p-5">
                   <h3 className="font-serif text-lg font-bold leading-tight text-foreground">
-                    {p.name}
+                    {item.alt}
                   </h3>
-                  <p className="text-sm text-muted-foreground">{p.description}</p>
+                  <p className="text-sm text-muted-foreground">{item.caption}</p>
                 </div>
               </li>
             ))}
           </ul>
         </div>
       </section>
+
 
       {/* Encargos + Contacto CTA split */}
       <section className="grid gap-0 lg:grid-cols-2">

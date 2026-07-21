@@ -1,46 +1,40 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import hero1 from "@/assets/hero-1.jpg";
-import hero2 from "@/assets/hero-2.jpg";
-import hero3 from "@/assets/hero-3.jpg";
 import { Header } from "./Header";
+import { fetchPublicGallery, galleryItems, type GalleryItem } from "@/lib/gallery";
 
-const slides = [
-  {
-    src: hero1,
-    kicker: "Colección de temporada",
-    title: "Repostería que cruje, funde y sorprende",
-    caption: "Piezas modernas horneadas cada mañana en nuestro obrador.",
-  },
-  {
-    src: hero2,
-    kicker: "Café de especialidad",
-    title: "Un buen café merece una buena mesa",
-    caption: "Blend de tueste medio, extraído con precisión.",
-  },
-  {
-    src: hero3,
-    kicker: "Bienvenidos al 144",
-    title: "Ladrillo, acero y azúcar",
-    caption: "Un local industrial pensado para quedarse un rato más.",
-  },
-];
+const HERO_COUNT = 5;
 
 export function Hero() {
+  const [items, setItems] = useState<GalleryItem[]>(() => galleryItems.slice(0, HERO_COUNT));
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
-    const t = setInterval(() => setIdx((i) => (i + 1) % slides.length), 5500);
-    return () => clearInterval(t);
+    let alive = true;
+    fetchPublicGallery().then((all) => {
+      if (!alive || all.length === 0) return;
+      setItems(all.slice(0, HERO_COUNT));
+    });
+    return () => {
+      alive = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (items.length <= 1) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % items.length), 5500);
+    return () => clearInterval(t);
+  }, [items.length]);
+
+  const current = items[idx] ?? items[0];
 
   return (
     <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
       {/* Slides */}
       <div className="absolute inset-0">
-        {slides.map((s, i) => (
+        {items.map((s, i) => (
           <div
-            key={s.src}
+            key={`${s.src}-${i}`}
             className={`absolute inset-0 transition-opacity duration-[1600ms] ease-in-out ${
               i === idx ? "opacity-100" : "opacity-0"
             }`}
@@ -67,13 +61,13 @@ export function Hero() {
         <div className="max-w-3xl">
           <div className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-secondary">
             <span className="h-px w-10 bg-secondary" />
-            {slides[idx].kicker}
+            {current?.tag || "144 Reality"}
           </div>
           <h1 className="font-display text-5xl leading-[0.95] sm:text-7xl lg:text-8xl">
-            {slides[idx].title}
+            Repostería que cruje, funde y sorprende
           </h1>
           <p className="mt-5 max-w-xl text-base text-primary-foreground/85 sm:text-lg">
-            {slides[idx].caption}
+            {current?.caption || "Piezas modernas horneadas cada mañana en nuestro obrador."}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -92,7 +86,7 @@ export function Hero() {
         </div>
 
         <div className="mt-10 flex items-center gap-3">
-          {slides.map((_, i) => (
+          {items.map((_, i) => (
             <button
               key={i}
               onClick={() => setIdx(i)}
@@ -103,7 +97,7 @@ export function Hero() {
             />
           ))}
           <span className="ml-4 font-mono text-xs tracking-widest text-primary-foreground/60">
-            0{idx + 1} / 0{slides.length}
+            {String(idx + 1).padStart(2, "0")} / {String(items.length).padStart(2, "0")}
           </span>
         </div>
       </div>
