@@ -1,37 +1,99 @@
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import customCake from "@/assets/custom-cake.jpg";
+import { submitCustomOrder } from "@/lib/custom-orders.functions";
 
-const WHATSAPP_NUMBER = "34681634623";
-const EMAIL = "hola@144reality.com";
+const ORDER_TYPES = [
+  "Tarta a medida",
+  "Tarta de boda",
+  "Cupcakes / mini bites",
+  "Mesa dulce / catering",
+  "Pedido corporativo",
+  "Otro",
+];
+
+const BUDGETS = [
+  "Menos de 50 €",
+  "50 – 100 €",
+  "100 – 200 €",
+  "200 – 400 €",
+  "Más de 400 €",
+  "A definir",
+];
+
+const ALLERGEN_OPTIONS = [
+  "Gluten",
+  "Lactosa",
+  "Frutos secos",
+  "Huevo",
+  "Soja",
+  "Fresa",
+];
+
+const emptyForm = {
+  name: "",
+  email: "",
+  phone: "",
+  orderType: "Tarta a medida",
+  eventDate: "",
+  servings: "",
+  flavors: "",
+  budgetRange: "A definir",
+  message: "",
+};
 
 export function CustomOrders() {
-  const [form, setForm] = useState({
-    name: "",
-    contact: "",
-    date: "",
-    people: "",
-    type: "Tarta a medida",
-    details: "",
-  });
+  const submit = useServerFn(submitCustomOrder);
+  const [form, setForm] = useState(emptyForm);
+  const [allergens, setAllergens] = useState<string[]>([]);
+  const [otherAllergen, setOtherAllergen] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
 
-  const message =
-    `Hola 144 Reality, me gustaría un encargo a medida:%0A%0A` +
-    `Nombre: ${form.name}%0A` +
-    `Contacto: ${form.contact}%0A` +
-    `Fecha: ${form.date}%0A` +
-    `Personas: ${form.people}%0A` +
-    `Tipo: ${form.type}%0A` +
-    `Detalles: ${form.details}`;
+  const toggleAllergen = (a: string) =>
+    setAllergens((prev) =>
+      prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a],
+    );
 
-  const waHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
-  const mailHref = `mailto:${EMAIL}?subject=Encargo%20a%20medida%20-%20${encodeURIComponent(
-    form.name || "144 Reality",
-  )}&body=${message.replace(/%0A/g, "%0D%0A")}`;
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const allergensList = [
+        ...allergens,
+        ...(otherAllergen.trim() ? [otherAllergen.trim()] : []),
+      ].join(", ");
+      await submit({
+        data: {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          orderType: form.orderType,
+          eventDate: form.eventDate,
+          servings: form.servings ? Number(form.servings) : null,
+          flavors: form.flavors,
+          allergens: allergensList,
+          budgetRange: form.budgetRange,
+          message: form.message,
+        },
+      });
+      toast.success("¡Solicitud enviada! Te contactamos en menos de 24h.");
+      setForm(emptyForm);
+      setAllergens([]);
+      setOtherAllergen("");
+      setDone(true);
+    } catch (err) {
+      console.error(err);
+      toast.error("No se pudo enviar la solicitud. Inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <section id="encargos" className="relative overflow-hidden bg-primary text-primary-foreground">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-2 lg:gap-16 lg:px-10">
-        {/* Left: image + copy */}
         <div>
           <p className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-secondary">
             — Encargos a medida
@@ -72,12 +134,8 @@ export function CustomOrders() {
           </dl>
         </div>
 
-        {/* Right: form */}
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            window.open(waHref, "_blank");
-          }}
+          onSubmit={onSubmit}
           className="rounded-sm border border-primary-foreground/15 bg-background p-6 text-foreground shadow-[var(--shadow-plate)] sm:p-8"
         >
           <h3 className="font-display text-3xl text-primary">Cuéntanos tu idea</h3>
@@ -85,31 +143,60 @@ export function CustomOrders() {
             Rellena estos campos y te respondemos en menos de 24h.
           </p>
 
+          {done && (
+            <div className="mt-4 rounded-sm border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
+              Solicitud recibida. Revisa tu email para la confirmación.
+            </div>
+          )}
+
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <Field label="Nombre">
               <input
                 required
+                maxLength={120}
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="input"
                 placeholder="Cómo te llamas"
               />
             </Field>
-            <Field label="Teléfono / email">
+            <Field label="Email">
               <input
+                type="email"
                 required
-                value={form.contact}
-                onChange={(e) => setForm({ ...form, contact: e.target.value })}
+                maxLength={254}
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="input"
-                placeholder="Cómo te contactamos"
+                placeholder="tu@email.com"
               />
+            </Field>
+            <Field label="Teléfono">
+              <input
+                type="tel"
+                maxLength={40}
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="input"
+                placeholder="+34 …"
+              />
+            </Field>
+            <Field label="Tipo de encargo">
+              <select
+                value={form.orderType}
+                onChange={(e) => setForm({ ...form, orderType: e.target.value })}
+                className="input"
+              >
+                {ORDER_TYPES.map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
             </Field>
             <Field label="Fecha del evento">
               <input
                 type="date"
-                required
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                value={form.eventDate}
+                onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
                 className="input"
               />
             </Field>
@@ -117,49 +204,88 @@ export function CustomOrders() {
               <input
                 type="number"
                 min={1}
-                value={form.people}
-                onChange={(e) => setForm({ ...form, people: e.target.value })}
+                max={1000}
+                value={form.servings}
+                onChange={(e) => setForm({ ...form, servings: e.target.value })}
                 className="input"
                 placeholder="10"
               />
             </Field>
-            <Field label="Tipo de encargo" className="sm:col-span-2">
+            <Field label="Presupuesto orientativo" className="sm:col-span-2">
               <select
-                value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value })}
+                value={form.budgetRange}
+                onChange={(e) => setForm({ ...form, budgetRange: e.target.value })}
                 className="input"
               >
-                <option>Tarta a medida</option>
-                <option>Mesa dulce / catering</option>
-                <option>Pedido corporativo</option>
-                <option>Otro</option>
+                {BUDGETS.map((b) => (
+                  <option key={b}>{b}</option>
+                ))}
               </select>
             </Field>
-            <Field label="Detalles" className="sm:col-span-2">
+            <Field label="Sabores preferidos" className="sm:col-span-2">
+              <input
+                maxLength={500}
+                value={form.flavors}
+                onChange={(e) => setForm({ ...form, flavors: e.target.value })}
+                className="input"
+                placeholder="Chocolate, frutos rojos, pistacho…"
+              />
+            </Field>
+
+            <div className="sm:col-span-2">
+              <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                Alérgenos / intolerancias
+              </span>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {ALLERGEN_OPTIONS.map((a) => {
+                  const active = allergens.includes(a);
+                  return (
+                    <button
+                      type="button"
+                      key={a}
+                      onClick={() => toggleAllergen(a)}
+                      className={`rounded-sm border px-3 py-1.5 text-xs uppercase tracking-widest transition ${
+                        active
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background text-foreground hover:border-primary"
+                      }`}
+                    >
+                      {a}
+                    </button>
+                  );
+                })}
+              </div>
+              <input
+                maxLength={200}
+                value={otherAllergen}
+                onChange={(e) => setOtherAllergen(e.target.value)}
+                className="input mt-2"
+                placeholder="Otros alérgenos…"
+              />
+            </div>
+
+            <Field label="Detalles adicionales" className="sm:col-span-2">
               <textarea
                 rows={4}
-                value={form.details}
-                onChange={(e) => setForm({ ...form, details: e.target.value })}
+                maxLength={2000}
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
                 className="input resize-none"
-                placeholder="Sabores preferidos, alergias, estilo…"
+                placeholder="Estilo, colores, referencias, mensaje sobre la tarta…"
               />
             </Field>
           </div>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="submit"
-              className="flex-1 rounded-sm bg-secondary py-3 text-sm font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90"
-            >
-              Enviar por WhatsApp
-            </button>
-            <a
-              href={mailHref}
-              className="flex-1 rounded-sm border border-primary py-3 text-center text-sm font-bold uppercase tracking-widest text-primary transition hover:bg-primary hover:text-primary-foreground"
-            >
-              Enviar por email
-            </a>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-6 w-full rounded-sm bg-secondary py-3 text-sm font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 disabled:opacity-60"
+          >
+            {loading ? "Enviando…" : "Enviar solicitud"}
+          </button>
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Al enviar aceptas que te contactemos por email o teléfono.
+          </p>
         </form>
       </div>
 
