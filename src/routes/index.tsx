@@ -1,22 +1,37 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Hero } from "@/components/site/Hero";
-import { Catalog } from "@/components/site/Catalog";
-import { CustomOrders } from "@/components/site/CustomOrders";
-import { Contact } from "@/components/site/Contact";
+import { HomeTeasers } from "@/components/site/HomeTeasers";
 import { Footer } from "@/components/site/Footer";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "144 Reality — Bites & Coffee | Repostería moderna & café de especialidad" },
+      {
+        name: "description",
+        content:
+          "Repostería moderna, café de especialidad y encargos a medida en un local industrial y acogedor en Madrid.",
+      },
+      { property: "og:title", content: "144 Reality — Bites & Coffee" },
+      {
+        property: "og:description",
+        content: "Repostería moderna, café de especialidad y encargos a medida.",
+      },
+      { property: "og:url", content: "/" },
+    ],
+    links: [{ rel: "canonical", href: "/" }],
+  }),
   component: Home,
 });
 
 function Home() {
   return (
-    <main className="grain">
-      <Hero />
-      <Catalog />
-      <CustomOrders />
-      <Contact />
+    <>
+      <main className="grain">
+        <Hero />
+        <HomeTeasers />
+      </main>
       <Footer />
-    </main>
+    </>
   );
 }
