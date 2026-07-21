@@ -17,6 +17,7 @@ import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TiendaSlugRouteImport } from './routes/tienda.$slug'
 import { Route as AuthenticatedProductosRouteImport } from './routes/_authenticated/productos'
 import { Route as AuthenticatedGaleriaAdminRouteImport } from './routes/_authenticated/galeria-admin'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -62,6 +63,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TiendaSlugRoute = TiendaSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => TiendaRoute,
+} as any)
 const AuthenticatedProductosRoute = AuthenticatedProductosRouteImport.update({
   id: '/productos',
   path: '/productos',
@@ -97,10 +103,11 @@ export interface FileRoutesByFullPath {
   '/encargos': typeof EncargosRoute
   '/galeria': typeof GaleriaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tienda': typeof TiendaRoute
+  '/tienda': typeof TiendaRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/productos': typeof AuthenticatedProductosRoute
+  '/tienda/$slug': typeof TiendaSlugRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -111,10 +118,11 @@ export interface FileRoutesByTo {
   '/encargos': typeof EncargosRoute
   '/galeria': typeof GaleriaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tienda': typeof TiendaRoute
+  '/tienda': typeof TiendaRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/productos': typeof AuthenticatedProductosRoute
+  '/tienda/$slug': typeof TiendaSlugRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -127,10 +135,11 @@ export interface FileRoutesById {
   '/encargos': typeof EncargosRoute
   '/galeria': typeof GaleriaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tienda': typeof TiendaRoute
+  '/tienda': typeof TiendaRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/_authenticated/productos': typeof AuthenticatedProductosRoute
+  '/tienda/$slug': typeof TiendaSlugRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/galeria-admin'
     | '/productos'
+    | '/tienda/$slug'
     | '/api/public/media/$'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/galeria-admin'
     | '/productos'
+    | '/tienda/$slug'
     | '/api/public/media/$'
     | '/lovable/email/transactional/preview'
   id:
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/galeria-admin'
     | '/_authenticated/productos'
+    | '/tienda/$slug'
     | '/api/public/media/$'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -188,7 +200,7 @@ export interface RootRouteChildren {
   EncargosRoute: typeof EncargosRoute
   GaleriaRoute: typeof GaleriaRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  TiendaRoute: typeof TiendaRoute
+  TiendaRoute: typeof TiendaRouteWithChildren
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -251,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tienda/$slug': {
+      id: '/tienda/$slug'
+      path: '/$slug'
+      fullPath: '/tienda/$slug'
+      preLoaderRoute: typeof TiendaSlugRouteImport
+      parentRoute: typeof TiendaRoute
+    }
     '/_authenticated/productos': {
       id: '/_authenticated/productos'
       path: '/productos'
@@ -304,6 +323,17 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface TiendaRouteChildren {
+  TiendaSlugRoute: typeof TiendaSlugRoute
+}
+
+const TiendaRouteChildren: TiendaRouteChildren = {
+  TiendaSlugRoute: TiendaSlugRoute,
+}
+
+const TiendaRouteWithChildren =
+  TiendaRoute._addFileChildren(TiendaRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -312,7 +342,7 @@ const rootRouteChildren: RootRouteChildren = {
   EncargosRoute: EncargosRoute,
   GaleriaRoute: GaleriaRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  TiendaRoute: TiendaRoute,
+  TiendaRoute: TiendaRouteWithChildren,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
