@@ -1,0 +1,2 @@
+ALTER TABLE public.gallery_items ADD COLUMN IF NOT EXISTS is_featured boolean NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS gallery_items_featured_idx ON public.gallery_items(is_featured) WHERE is_featured = true;
