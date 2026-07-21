@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Contact } from "@/components/site/Contact";
+import { Header } from "@/components/site/Header";
+import { Footer } from "@/components/site/Footer";
 
 export const Route = createFileRoute("/contacto")({
   head: () => ({
@@ -24,8 +26,12 @@ export const Route = createFileRoute("/contacto")({
 
 function ContactoPage() {
   return (
-    <main className="grain">
-      <Contact />
-    </main>
+    <>
+      <Header />
+      <main className="grain">
+        <Contact />
+      </main>
+      <Footer />
+    </>
   );
 }

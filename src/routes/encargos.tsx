@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CustomOrders } from "@/components/site/CustomOrders";
+import { Header } from "@/components/site/Header";
+import { Footer } from "@/components/site/Footer";
 
 export const Route = createFileRoute("/encargos")({
   head: () => ({
@@ -24,8 +26,12 @@ export const Route = createFileRoute("/encargos")({
 
 function EncargosPage() {
   return (
-    <main className="grain">
-      <CustomOrders />
-    </main>
+    <>
+      <Header />
+      <main className="grain">
+        <CustomOrders />
+      </main>
+      <Footer />
+    </>
   );
 }
