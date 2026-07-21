@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TiendaRouteImport } from './routes/tienda'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as EncargosRouteImport } from './routes/encargos'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const TiendaRoute = TiendaRouteImport.update({
   id: '/tienda',
   path: '/tienda',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EncargosRoute = EncargosRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/contacto': typeof ContactoRoute
   '/encargos': typeof EncargosRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tienda': typeof TiendaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contacto': typeof ContactoRoute
   '/encargos': typeof EncargosRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tienda': typeof TiendaRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/contacto': typeof ContactoRoute
   '/encargos': typeof EncargosRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tienda': typeof TiendaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/contacto' | '/encargos' | '/tienda'
+  fullPaths: '/' | '/contacto' | '/encargos' | '/sitemap.xml' | '/tienda'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/contacto' | '/encargos' | '/tienda'
-  id: '__root__' | '/' | '/contacto' | '/encargos' | '/tienda'
+  to: '/' | '/contacto' | '/encargos' | '/sitemap.xml' | '/tienda'
+  id: '__root__' | '/' | '/contacto' | '/encargos' | '/sitemap.xml' | '/tienda'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContactoRoute: typeof ContactoRoute
   EncargosRoute: typeof EncargosRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TiendaRoute: typeof TiendaRoute
 }
 
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/tienda'
       fullPath: '/tienda'
       preLoaderRoute: typeof TiendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/encargos': {
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContactoRoute: ContactoRoute,
   EncargosRoute: EncargosRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TiendaRoute: TiendaRoute,
 }
 export const routeTree = rootRouteImport
