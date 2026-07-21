@@ -145,9 +145,14 @@ function GalleryAdminPage() {
                 key={r.id}
                 className="group relative overflow-hidden rounded-sm border border-foreground/15 bg-card"
               >
-                <div className="aspect-square bg-muted">
+                <div className="relative aspect-square bg-muted">
                   {r.image_url && (
                     <img src={r.image_url} alt={r.alt} className="h-full w-full object-cover" />
+                  )}
+                  {r.is_featured && (
+                    <span className="absolute left-2 top-2 rounded-sm bg-secondary px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-secondary-foreground">
+                      ★ Favorito
+                    </span>
                   )}
                 </div>
                 <div className="p-2">
