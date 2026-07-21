@@ -108,8 +108,11 @@ export type Database = {
           is_active: boolean
           name: string
           price_cents: number
+          seo_description: string
+          seo_title: string
           slug: string
           sort_order: number
+          tags: string[]
           updated_at: string
         }
         Insert: {
@@ -121,8 +124,11 @@ export type Database = {
           is_active?: boolean
           name: string
           price_cents?: number
+          seo_description?: string
+          seo_title?: string
           slug: string
           sort_order?: number
+          tags?: string[]
           updated_at?: string
         }
         Update: {
@@ -134,8 +140,11 @@ export type Database = {
           is_active?: boolean
           name?: string
           price_cents?: number
+          seo_description?: string
+          seo_title?: string
           slug?: string
           sort_order?: number
+          tags?: string[]
           updated_at?: string
         }
         Relationships: []
