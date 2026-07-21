@@ -34,6 +34,10 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        const domain = email.toLowerCase().trim().split("@")[1];
+        if (domain !== "144reality.com") {
+          throw new Error("Solo se permiten cuentas @144reality.com");
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -56,6 +60,7 @@ function AuthPage() {
       setLoading(false);
     }
   }
+
 
   return (
     <>
