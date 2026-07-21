@@ -32,6 +32,7 @@ type Row = {
   tag: string;
   sort_order: number;
   is_active: boolean;
+  is_featured: boolean;
 };
 
 const EMPTY: Row = {
@@ -42,6 +43,7 @@ const EMPTY: Row = {
   tag: "",
   sort_order: 0,
   is_active: true,
+  is_featured: false,
 };
 
 function GalleryAdminPage() {
