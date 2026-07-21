@@ -35,6 +35,9 @@ type Row = {
   image_url: string;
   sort_order: number;
   is_active: boolean;
+  tags: string[];
+  seo_title: string;
+  seo_description: string;
 };
 
 const EMPTY: Row = {
@@ -47,6 +50,9 @@ const EMPTY: Row = {
   image_url: "",
   sort_order: 0,
   is_active: true,
+  tags: [],
+  seo_title: "",
+  seo_description: "",
 };
 
 function ProductsPage() {
@@ -93,6 +99,9 @@ function ProductsPage() {
           image_url: editing.image_url,
           sort_order: editing.sort_order,
           is_active: editing.is_active,
+          tags: editing.tags.map((t) => t.trim()).filter(Boolean),
+          seo_title: editing.seo_title.trim(),
+          seo_description: editing.seo_description.trim(),
         },
       });
       toast.success("Guardado");
@@ -168,8 +177,13 @@ function ProductsPage() {
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {r.category} · {(r.price_cents / 100).toFixed(2)} €
+                    {r.category} · {(r.price_cents / 100).toFixed(2)} € · orden {r.sort_order}
                   </p>
+                  {r.tags?.length > 0 && (
+                    <p className="mt-1 text-[10px] uppercase tracking-widest text-secondary">
+                      {r.tags.join(" · ")}
+                    </p>
+                  )}
                   <div className="mt-auto flex gap-2 pt-2">
                     <button
                       onClick={() => setEditing(r)}
@@ -268,6 +282,48 @@ function ProductsPage() {
                   />
                   <span className="text-xs uppercase tracking-widest">Visible</span>
                 </label>
+              </div>
+              <Text
+                label="Etiquetas (separadas por comas)"
+                value={editing.tags.join(", ")}
+                onChange={(v) =>
+                  setEditing((s) =>
+                    s ? { ...s, tags: v.split(",").map((t) => t.trim()).filter(Boolean) } : s,
+                  )
+                }
+              />
+              <div className="rounded-sm border border-dashed border-foreground/20 p-3">
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-secondary">
+                  SEO — se usa en la ficha del producto
+                </p>
+                <div className="space-y-3">
+                  <label className="block">
+                    <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Título SEO ({editing.seo_title.length}/70)
+                    </span>
+                    <input
+                      type="text"
+                      maxLength={70}
+                      value={editing.seo_title}
+                      onChange={(e) => setEditing((s) => (s ? { ...s, seo_title: e.target.value } : s))}
+                      placeholder="Ej: Tartaleta de pistacho artesanal en Bullas"
+                      className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Meta descripción ({editing.seo_description.length}/200)
+                    </span>
+                    <textarea
+                      rows={2}
+                      maxLength={200}
+                      value={editing.seo_description}
+                      onChange={(e) => setEditing((s) => (s ? { ...s, seo_description: e.target.value } : s))}
+                      placeholder="Frase corta y única que aparecerá en Google."
+                      className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                    />
+                  </label>
+                </div>
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">

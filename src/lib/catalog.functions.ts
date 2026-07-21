@@ -12,7 +12,7 @@ function assertAdmin(context: { claims: unknown }) {
 
 const ProductSchema = z.object({
   id: z.string().uuid().optional(),
-  slug: z.string().trim().min(1).max(120),
+  slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/, "Solo minúsculas, números y guiones"),
   name: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).default(""),
   price_cents: z.number().int().min(0).max(100_000_000),
@@ -20,6 +20,9 @@ const ProductSchema = z.object({
   image_url: z.string().trim().max(1000).default(""),
   sort_order: z.number().int().default(0),
   is_active: z.boolean().default(true),
+  tags: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
+  seo_title: z.string().trim().max(70).default(""),
+  seo_description: z.string().trim().max(200).default(""),
 });
 
 export const listProductsAdmin = createServerFn({ method: "GET" })
