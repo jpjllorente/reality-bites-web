@@ -3,6 +3,7 @@ import { CustomOrders } from "@/components/site/CustomOrders";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { getRequestOrigin } from "@/lib/origin.functions";
+import { breadcrumbJsonLd } from "@/lib/breadcrumbs";
 import ogImage from "@/assets/custom-cake.jpg";
 
 export const Route = createFileRoute("/encargos")({
@@ -36,6 +37,12 @@ export const Route = createFileRoute("/encargos")({
         { name: "twitter:image", content: absImage },
       ],
       links: [{ rel: "canonical", href: "/encargos" }],
+      scripts: [
+        breadcrumbJsonLd(origin, [
+          { name: "Inicio", path: "/" },
+          { name: "Encargos", path: "/encargos" },
+        ]),
+      ],
     };
   },
   component: EncargosPage,
