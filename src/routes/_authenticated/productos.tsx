@@ -35,6 +35,9 @@ type Row = {
   image_url: string;
   sort_order: number;
   is_active: boolean;
+  tags: string[];
+  seo_title: string;
+  seo_description: string;
 };
 
 const EMPTY: Row = {
@@ -47,6 +50,9 @@ const EMPTY: Row = {
   image_url: "",
   sort_order: 0,
   is_active: true,
+  tags: [],
+  seo_title: "",
+  seo_description: "",
 };
 
 function ProductsPage() {
