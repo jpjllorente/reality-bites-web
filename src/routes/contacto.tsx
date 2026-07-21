@@ -36,6 +36,39 @@ export const Route = createFileRoute("/contacto")({
         { name: "twitter:image", content: absImage },
       ],
       links: [{ rel: "canonical", href: "/contacto" }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CafeOrCoffeeShop",
+            "@id": `${origin}/#business`,
+            name: "144 Reality Bites & Coffee",
+            image: absImage,
+            url: origin || undefined,
+            telephone: "+34681634623",
+            priceRange: "€€",
+            servesCuisine: ["Repostería", "Café de especialidad"],
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "Calle Francisco González Conde, 37",
+              addressLocality: "Bullas",
+              addressRegion: "Murcia",
+              postalCode: "30180",
+              addressCountry: "ES",
+            },
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: 38.046,
+              longitude: -1.668,
+            },
+            sameAs: [
+              "https://www.instagram.com/144reality_bitesandcoffee",
+            ],
+            hasMenu: `${origin}/tienda`,
+          }),
+        },
+      ],
     };
   },
   component: ContactoPage,
