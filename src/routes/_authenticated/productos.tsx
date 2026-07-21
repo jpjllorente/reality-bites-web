@@ -62,6 +62,54 @@ function ProductsPage() {
   const save = useServerFn(upsertProduct);
   const remove = useServerFn(deleteProduct);
   const [editing, setEditing] = useState<Row | null>(null);
+  const [dirty, setDirty] = useState<{ slug: boolean; seo_title: boolean; seo_description: boolean }>({
+    slug: false,
+    seo_title: false,
+    seo_description: false,
+  });
+
+  function slugify(s: string) {
+    return s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/&/g, " y ")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 120);
+  }
+  function truncate(s: string, n: number) {
+    const t = s.trim().replace(/\s+/g, " ");
+    if (t.length <= n) return t;
+    const cut = t.slice(0, n);
+    const sp = cut.lastIndexOf(" ");
+    return (sp > 40 ? cut.slice(0, sp) : cut).trim();
+  }
+  function openNew() {
+    setDirty({ slug: false, seo_title: false, seo_description: false });
+    setEditing({ ...EMPTY });
+  }
+  function openEdit(r: Row) {
+    setDirty({ slug: true, seo_title: true, seo_description: true });
+    setEditing(r);
+  }
+  function onNameChange(v: string) {
+    setEditing((s) => {
+      if (!s) return s;
+      const next = { ...s, name: v };
+      if (!dirty.slug) next.slug = slugify(v);
+      if (!dirty.seo_title) next.seo_title = truncate(`${v} — 144 Reality`, 70);
+      return next;
+    });
+  }
+  function onDescriptionChange(v: string) {
+    setEditing((s) => {
+      if (!s) return s;
+      const next = { ...s, description: v };
+      if (!dirty.seo_description) next.seo_description = truncate(v, 200);
+      return next;
+    });
+  }
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin-products"],
