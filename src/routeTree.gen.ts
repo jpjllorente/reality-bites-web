@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TiendaRouteImport } from './routes/tienda'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as GaleriaRouteImport } from './routes/galeria'
 import { Route as EncargosRouteImport } from './routes/encargos'
 import { Route as ContactoRouteImport } from './routes/contacto'
@@ -34,6 +35,11 @@ const TiendaRoute = TiendaRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GaleriaRoute = GaleriaRouteImport.update({
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/contacto': typeof ContactoRoute
   '/encargos': typeof EncargosRoute
   '/galeria': typeof GaleriaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tienda': typeof TiendaRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/contacto': typeof ContactoRoute
   '/encargos': typeof EncargosRoute
   '/galeria': typeof GaleriaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tienda': typeof TiendaRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/contacto': typeof ContactoRoute
   '/encargos': typeof EncargosRoute
   '/galeria': typeof GaleriaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tienda': typeof TiendaRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/contacto'
     | '/encargos'
     | '/galeria'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/tienda'
     | '/dashboard'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/contacto'
     | '/encargos'
     | '/galeria'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/tienda'
     | '/dashboard'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/contacto'
     | '/encargos'
     | '/galeria'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/tienda'
     | '/_authenticated/dashboard'
@@ -223,6 +235,7 @@ export interface RootRouteChildren {
   ContactoRoute: typeof ContactoRoute
   EncargosRoute: typeof EncargosRoute
   GaleriaRoute: typeof GaleriaRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TiendaRoute: typeof TiendaRouteWithChildren
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/galeria': {
@@ -381,6 +401,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactoRoute: ContactoRoute,
   EncargosRoute: EncargosRoute,
   GaleriaRoute: GaleriaRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TiendaRoute: TiendaRouteWithChildren,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
