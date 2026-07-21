@@ -44,6 +44,18 @@ export const Route = createFileRoute("/encargos")({
           { name: "Inicio", path: "/" },
           { name: "Encargos", path: "/encargos" },
         ]),
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqs.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          }),
+        },
       ],
     };
   },
@@ -56,8 +68,10 @@ function EncargosPage() {
       <Header />
       <main className="grain">
         <CustomOrders />
+        <Faq />
       </main>
       <Footer />
     </>
   );
 }
+
