@@ -91,8 +91,8 @@ export function HomeTeasers() {
             — Visítanos
           </p>
           <h3 className="font-display text-4xl leading-none text-primary sm:text-6xl">
-            Calle Reality, <br />
-            <span className="text-secondary-foreground">144.</span>
+            Bullas, <br />
+            <span className="text-secondary-foreground">Murcia.</span>
           </h3>
           <p className="mt-5 max-w-md text-primary/80">
             Un espacio industrial con tubos vistos, ladrillo, madera natural y buena
