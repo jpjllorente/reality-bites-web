@@ -190,7 +190,7 @@ function ProductsPage() {
             <div className="flex flex-wrap gap-2">
               <NavTabs current="productos" />
               <button
-                onClick={() => setEditing({ ...EMPTY })}
+                onClick={openNew}
                 className="rounded-sm bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-widest text-primary-foreground hover:bg-primary/90"
               >
                 + Nuevo
