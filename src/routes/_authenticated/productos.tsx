@@ -274,14 +274,21 @@ function ProductsPage() {
                 value={editing.image_url}
                 onChange={(url) => setEditing((e) => (e ? { ...e, image_url: url } : e))}
               />
-              <Text label="Nombre *" value={editing.name} onChange={(v) => setEditing((e) => (e ? { ...e, name: v } : e))} />
-              <Text label="Slug *" value={editing.slug} onChange={(v) => setEditing((e) => (e ? { ...e, slug: v } : e))} />
+              <Text label="Nombre *" value={editing.name} onChange={onNameChange} />
+              <Text
+                label="Slug *"
+                value={editing.slug}
+                onChange={(v) => {
+                  setDirty((d) => ({ ...d, slug: true }));
+                  setEditing((e) => (e ? { ...e, slug: v } : e));
+                }}
+              />
               <label className="block">
                 <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Descripción</span>
                 <textarea
                   rows={3}
                   value={editing.description}
-                  onChange={(e) => setEditing((s) => (s ? { ...s, description: e.target.value } : s))}
+                  onChange={(e) => onDescriptionChange(e.target.value)}
                   className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 />
               </label>
