@@ -1,8 +1,8 @@
-// Whitelist of email addresses allowed into the internal dashboard.
-// Add/remove addresses here — no database changes needed.
-export const ADMIN_EMAILS = ["hola@144reality.com"];
+// Only accounts on this domain can access the internal dashboard.
+export const ADMIN_DOMAIN = "144reality.com";
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
-  return ADMIN_EMAILS.includes(email.toLowerCase().trim());
+  const domain = email.toLowerCase().trim().split("@")[1];
+  return domain === ADMIN_DOMAIN;
 }
