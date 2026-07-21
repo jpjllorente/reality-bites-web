@@ -68,7 +68,7 @@ function Dashboard() {
     router.navigate({ to: "/auth" });
   }
 
-  async function onChangeStatus(kind: "custom" | "shop", id: string, status: Status) {
+  async function onChangeStatus(kind: "custom" | "shop", id: string, status: AnyStatus) {
     try {
       await updateStatus({ data: { kind, id, status } });
       toast.success("Estado actualizado");
@@ -191,20 +191,22 @@ function TabBtn({
   );
 }
 
-function StatusSelect({
+function StatusSelect<T extends AnyStatus>({
   value,
+  options,
   onChange,
 }: {
-  value: Status;
-  onChange: (s: Status) => void;
+  value: T;
+  options: readonly T[];
+  onChange: (s: T) => void;
 }) {
   return (
     <select
       value={value}
-      onChange={(e) => onChange(e.target.value as Status)}
+      onChange={(e) => onChange(e.target.value as T)}
       className="rounded-sm border border-border bg-background px-2 py-1 text-xs"
     >
-      {STATUSES.map((s) => (
+      {options.map((s) => (
         <option key={s} value={s}>
           {STATUS_LABEL[s]}
         </option>
