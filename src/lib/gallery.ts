@@ -13,6 +13,7 @@ export interface GalleryItem {
   alt: string;
   caption: string;
   tag: string;
+  featured?: boolean;
 }
 
 export const galleryItems: GalleryItem[] = [
@@ -29,7 +30,7 @@ export const galleryItems: GalleryItem[] = [
 export async function fetchPublicGallery(): Promise<GalleryItem[]> {
   const { data, error } = await supabase
     .from("gallery_items")
-    .select("image_url, alt, caption, tag, sort_order")
+    .select("image_url, alt, caption, tag, sort_order, is_featured")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
   if (error || !data || data.length === 0) return galleryItems;
@@ -38,5 +39,12 @@ export async function fetchPublicGallery(): Promise<GalleryItem[]> {
     alt: r.alt ?? "",
     caption: r.caption ?? "",
     tag: r.tag ?? "",
+    featured: Boolean((r as { is_featured?: boolean }).is_featured),
   }));
+}
+
+export async function fetchFeaturedGallery(limit = 3): Promise<GalleryItem[]> {
+  const all = await fetchPublicGallery();
+  const featured = all.filter((i) => i.featured);
+  return (featured.length > 0 ? featured : all).slice(0, limit);
 }

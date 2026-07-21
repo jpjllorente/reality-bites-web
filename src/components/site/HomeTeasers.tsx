@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import customCake from "@/assets/custom-cake.jpg";
-import { fetchPublicGallery, galleryItems, type GalleryItem } from "@/lib/gallery";
+import { fetchFeaturedGallery, galleryItems, type GalleryItem } from "@/lib/gallery";
 
 const TEASER_COUNT = 3;
 
@@ -10,9 +10,9 @@ export function HomeTeasers() {
 
   useEffect(() => {
     let alive = true;
-    fetchPublicGallery().then((all) => {
-      if (!alive || all.length === 0) return;
-      setFeatured(all.slice(0, TEASER_COUNT));
+    fetchFeaturedGallery(TEASER_COUNT).then((items) => {
+      if (!alive || items.length === 0) return;
+      setFeatured(items);
     });
     return () => {
       alive = false;

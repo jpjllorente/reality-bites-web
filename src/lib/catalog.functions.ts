@@ -81,6 +81,7 @@ const GallerySchema = z.object({
   tag: z.string().trim().max(60).default(""),
   sort_order: z.number().int().default(0),
   is_active: z.boolean().default(true),
+  is_featured: z.boolean().default(false),
 });
 
 export const listGalleryAdmin = createServerFn({ method: "GET" })

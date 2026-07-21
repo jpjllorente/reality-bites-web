@@ -70,6 +70,7 @@ export type Database = {
           id: string
           image_url: string
           is_active: boolean
+          is_featured: boolean
           sort_order: number
           tag: string
           updated_at: string
@@ -81,6 +82,7 @@ export type Database = {
           id?: string
           image_url: string
           is_active?: boolean
+          is_featured?: boolean
           sort_order?: number
           tag?: string
           updated_at?: string
@@ -92,6 +94,7 @@ export type Database = {
           id?: string
           image_url?: string
           is_active?: boolean
+          is_featured?: boolean
           sort_order?: number
           tag?: string
           updated_at?: string

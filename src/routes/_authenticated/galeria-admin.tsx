@@ -32,6 +32,7 @@ type Row = {
   tag: string;
   sort_order: number;
   is_active: boolean;
+  is_featured: boolean;
 };
 
 const EMPTY: Row = {
@@ -42,6 +43,7 @@ const EMPTY: Row = {
   tag: "",
   sort_order: 0,
   is_active: true,
+  is_featured: false,
 };
 
 function GalleryAdminPage() {
@@ -86,6 +88,7 @@ function GalleryAdminPage() {
           tag: editing.tag,
           sort_order: editing.sort_order,
           is_active: editing.is_active,
+          is_featured: editing.is_featured,
         },
       });
       toast.success("Guardado");
@@ -142,9 +145,14 @@ function GalleryAdminPage() {
                 key={r.id}
                 className="group relative overflow-hidden rounded-sm border border-foreground/15 bg-card"
               >
-                <div className="aspect-square bg-muted">
+                <div className="relative aspect-square bg-muted">
                   {r.image_url && (
                     <img src={r.image_url} alt={r.alt} className="h-full w-full object-cover" />
+                  )}
+                  {r.is_featured && (
+                    <span className="absolute left-2 top-2 rounded-sm bg-secondary px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-secondary-foreground">
+                      ★ Favorito
+                    </span>
                   )}
                 </div>
                 <div className="p-2">
@@ -222,6 +230,16 @@ function GalleryAdminPage() {
                     onChange={(e) => setEditing((s) => (s ? { ...s, is_active: e.target.checked } : s))}
                   />
                   <span className="text-xs uppercase tracking-widest">Visible</span>
+                </label>
+                <label className="col-span-2 flex items-center gap-2 rounded-sm border border-secondary/40 bg-secondary/10 px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={editing.is_featured}
+                    onChange={(e) => setEditing((s) => (s ? { ...s, is_featured: e.target.checked } : s))}
+                  />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-primary">
+                    ★ Nuestros favoritos (portada)
+                  </span>
                 </label>
               </div>
             </div>
