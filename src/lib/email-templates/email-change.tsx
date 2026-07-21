@@ -49,8 +49,8 @@ export const EmailChangeEmail = ({
         <Text style={text}>
           Hemos recibido una solicitud para cambiar el email de tu cuenta en{' '}
           <strong>{siteName}</strong>
-          {oldEmail ? <> de <strong>{oldEmail}</strong></> : null>
-          {newEmail ? <> a <strong>{newEmail}</strong></> : null>.
+          {oldEmail ? <> de <strong>{oldEmail}</strong></> : null}
+          {newEmail ? <> a <strong>{newEmail}</strong></> : null}.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Confirmar cambio
