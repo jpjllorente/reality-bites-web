@@ -19,13 +19,18 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
-const STATUSES = ["new", "contacted", "confirmed", "completed", "cancelled"] as const;
-type Status = (typeof STATUSES)[number];
+const SHOP_STATUSES = ["new", "contacted", "confirmed", "completed", "cancelled"] as const;
+const CUSTOM_STATUSES = ["new", "reviewing", "confirmed", "declined"] as const;
+type ShopStatus = (typeof SHOP_STATUSES)[number];
+type CustomStatus = (typeof CUSTOM_STATUSES)[number];
+type AnyStatus = ShopStatus | CustomStatus;
 
-const STATUS_LABEL: Record<Status, string> = {
+const STATUS_LABEL: Record<AnyStatus, string> = {
   new: "Nuevo",
+  reviewing: "Revisando",
   contacted: "Contactado",
   confirmed: "Confirmado",
+  declined: "Rechazado",
   completed: "Completado",
   cancelled: "Cancelado",
 };
