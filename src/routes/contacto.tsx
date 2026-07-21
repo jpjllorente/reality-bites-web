@@ -66,6 +66,37 @@ export const Route = createFileRoute("/contacto")({
               "https://www.instagram.com/144reality_bitesandcoffee",
             ],
             hasMenu: `${origin}/tienda`,
+            openingHoursSpecification: [
+              {
+                "@type": "OpeningHoursSpecification",
+                dayOfWeek: ["Tuesday", "Wednesday", "Thursday", "Friday"],
+                opens: "08:30",
+                closes: "13:00",
+              },
+              {
+                "@type": "OpeningHoursSpecification",
+                dayOfWeek: ["Tuesday", "Wednesday", "Thursday", "Friday"],
+                opens: "15:30",
+                closes: "20:00",
+              },
+              {
+                "@type": "OpeningHoursSpecification",
+                dayOfWeek: ["Saturday", "Sunday", "PublicHolidays"],
+                opens: "08:30",
+                closes: "13:00",
+              },
+              {
+                "@type": "OpeningHoursSpecification",
+                dayOfWeek: ["Saturday", "Sunday", "PublicHolidays"],
+                opens: "15:30",
+                closes: "21:00",
+              },
+            ],
+            additionalProperty: {
+              "@type": "PropertyValue",
+              name: "timezone",
+              value: "Europe/Madrid",
+            },
           }),
         },
       ],
