@@ -8,6 +8,8 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { listAllOrders, updateOrderStatus } from "@/lib/shop-orders.functions";
 import { isAdminEmail } from "@/lib/admin";
+import { NavTabs } from "./productos";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -121,7 +123,8 @@ function Dashboard() {
                 Sesión: {user?.email}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <NavTabs current="dashboard" />
               <button
                 onClick={() => refetch()}
                 className="rounded-sm border border-foreground/20 px-4 py-2 text-xs uppercase tracking-widest text-foreground hover:border-primary hover:text-primary"
@@ -135,6 +138,7 @@ function Dashboard() {
                 Salir
               </button>
             </div>
+
           </div>
 
           <div className="mt-8 flex gap-2">

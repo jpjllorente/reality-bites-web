@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { products, type Category } from "@/lib/products";
+import { useEffect, useMemo, useState } from "react";
+import { fetchPublicProducts, products as fallback, type Category, type Product } from "@/lib/products";
 import { useCart } from "@/hooks/use-cart";
 import { submitShopOrder } from "@/lib/shop-orders.functions";
 import { toast } from "sonner";
@@ -18,12 +18,18 @@ export function Catalog() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "" });
+  const [items, setItems] = useState<Product[]>(fallback);
   const cart = useCart();
 
+  useEffect(() => {
+    fetchPublicProducts().then(setItems).catch(() => setItems(fallback));
+  }, []);
+
   const list = useMemo(
-    () => (filter === "Todo" ? products : products.filter((p) => p.category === filter)),
-    [filter],
+    () => (filter === "Todo" ? items : items.filter((p) => p.category === filter)),
+    [filter, items],
   );
+
 
   function buildWhatsappHref() {
     const lines = cart.items.map(

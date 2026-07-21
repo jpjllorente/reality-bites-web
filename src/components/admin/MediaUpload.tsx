@@ -1,0 +1,100 @@
+import { useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { uploadMedia } from "@/lib/catalog.functions";
+import { toast } from "sonner";
+
+export function MediaUpload({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  const upload = useServerFn(uploadMedia);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function onFile(file: File) {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Máx 10 MB");
+      return;
+    }
+    setBusy(true);
+    try {
+      const buf = await file.arrayBuffer();
+      let binary = "";
+      const bytes = new Uint8Array(buf);
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const b64 = btoa(binary);
+      const res = await upload({
+        data: {
+          filename: file.name,
+          content_type: file.type || "application/octet-stream",
+          data_base64: b64,
+        },
+      });
+      onChange(res.url);
+      toast.success("Imagen subida");
+    } catch (e) {
+      console.error(e);
+      toast.error("Error al subir");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        {value ? (
+          <img
+            src={value}
+            alt=""
+            className="h-20 w-20 rounded-sm border border-foreground/15 object-cover"
+          />
+        ) : (
+          <div className="grid h-20 w-20 place-items-center rounded-sm border border-dashed border-foreground/25 text-[10px] uppercase tracking-widest text-muted-foreground">
+            Sin imagen
+          </div>
+        )}
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={busy}
+            className="rounded-sm border border-primary px-3 py-1.5 text-xs uppercase tracking-widest text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+          >
+            {busy ? "Subiendo…" : "Subir imagen"}
+          </button>
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="rounded-sm border border-foreground/20 px-3 py-1.5 text-xs uppercase tracking-widest text-muted-foreground hover:border-destructive hover:text-destructive"
+            >
+              Quitar
+            </button>
+          )}
+        </div>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onFile(f);
+          e.target.value = "";
+        }}
+      />
+      <input
+        type="url"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="…o pega una URL"
+        className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-xs focus:border-primary focus:outline-none"
+      />
+    </div>
+  );
+}
