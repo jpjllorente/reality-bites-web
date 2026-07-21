@@ -1,8 +1,8 @@
-// Only accounts on this domain can access the internal dashboard.
-export const ADMIN_DOMAIN = "144reality.com";
+// Only these specific accounts can access the internal dashboard.
+// Server-side enforcement lives in the `user_roles` table + `is_admin()` (Supabase).
+export const ADMIN_EMAILS = ["hola@144reality.com", "webmaster@144reality.com"] as const;
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
-  const domain = email.toLowerCase().trim().split("@")[1];
-  return domain === ADMIN_DOMAIN;
+  return (ADMIN_EMAILS as readonly string[]).includes(email.toLowerCase().trim());
 }
