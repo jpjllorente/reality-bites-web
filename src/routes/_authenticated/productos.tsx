@@ -99,6 +99,9 @@ function ProductsPage() {
           image_url: editing.image_url,
           sort_order: editing.sort_order,
           is_active: editing.is_active,
+          tags: editing.tags.map((t) => t.trim()).filter(Boolean),
+          seo_title: editing.seo_title.trim(),
+          seo_description: editing.seo_description.trim(),
         },
       });
       toast.success("Guardado");
