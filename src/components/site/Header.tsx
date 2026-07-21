@@ -34,6 +34,9 @@ export function Header({ variant = "solid" }: { variant?: "solid" | "overlay" })
           <NavItem to="/tienda" overlay={isOverlay}>
             Tienda
           </NavItem>
+          <NavItem to="/galeria" overlay={isOverlay}>
+            Galería
+          </NavItem>
           <NavItem to="/encargos" overlay={isOverlay}>
             Encargos
           </NavItem>
