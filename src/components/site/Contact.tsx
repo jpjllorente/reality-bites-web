@@ -19,9 +19,9 @@ export function Contact() {
 
             <dl className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
               <InfoBlock label="Dirección">
-                Calle Reality, 144
+                Calle Francisco González Conde, 37
                 <br />
-                28000 Madrid
+                30180 Bullas, Murcia
               </InfoBlock>
               <InfoBlock label="Horario">
                 Lun – Vie · 08:00 – 20:00
@@ -29,9 +29,9 @@ export function Contact() {
                 Sáb – Dom · 09:30 – 21:00
               </InfoBlock>
               <InfoBlock label="Contacto">
-                +34 600 000 000
+                +34 681 63 46 23
                 <br />
-                hola@144reality.com
+                WhatsApp disponible
               </InfoBlock>
               <InfoBlock label="Sígue­nos">
                 @144reality
