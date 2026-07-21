@@ -3,6 +3,7 @@ import { Catalog } from "@/components/site/Catalog";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { getRequestOrigin } from "@/lib/origin.functions";
+import { products } from "@/lib/products";
 import ogImage from "@/assets/product-1.jpg";
 
 export const Route = createFileRoute("/tienda")({
@@ -36,6 +37,70 @@ export const Route = createFileRoute("/tienda")({
         { name: "twitter:image", content: absImage },
       ],
       links: [{ rel: "canonical", href: "/tienda" }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Menu",
+            name: "Catálogo 144 Reality",
+            url: `${origin}/tienda`,
+            hasMenuSection: [
+              {
+                "@type": "MenuSection",
+                name: "Repostería",
+                hasMenuItem: products
+                  .filter((p) => p.category === "Repostería")
+                  .map((p) => ({
+                    "@type": "MenuItem",
+                    name: p.name,
+                    description: p.description,
+                    image: `${origin}${p.image}`,
+                    offers: {
+                      "@type": "Offer",
+                      price: p.price.toFixed(2),
+                      priceCurrency: "EUR",
+                    },
+                  })),
+              },
+              {
+                "@type": "MenuSection",
+                name: "Café",
+                hasMenuItem: products
+                  .filter((p) => p.category === "Café")
+                  .map((p) => ({
+                    "@type": "MenuItem",
+                    name: p.name,
+                    description: p.description,
+                    image: `${origin}${p.image}`,
+                    offers: {
+                      "@type": "Offer",
+                      price: p.price.toFixed(2),
+                      priceCurrency: "EUR",
+                    },
+                  })),
+              },
+              {
+                "@type": "MenuSection",
+                name: "Bites",
+                hasMenuItem: products
+                  .filter((p) => p.category === "Bites")
+                  .map((p) => ({
+                    "@type": "MenuItem",
+                    name: p.name,
+                    description: p.description,
+                    image: `${origin}${p.image}`,
+                    offers: {
+                      "@type": "Offer",
+                      price: p.price.toFixed(2),
+                      priceCurrency: "EUR",
+                    },
+                  })),
+              },
+            ],
+          }),
+        },
+      ],
     };
   },
   component: TiendaPage,
