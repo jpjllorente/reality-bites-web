@@ -62,6 +62,54 @@ function ProductsPage() {
   const save = useServerFn(upsertProduct);
   const remove = useServerFn(deleteProduct);
   const [editing, setEditing] = useState<Row | null>(null);
+  const [dirty, setDirty] = useState<{ slug: boolean; seo_title: boolean; seo_description: boolean }>({
+    slug: false,
+    seo_title: false,
+    seo_description: false,
+  });
+
+  function slugify(s: string) {
+    return s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/&/g, " y ")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 120);
+  }
+  function truncate(s: string, n: number) {
+    const t = s.trim().replace(/\s+/g, " ");
+    if (t.length <= n) return t;
+    const cut = t.slice(0, n);
+    const sp = cut.lastIndexOf(" ");
+    return (sp > 40 ? cut.slice(0, sp) : cut).trim();
+  }
+  function openNew() {
+    setDirty({ slug: false, seo_title: false, seo_description: false });
+    setEditing({ ...EMPTY });
+  }
+  function openEdit(r: Row) {
+    setDirty({ slug: true, seo_title: true, seo_description: true });
+    setEditing(r);
+  }
+  function onNameChange(v: string) {
+    setEditing((s) => {
+      if (!s) return s;
+      const next = { ...s, name: v };
+      if (!dirty.slug) next.slug = slugify(v);
+      if (!dirty.seo_title) next.seo_title = truncate(`${v} — 144 Reality`, 70);
+      return next;
+    });
+  }
+  function onDescriptionChange(v: string) {
+    setEditing((s) => {
+      if (!s) return s;
+      const next = { ...s, description: v };
+      if (!dirty.seo_description) next.seo_description = truncate(v, 200);
+      return next;
+    });
+  }
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin-products"],
@@ -142,7 +190,7 @@ function ProductsPage() {
             <div className="flex flex-wrap gap-2">
               <NavTabs current="productos" />
               <button
-                onClick={() => setEditing({ ...EMPTY })}
+                onClick={openNew}
                 className="rounded-sm bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-widest text-primary-foreground hover:bg-primary/90"
               >
                 + Nuevo
@@ -186,7 +234,7 @@ function ProductsPage() {
                   )}
                   <div className="mt-auto flex gap-2 pt-2">
                     <button
-                      onClick={() => setEditing(r)}
+                      onClick={() => openEdit(r)}
                       className="rounded-sm border border-foreground/20 px-2 py-1 text-[11px] uppercase tracking-widest hover:border-primary hover:text-primary"
                     >
                       Editar
@@ -226,14 +274,21 @@ function ProductsPage() {
                 value={editing.image_url}
                 onChange={(url) => setEditing((e) => (e ? { ...e, image_url: url } : e))}
               />
-              <Text label="Nombre *" value={editing.name} onChange={(v) => setEditing((e) => (e ? { ...e, name: v } : e))} />
-              <Text label="Slug *" value={editing.slug} onChange={(v) => setEditing((e) => (e ? { ...e, slug: v } : e))} />
+              <Text label="Nombre *" value={editing.name} onChange={onNameChange} />
+              <Text
+                label="Slug *"
+                value={editing.slug}
+                onChange={(v) => {
+                  setDirty((d) => ({ ...d, slug: true }));
+                  setEditing((e) => (e ? { ...e, slug: v } : e));
+                }}
+              />
               <label className="block">
                 <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Descripción</span>
                 <textarea
                   rows={3}
                   value={editing.description}
-                  onChange={(e) => setEditing((s) => (s ? { ...s, description: e.target.value } : s))}
+                  onChange={(e) => onDescriptionChange(e.target.value)}
                   className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 />
               </label>
@@ -305,7 +360,10 @@ function ProductsPage() {
                       type="text"
                       maxLength={70}
                       value={editing.seo_title}
-                      onChange={(e) => setEditing((s) => (s ? { ...s, seo_title: e.target.value } : s))}
+                      onChange={(e) => {
+                        setDirty((d) => ({ ...d, seo_title: true }));
+                        setEditing((s) => (s ? { ...s, seo_title: e.target.value } : s));
+                      }}
                       placeholder="Ej: Tartaleta de pistacho artesanal en Bullas"
                       className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
                     />
@@ -318,7 +376,10 @@ function ProductsPage() {
                       rows={2}
                       maxLength={200}
                       value={editing.seo_description}
-                      onChange={(e) => setEditing((s) => (s ? { ...s, seo_description: e.target.value } : s))}
+                      onChange={(e) => {
+                        setDirty((d) => ({ ...d, seo_description: true }));
+                        setEditing((s) => (s ? { ...s, seo_description: e.target.value } : s));
+                      }}
                       placeholder="Frase corta y única que aparecerá en Google."
                       className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
                     />
