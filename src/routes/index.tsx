@@ -10,12 +10,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Repostería moderna, café de especialidad y encargos a medida en un local industrial y acogedor en Madrid.",
+          "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
       },
-      { property: "og:title", content: "144 Reality — Bites & Coffee" },
+      { property: "og:title", content: "144 Reality — Bites & Coffee | Repostería moderna & café de especialidad" },
       {
         property: "og:description",
-        content: "Repostería moderna, café de especialidad y encargos a medida.",
+        content: "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
       },
       { property: "og:url", content: "/" },
     ],

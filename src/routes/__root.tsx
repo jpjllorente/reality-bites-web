@@ -81,21 +81,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "144 Reality Bites & Coffee: repostería moderna, café de especialidad y encargos a medida en un local industrial y acogedor. Cátalogo online y pedidos por WhatsApp.",
+          "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
       },
       { name: "author", content: "144 Reality" },
-      { property: "og:title", content: "144 Reality — Bites & Coffee" },
+      { property: "og:title", content: "144 Reality — Bites & Coffee | Repostería moderna & café de especialidad" },
       {
         property: "og:description",
         content:
-          "Repostería moderna y café de especialidad. Catálogo online, encargos a medida y ambiente industrial.",
+          "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "144 Reality — Bites & Coffee | Repostería moderna & café de especialidad" },
+      { name: "twitter:description", content: "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/2aTFzYNJqUYfQfMni6aWXLFYWj02/social-images/social-1784650264228-07408EC5-D139-47C6-8B5A-98C8F730DE42.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/2aTFzYNJqUYfQfMni6aWXLFYWj02/social-images/social-1784650264228-07408EC5-D139-47C6-8B5A-98C8F730DE42.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
