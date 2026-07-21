@@ -34,9 +34,16 @@ export function Contact() {
                 WhatsApp disponible
               </InfoBlock>
               <InfoBlock label="Sígue­nos">
-                @144reality
+                <a
+                  href="https://instagram.com/144reality_bitesandcoffee"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline-offset-4 hover:text-secondary hover:underline"
+                >
+                  @144reality_bitesandcoffee
+                </a>
                 <br />
-                Instagram · TikTok
+                Instagram
               </InfoBlock>
             </dl>
           </div>
