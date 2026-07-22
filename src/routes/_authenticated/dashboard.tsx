@@ -390,6 +390,49 @@ function QuotePanel({ row }: { row: CustomRow }) {
     }
   }
 
+  const hasPayment =
+    (row.amount_paid_cents ?? 0) > 0 ||
+    row.payment_status === "deposit_paid" ||
+    row.payment_status === "paid";
+
+  if (hasPayment) {
+    return (
+      <div className="mt-4 rounded-sm border border-primary/30 bg-primary/5 p-4">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
+          Presupuesto y link de pago
+        </p>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          {row.quote_sent_at ? `Enviado el ${formatDate(row.quote_sent_at)} · ` : ""}
+          Total {formatEUR(row.quote_total_cents ?? 0)} · Anticipo {row.deposit_percent ?? 0}% ·
+          Estado: {row.payment_status}
+          {row.amount_paid_cents ? ` (${formatEUR(row.amount_paid_cents)})` : ""}
+        </p>
+        {row.quote_notes && (
+          <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
+            {row.quote_notes}
+          </p>
+        )}
+        {paymentUrl && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <p className="text-[11px] text-muted-foreground">Link de pago:</p>
+            <code className="rounded-sm bg-background px-2 py-1 text-[11px]">{paymentUrl}</code>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(paymentUrl);
+                toast.success("Enlace copiado.");
+              }}
+              className="rounded-sm border border-foreground/20 px-2 py-1 text-[10px] uppercase tracking-widest hover:bg-muted"
+            >
+              Copiar
+            </button>
+          </div>
+        )}
+        <PickupControls row={row} />
+      </div>
+    );
+  }
+
   return (
     <form
       onSubmit={submit}
@@ -468,6 +511,7 @@ function QuotePanel({ row }: { row: CustomRow }) {
     </form>
   );
 }
+
 
 function PickupControls({ row }: { row: CustomRow }) {
   const router = useRouter();
