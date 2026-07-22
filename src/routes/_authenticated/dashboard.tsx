@@ -558,7 +558,7 @@ function PickupControls({ row }: { row: CustomRow }) {
         </span>
         {row.ready_at ? ` · Listo desde ${formatDate(row.ready_at)}` : ""}
         {row.in_store_paid_at ? " · Cobrado en mostrador" : ""}
-        {completed ? ` · Finalizado ${formatDate(row.completed_at!)}` : ""}
+        {completed ? ` · Finalizado ${formatDate(row.completed_at ?? row.in_store_paid_at!)}` : ""}
       </p>
       {completed ? (
         <p className="mt-2 text-[11px] font-semibold uppercase tracking-widest text-primary">
