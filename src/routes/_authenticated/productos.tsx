@@ -367,6 +367,13 @@ function ProductsPage() {
                     >
                       Borrar
                     </button>
+                    <button
+                      onClick={() => onSync(r.id)}
+                      disabled={syncing === r.id}
+                      className="rounded-sm border border-foreground/20 px-2 py-1 text-[11px] uppercase tracking-widest hover:border-primary hover:text-primary disabled:opacity-50"
+                    >
+                      {syncing === r.id ? "Sync…" : "Sync Stripe"}
+                    </button>
                   </div>
                 </div>
               </article>
