@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { fetchPublicProducts, products as fallback, type Category, type Product } from "@/lib/products";
+import { fetchPublicProducts, type Category, type Product } from "@/lib/products";
 import { useCart } from "@/hooks/use-cart";
 import { StripeEmbeddedCheckout } from "@/components/site/StripeEmbeddedCheckout";
 import { toast } from "sonner";
@@ -12,18 +12,20 @@ function formatPrice(v: number) {
 }
 
 
-export function Catalog() {
+export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {}) {
   const [filter, setFilter] = useState<Category | "Todo">("Todo");
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "" });
-  const [items, setItems] = useState<Product[]>(fallback);
+  const [items, setItems] = useState<Product[]>(initialProducts ?? []);
   const cart = useCart();
 
   useEffect(() => {
-    fetchPublicProducts().then(setItems).catch(() => setItems(fallback));
-  }, []);
+    // Only refetch on the client if the loader didn't already give us data.
+    if (initialProducts && initialProducts.length > 0) return;
+    fetchPublicProducts().then(setItems).catch(() => setItems([]));
+  }, [initialProducts]);
 
   const list = useMemo(
     () => (filter === "Todo" ? items : items.filter((p) => p.category === filter)),

@@ -5,27 +5,50 @@ import { Footer } from "@/components/site/Footer";
 import { PaymentTestModeBanner } from "@/components/site/PaymentTestModeBanner";
 import { getRequestOrigin } from "@/lib/origin.functions";
 import { breadcrumbJsonLd } from "@/lib/breadcrumbs";
-import { products } from "@/lib/products";
+import { fetchPublicProductsServer } from "@/lib/products-public.functions";
 import ogImage from "@/assets/product-1.jpg";
 
-
 export const Route = createFileRoute("/tienda")({
-  loader: async () => ({ origin: await getRequestOrigin() }),
+  loader: async () => ({
+    origin: await getRequestOrigin(),
+    products: await fetchPublicProductsServer(),
+  }),
   head: ({ loaderData }) => {
     const origin = loaderData?.origin ?? "";
+    const products = loaderData?.products ?? [];
     const absImage = `${origin}${ogImage}`;
+    const abs = (u: string) => (u.startsWith("http") ? u : `${origin}${u}`);
+
+    const sectionFor = (cat: string) => ({
+      "@type": "MenuSection",
+      name: cat,
+      hasMenuItem: products
+        .filter((p) => p.category === cat)
+        .map((p) => ({
+          "@type": "MenuItem",
+          name: p.name,
+          description: p.description,
+          image: abs(p.image),
+          offers: {
+            "@type": "Offer",
+            price: p.price.toFixed(2),
+            priceCurrency: "EUR",
+          },
+        })),
+    });
+
     return {
       meta: [
         { title: "Tienda — 144 Reality Bites & Coffee" },
         {
           name: "description",
           content:
-            "Catálogo online de repostería, café de especialidad y bites. Arma tu pedido y lo confirmamos por WhatsApp.",
+            "Catálogo online de repostería, café de especialidad y bites. Arma tu pedido y págalo con tarjeta.",
         },
         { property: "og:title", content: "Tienda — 144 Reality" },
         {
           property: "og:description",
-          content: "Catálogo online de repostería y café. Pedidos por WhatsApp.",
+          content: "Catálogo online de repostería y café. Pago con tarjeta.",
         },
         { property: "og:type", content: "website" },
         { property: "og:url", content: "https://144reality.com/tienda" },
@@ -35,7 +58,7 @@ export const Route = createFileRoute("/tienda")({
         { name: "twitter:title", content: "Tienda — 144 Reality" },
         {
           name: "twitter:description",
-          content: "Catálogo online de repostería y café. Pedidos por WhatsApp.",
+          content: "Catálogo online de repostería y café. Pago con tarjeta.",
         },
         { name: "twitter:image", content: absImage },
       ],
@@ -48,59 +71,7 @@ export const Route = createFileRoute("/tienda")({
             "@type": "Menu",
             name: "Catálogo 144 Reality",
             url: `${origin}/tienda`,
-            hasMenuSection: [
-              {
-                "@type": "MenuSection",
-                name: "Repostería",
-                hasMenuItem: products
-                  .filter((p) => p.category === "Repostería")
-                  .map((p) => ({
-                    "@type": "MenuItem",
-                    name: p.name,
-                    description: p.description,
-                    image: `${origin}${p.image}`,
-                    offers: {
-                      "@type": "Offer",
-                      price: p.price.toFixed(2),
-                      priceCurrency: "EUR",
-                    },
-                  })),
-              },
-              {
-                "@type": "MenuSection",
-                name: "Café",
-                hasMenuItem: products
-                  .filter((p) => p.category === "Café")
-                  .map((p) => ({
-                    "@type": "MenuItem",
-                    name: p.name,
-                    description: p.description,
-                    image: `${origin}${p.image}`,
-                    offers: {
-                      "@type": "Offer",
-                      price: p.price.toFixed(2),
-                      priceCurrency: "EUR",
-                    },
-                  })),
-              },
-              {
-                "@type": "MenuSection",
-                name: "Bites",
-                hasMenuItem: products
-                  .filter((p) => p.category === "Bites")
-                  .map((p) => ({
-                    "@type": "MenuItem",
-                    name: p.name,
-                    description: p.description,
-                    image: `${origin}${p.image}`,
-                    offers: {
-                      "@type": "Offer",
-                      price: p.price.toFixed(2),
-                      priceCurrency: "EUR",
-                    },
-                  })),
-              },
-            ],
+            hasMenuSection: ["Repostería", "Café", "Bites"].map(sectionFor),
           }),
         },
         {
@@ -116,7 +87,7 @@ export const Route = createFileRoute("/tienda")({
               position: i + 1,
               url: `https://144reality.com/tienda/${p.slug ?? p.id}`,
               name: p.name,
-              image: `${origin}${p.image}`,
+              image: abs(p.image),
             })),
           }),
         },
@@ -131,15 +102,15 @@ export const Route = createFileRoute("/tienda")({
 });
 
 function TiendaPage() {
+  const { products } = Route.useLoaderData();
   return (
     <>
       <PaymentTestModeBanner />
       <Header />
       <main className="grain">
-        <Catalog />
+        <Catalog initialProducts={products} />
       </main>
       <Footer />
     </>
   );
 }
-
