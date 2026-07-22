@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useCart } from "@/hooks/use-cart";
+
 
 const WHATSAPP_NUMBER = "34681634623";
 
