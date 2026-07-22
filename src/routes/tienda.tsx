@@ -133,6 +133,7 @@ export const Route = createFileRoute("/tienda")({
 function TiendaPage() {
   return (
     <>
+      <PaymentTestModeBanner />
       <Header />
       <main className="grain">
         <Catalog />
@@ -141,3 +142,4 @@ function TiendaPage() {
     </>
   );
 }
+
