@@ -1,23 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import customCake from "@/assets/custom-cake.jpg";
-import { fetchFeaturedGallery, galleryItems, type GalleryItem } from "@/lib/gallery";
+import { fetchFeaturedGallery, type GalleryItem } from "@/lib/gallery";
 
 const TEASER_COUNT = 3;
 
 export function HomeTeasers() {
-  const [featured, setFeatured] = useState<GalleryItem[]>(() => galleryItems.slice(0, TEASER_COUNT));
+  const [featured, setFeatured] = useState<GalleryItem[]>([]);
 
   useEffect(() => {
     let alive = true;
     fetchFeaturedGallery(TEASER_COUNT).then((items) => {
-      if (!alive || items.length === 0) return;
+      if (!alive) return;
       setFeatured(items);
     });
     return () => {
       alive = false;
     };
   }, []);
+
 
   return (
     <>

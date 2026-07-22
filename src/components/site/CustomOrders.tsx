@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import customCake from "@/assets/custom-cake.jpg";
 import { submitCustomOrder } from "@/lib/custom-orders.functions";
+
 
 const ORDER_TYPES = [
   "Tarta a medida",
@@ -107,16 +107,7 @@ export function CustomOrders() {
             Diseñamos la pieza contigo desde el concepto hasta el último detalle comestible.
           </p>
 
-          <div className="mt-8 overflow-hidden rounded-sm border border-primary-foreground/15 rivet-frame">
-            <img
-              src={customCake}
-              alt="Tarta a medida de tres pisos"
-              className="h-full w-full object-cover"
-              width={1200}
-              height={1400}
-              loading="lazy"
-            />
-          </div>
+
 
           <dl className="mt-8 grid grid-cols-3 gap-6 border-t border-primary-foreground/15 pt-6 text-sm">
             {[
