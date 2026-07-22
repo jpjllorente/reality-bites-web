@@ -385,6 +385,59 @@ function ProductsPage() {
               Sin productos en la base de datos. Mientras esté vacía, la tienda muestra los ejemplos por defecto.
             </p>
           )}
+
+          {reconcileResult && (
+            <section className="mt-10 rounded-sm border border-foreground/15 bg-card p-5">
+              <h2 className="font-display text-2xl text-primary">Conciliación con Stripe</h2>
+              {"error" in reconcileResult ? (
+                <p className="mt-2 text-sm text-destructive">{reconcileResult.error}</p>
+              ) : (
+                <>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {reconcileResult.checked} producto(s) revisados ·{" "}
+                    {reconcileResult.discrepancies.length} discrepancia(s)
+                  </p>
+                  {reconcileResult.discrepancies.length === 0 ? (
+                    <p className="mt-3 text-sm text-primary">Todo sincronizado.</p>
+                  ) : (
+                    <ul className="mt-4 divide-y divide-foreground/10">
+                      {reconcileResult.discrepancies.map((d, i) => (
+                        <li key={i} className="flex flex-wrap items-start gap-3 py-3">
+                          <span
+                            className={`rounded px-2 py-0.5 text-[10px] uppercase tracking-widest ${
+                              d.severity === "error"
+                                ? "bg-destructive/15 text-destructive"
+                                : d.severity === "warning"
+                                  ? "bg-amber-500/15 text-amber-700"
+                                  : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {d.severity}
+                          </span>
+                          <div className="flex-1 min-w-[220px]">
+                            <p className="text-sm font-semibold">{d.name}</p>
+                            <p className="text-xs text-muted-foreground">{d.detail}</p>
+                            {(d.dbValue != null || d.stripeValue != null) && (
+                              <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
+                                BD: {String(d.dbValue ?? "—")} · Stripe: {String(d.stripeValue ?? "—")}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => onSync(d.productId)}
+                            disabled={syncing === d.productId}
+                            className="rounded-sm border border-foreground/20 px-2 py-1 text-[10px] uppercase tracking-widest hover:border-primary hover:text-primary disabled:opacity-50"
+                          >
+                            {syncing === d.productId ? "Sync…" : "Sincronizar"}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+            </section>
+          )}
         </div>
       </main>
       <Footer />
