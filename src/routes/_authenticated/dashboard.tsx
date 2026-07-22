@@ -17,6 +17,7 @@ import {
   sendCustomOrderQuote,
   markCustomOrderReadyForPickup,
   markCustomOrderInStorePaid,
+  markCustomOrderCompleted,
 } from "@/lib/custom-orders.functions";
 import { NavTabs } from "./productos";
 import { OrderTimeline } from "@/components/site/OrderTimeline";
