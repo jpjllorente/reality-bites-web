@@ -57,6 +57,7 @@ function Page() {
             status: r.status,
             mode: r.mode,
             amountCents: r.amountCents,
+            timeline: (r.timeline ?? []) as TimelineEvent[],
           });
       })
       .catch((e) =>
