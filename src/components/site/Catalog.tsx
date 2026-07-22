@@ -2,16 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { fetchPublicProducts, products as fallback, type Category, type Product } from "@/lib/products";
 import { useCart } from "@/hooks/use-cart";
-import { submitShopOrder } from "@/lib/shop-orders.functions";
+import { StripeEmbeddedCheckout } from "@/components/site/StripeEmbeddedCheckout";
 import { toast } from "sonner";
 
 const categories: Array<Category | "Todo"> = ["Todo", "Repostería", "Café", "Bites"];
 
-const WHATSAPP_NUMBER = "34681634623";
-
 function formatPrice(v: number) {
   return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 }
+
 
 export function Catalog() {
   const [filter, setFilter] = useState<Category | "Todo">("Todo");
