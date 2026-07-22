@@ -341,6 +341,14 @@ function PaymentBadge({ row }: { row: ShopRow }) {
       label: "Reembolsado",
       cls: "bg-destructive/10 text-destructive border-destructive/30",
     },
+    partially_refunded: {
+      label: "Reemb. parcial",
+      cls: "bg-orange-500/10 text-orange-700 border-orange-500/30",
+    },
+    pay_in_store: {
+      label: "Pago en tienda",
+      cls: "bg-secondary/15 text-secondary border-secondary/40",
+    },
     failed: {
       label: "Fallido",
       cls: "bg-destructive/10 text-destructive border-destructive/30",

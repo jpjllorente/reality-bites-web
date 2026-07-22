@@ -66,12 +66,74 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
   void stripe;
 }
 
+async function handleChargeRefunded(charge: any, env: StripeEnv) {
+  const paymentIntentId =
+    typeof charge?.payment_intent === "string"
+      ? charge.payment_intent
+      : charge?.payment_intent?.id ?? null;
+  if (!paymentIntentId) {
+    console.warn("[stripe webhook] charge.refunded without payment_intent");
+    return;
+  }
+
+  const amountRefunded = charge?.amount_refunded ?? 0;
+  const amountCaptured = charge?.amount_captured ?? charge?.amount ?? 0;
+  const isFullyRefunded = amountRefunded >= amountCaptured;
+
+  const { supabaseAdmin } = await import(
+    "@/integrations/supabase/client.server"
+  );
+  const { sendRefundNotification } = await import(
+    "@/lib/shop-order-mailer.server"
+  );
+
+  const { data: rows } = await supabaseAdmin
+    .from("shop_orders")
+    .select("id, amount_paid_cents, amount_refunded_cents")
+    .eq("stripe_payment_intent_id", paymentIntentId)
+    .limit(1);
+
+  const row = rows?.[0] as
+    | { id: string; amount_paid_cents: number | null; amount_refunded_cents: number | null }
+    | undefined;
+  if (!row) {
+    console.warn(
+      "[stripe webhook] refund for unknown payment_intent",
+      paymentIntentId,
+    );
+    return;
+  }
+
+  // Idempotent: only update if refund amount grew
+  const prevRefunded = row.amount_refunded_cents ?? 0;
+  if (amountRefunded <= prevRefunded) return;
+
+  await (supabaseAdmin.from("shop_orders") as any)
+    .update({
+      payment_status: isFullyRefunded ? "refunded" : "partially_refunded",
+      amount_refunded_cents: amountRefunded,
+      refunded_at: new Date().toISOString(),
+    })
+    .eq("id", row.id);
+
+  await sendRefundNotification({
+    orderId: row.id,
+    amountRefundedCents: amountRefunded,
+    amountPaidCents: row.amount_paid_cents ?? amountCaptured,
+    isPartial: !isFullyRefunded,
+  });
+}
+
 async function handleWebhookEvent(request: Request, env: StripeEnv) {
   const event = await verifyWebhook(request, env);
   switch (event.type) {
     case "checkout.session.completed":
     case "checkout.session.async_payment_succeeded":
       await handleCheckoutCompleted(event.data.object, env);
+      break;
+    case "charge.refunded":
+    case "charge.refund.updated":
+      await handleChargeRefunded(event.data.object, env);
       break;
     default:
       console.log("[stripe webhook] unhandled event", event.type);

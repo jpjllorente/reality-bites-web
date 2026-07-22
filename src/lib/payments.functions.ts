@@ -262,3 +262,94 @@ export const finalizeShopCheckout = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(error) };
     }
   });
+
+// ---------- Reserva sin pago (pagar en tienda) ----------
+
+const InStoreSchema = z.object({
+  customer: z.object({
+    name: z.string().trim().min(1).max(120),
+    phone: z.string().trim().min(3).max(40),
+    email: z.string().trim().email().max(254).optional().or(z.literal("")),
+    notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  }),
+  items: z.array(CartItemSchema).min(1).max(50),
+});
+
+type InStoreResult = { orderId: string } | { error: string };
+
+export const createInStoreOrder = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => InStoreSchema.parse(data))
+  .handler(async ({ data }): Promise<InStoreResult> => {
+    try {
+      const { supabaseAdmin } = await import(
+        "@/integrations/supabase/client.server"
+      );
+
+      const slugs = Array.from(new Set(data.items.map((i) => i.slug)));
+      const { data: dbProducts, error: productsError } = await supabaseAdmin
+        .from("products")
+        .select("slug, name, price_cents, image_url, is_active")
+        .in("slug", slugs);
+      if (productsError) throw new Error(productsError.message);
+      if (!dbProducts || dbProducts.length === 0) {
+        return { error: "No se encontraron los productos del pedido." };
+      }
+
+      const bySlug = new Map(dbProducts.map((p) => [p.slug, p]));
+      const lineItems: Array<{
+        id: string;
+        name: string;
+        qty: number;
+        price_cents: number;
+      }> = [];
+      let totalCents = 0;
+      for (const item of data.items) {
+        const product = bySlug.get(item.slug);
+        if (!product || !product.is_active) {
+          return { error: `El producto "${item.slug}" ya no está disponible.` };
+        }
+        const unit = product.price_cents ?? 0;
+        totalCents += unit * item.qty;
+        lineItems.push({
+          id: product.slug,
+          name: product.name,
+          qty: item.qty,
+          price_cents: unit,
+        });
+      }
+
+      const { data: order, error: orderError } = await supabaseAdmin
+        .from("shop_orders")
+        .insert({
+          name: data.customer.name,
+          phone: data.customer.phone,
+          email: data.customer.email || null,
+          notes: data.customer.notes || null,
+          items: lineItems,
+          total_cents: totalCents,
+          payment_status: "pay_in_store",
+        })
+        .select("id")
+        .single();
+      if (orderError || !order) {
+        return { error: "No se pudo registrar la reserva." };
+      }
+
+      try {
+        const { sendInStoreOrderEmails } = await import(
+          "@/lib/shop-order-mailer.server"
+        );
+        await sendInStoreOrderEmails(order.id);
+      } catch (e) {
+        console.error("[in-store] email dispatch failed", e);
+      }
+
+      return { orderId: order.id };
+    } catch (error) {
+      console.error("[in-store] createInStoreOrder", error);
+      return {
+        error:
+          error instanceof Error ? error.message : "No se pudo crear la reserva.",
+      };
+    }
+  });
