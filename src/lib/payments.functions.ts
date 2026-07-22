@@ -188,14 +188,29 @@ export const finalizeShopCheckout = createServerFn({ method: "POST" })
       );
 
       if (paid && orderId) {
-        await supabaseAdmin
-          .from("shop_orders")
+        await (supabaseAdmin.from("shop_orders") as any)
           .update({
             payment_status: "paid",
             amount_paid_cents: session.amount_total ?? null,
+            payment_confirmed_at: new Date().toISOString(),
+            stripe_payment_intent_id:
+              typeof session.payment_intent === "string"
+                ? session.payment_intent
+                : (session.payment_intent as any)?.id ?? null,
           })
           .eq("id", orderId)
-          .eq("payment_status", "unpaid");
+          .neq("payment_status", "paid");
+
+        // Fire-and-forget: dispatch emails as a fallback in case the
+        // webhook hasn't landed yet. sendShopOrderEmails is idempotent.
+        try {
+          const { sendShopOrderEmails } = await import(
+            "@/lib/shop-order-mailer.server"
+          );
+          await sendShopOrderEmails(orderId);
+        } catch (e) {
+          console.error("[finalize] email dispatch failed", e);
+        }
       }
 
       if (!orderId) {

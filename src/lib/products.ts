@@ -39,7 +39,7 @@ export async function fetchPublicProducts(): Promise<Product[]> {
     .select("id, slug, name, description, price_cents, category, image_url, sort_order, tags, seo_title, seo_description")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
-  if (error || !data || data.length === 0) return products;
+  if (error || !data) return [];
   return data.map((r) => ({
     id: r.slug || r.id,
     slug: r.slug || r.id,

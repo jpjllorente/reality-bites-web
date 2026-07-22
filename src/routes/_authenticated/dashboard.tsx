@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { listAllOrders, updateOrderStatus } from "@/lib/shop-orders.functions";
-import { isAdminEmail } from "@/lib/admin";
+import { amIAdmin } from "@/lib/auth-admin.functions";
 import { NavTabs } from "./productos";
 
 
@@ -54,10 +54,15 @@ function Dashboard() {
   const router = useRouter();
   const { user } = Route.useRouteContext();
   const fetchAll = useServerFn(listAllOrders);
+  const fetchAmIAdmin = useServerFn(amIAdmin);
   const updateStatus = useServerFn(updateOrderStatus);
   const [tab, setTab] = useState<"custom" | "shop">("custom");
 
-  const isAdmin = isAdminEmail(user?.email);
+  const { data: adminCheck, isLoading: adminLoading } = useQuery({
+    queryKey: ["am-i-admin", user?.id],
+    queryFn: () => fetchAmIAdmin(),
+  });
+  const isAdmin = Boolean(adminCheck?.isAdmin);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["dashboard-orders"],
@@ -78,6 +83,20 @@ function Dashboard() {
     } catch {
       toast.error("No se pudo actualizar el estado");
     }
+  }
+
+  if (adminLoading) {
+    return (
+      <>
+        <Header />
+        <main className="grain bg-background py-24">
+          <p className="mx-auto max-w-md px-4 text-center text-sm text-muted-foreground">
+            Comprobando permisos…
+          </p>
+        </main>
+        <Footer />
+      </>
+    );
   }
 
   if (!isAdmin) {
@@ -303,7 +322,40 @@ type ShopRow = {
   notes: string | null;
   items: unknown;
   total_cents: number;
+  payment_status?: string | null;
+  amount_paid_cents?: number | null;
+  stripe_session_id?: string | null;
+  stripe_payment_intent_id?: string | null;
+  payment_confirmed_at?: string | null;
 };
+
+function PaymentBadge({ row }: { row: ShopRow }) {
+  const status = row.payment_status ?? "unpaid";
+  const map: Record<string, { label: string; cls: string }> = {
+    paid: { label: "Pagado", cls: "bg-primary/15 text-primary border-primary/30" },
+    unpaid: {
+      label: "Sin pagar",
+      cls: "bg-muted text-muted-foreground border-foreground/20",
+    },
+    refunded: {
+      label: "Reembolsado",
+      cls: "bg-destructive/10 text-destructive border-destructive/30",
+    },
+    failed: {
+      label: "Fallido",
+      cls: "bg-destructive/10 text-destructive border-destructive/30",
+    },
+  };
+  const cfg = map[status] ?? map.unpaid;
+  return (
+    <span
+      className={`inline-flex items-center rounded-sm border px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest ${cfg.cls}`}
+    >
+      {cfg.label}
+      {row.amount_paid_cents ? ` · ${formatEUR(row.amount_paid_cents)}` : ""}
+    </span>
+  );
+}
 
 function ShopOrdersTable({
   rows,
@@ -325,10 +377,15 @@ function ShopOrdersTable({
           >
             <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <p className="font-serif text-base font-semibold text-foreground">
-                  {r.name}{" "}
-                  <span className="text-secondary">· {formatEUR(r.total_cents)}</span>
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-serif text-base font-semibold text-foreground">
+                    {r.name}{" "}
+                    <span className="text-secondary">
+                      · {formatEUR(r.total_cents)}
+                    </span>
+                  </p>
+                  <PaymentBadge row={r} />
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {formatDate(r.created_at)} · {r.phone}
                   {r.email ? ` · ${r.email}` : ""}
@@ -352,6 +409,16 @@ function ShopOrdersTable({
                 </li>
               ))}
             </ul>
+            {(r.stripe_payment_intent_id || r.payment_confirmed_at) && (
+              <div className="mt-3 rounded-sm bg-muted/40 px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                {r.payment_confirmed_at ? (
+                  <div>Pago confirmado: {formatDate(r.payment_confirmed_at)}</div>
+                ) : null}
+                {r.stripe_payment_intent_id ? (
+                  <div>PaymentIntent: {r.stripe_payment_intent_id}</div>
+                ) : null}
+              </div>
+            )}
             {r.notes && (
               <div className="mt-3">
                 <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -368,6 +435,7 @@ function ShopOrdersTable({
     </div>
   );
 }
+
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
