@@ -31,54 +31,40 @@ export function Catalog() {
   );
 
 
-  function buildWhatsappHref() {
-    const lines = cart.items.map(
-      (i) => `• ${i.qty} × ${i.product.name} — ${formatPrice(i.qty * i.product.price)}`,
-    );
-    const msg =
-      `Hola 144 Reality, soy ${form.name}. Me gustaría hacer este pedido:%0A%0A` +
-      lines.join("%0A") +
-      `%0A%0ATotal: ${formatPrice(cart.total)}` +
-      (form.notes ? `%0A%0ANotas: ${encodeURIComponent(form.notes)}` : "");
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
-  }
+  const [payOpen, setPayOpen] = useState(false);
+  const [checkoutPayload, setCheckoutPayload] = useState<{
+    items: { slug: string; qty: number }[];
+    customer: { name: string; phone: string; email?: string; notes?: string };
+  } | null>(null);
 
-  async function onConfirmOrder() {
+  function onGoToPayment() {
     if (!form.name.trim() || !form.phone.trim()) {
       toast.error("Nombre y teléfono son obligatorios");
       return;
     }
     if (cart.items.length === 0) return;
     setSubmitting(true);
-    try {
-      await submitShopOrder({
-        data: {
-          name: form.name.trim(),
-          phone: form.phone.trim(),
-          email: form.email.trim() || null,
-          notes: form.notes.trim() || null,
-          items: cart.items.map((i) => ({
-            id: i.product.id,
-            name: i.product.name,
-            qty: i.qty,
-            price_cents: Math.round(i.product.price * 100),
-          })),
-          total_cents: Math.round(cart.total * 100),
-        },
-      });
-      const href = buildWhatsappHref();
-      cart.clear();
-      setCheckoutOpen(false);
-      setCartOpen(false);
-      setForm({ name: "", phone: "", email: "", notes: "" });
-      toast.success("Pedido registrado. Abriendo WhatsApp…");
-      window.open(href, "_blank", "noopener");
-    } catch {
-      toast.error("No se pudo registrar el pedido. Inténtalo de nuevo.");
-    } finally {
-      setSubmitting(false);
-    }
+    setCheckoutPayload({
+      items: cart.items.map((i) => ({ slug: i.product.slug, qty: i.qty })),
+      customer: {
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim() || undefined,
+        notes: form.notes.trim() || undefined,
+      },
+    });
+    setCheckoutOpen(false);
+    setCartOpen(false);
+    setPayOpen(true);
+    setSubmitting(false);
   }
+
+  const returnUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/tienda/pago-completado?session_id={CHECKOUT_SESSION_ID}`
+      : "";
+
+
 
 
   return (
