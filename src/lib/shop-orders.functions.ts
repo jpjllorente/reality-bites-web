@@ -49,7 +49,7 @@ export const submitShopOrder = createServerFn({ method: "POST" })
   });
 
 const SHOP_STATUS = z.enum(["new", "contacted", "confirmed", "completed", "cancelled"]);
-const CUSTOM_STATUS = z.enum(["new", "reviewing", "confirmed", "declined"]);
+const CUSTOM_STATUS = z.enum(["new", "reviewing", "confirmed", "declined", "completed"]);
 
 export const listAllOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
