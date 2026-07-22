@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Header } from "./Header";
-import { fetchPublicGallery, galleryItems, type GalleryItem } from "@/lib/gallery";
+import { fetchPublicGallery, type GalleryItem } from "@/lib/gallery";
 
 const HERO_COUNT = 5;
 
 export function Hero() {
-  const [items, setItems] = useState<GalleryItem[]>(() => galleryItems.slice(0, HERO_COUNT));
+  const [items, setItems] = useState<GalleryItem[]>([]);
   const [idx, setIdx] = useState(0);
+
 
   useEffect(() => {
     let alive = true;
     fetchPublicGallery().then((all) => {
-      if (!alive || all.length === 0) return;
+      if (!alive) return;
       setItems(all.slice(0, HERO_COUNT));
     });
+
     return () => {
       alive = false;
     };
