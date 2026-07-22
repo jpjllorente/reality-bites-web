@@ -85,19 +85,6 @@ function PagoCompletado() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session_id]);
 
-  function whatsappHref() {
-    if (state.kind !== "ok") return "#";
-    const lines = state.items.map(
-      (i) => `• ${i.qty} × ${i.name} — ${formatPrice(i.qty * i.price_cents)}`,
-    );
-    const short = state.orderId ? state.orderId.slice(0, 8) : "";
-    const msg =
-      `Hola 144 Reality, soy ${state.customer.name}. Acabo de pagar mi pedido${short ? ` #${short}` : ""}:%0A%0A` +
-      lines.join("%0A") +
-      `%0A%0ATotal: ${formatPrice(state.totalCents)}` +
-      (state.customer.notes ? `%0A%0ANotas: ${encodeURIComponent(state.customer.notes)}` : "");
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
-  }
 
   return (
     <>
