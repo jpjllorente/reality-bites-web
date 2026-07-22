@@ -135,14 +135,16 @@ function useCanonicalRedirect() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const { hostname, protocol, pathname, search, hash } = window.location;
+    // Never redirect Lovable preview/sandbox hosts — keeps preview usable.
+    if (hostname.includes("lovable.app") || hostname === "localhost") return;
     const isWww = hostname === `www.${CANONICAL_HOST}`;
-    const isLovable = hostname.endsWith(".lovable.app");
     const isHttp = protocol === "http:" && hostname === CANONICAL_HOST;
-    if (isWww || isLovable || isHttp) {
+    if (isWww || isHttp) {
       window.location.replace(`https://${CANONICAL_HOST}${pathname}${search}${hash}`);
     }
   }, []);
 }
+
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
