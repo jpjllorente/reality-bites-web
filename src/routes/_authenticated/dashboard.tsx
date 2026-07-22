@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { listAllOrders, updateOrderStatus } from "@/lib/shop-orders.functions";
-import { isAdminEmail } from "@/lib/admin";
+import { amIAdmin } from "@/lib/auth-admin.functions";
 import { NavTabs } from "./productos";
 
 
@@ -54,10 +54,15 @@ function Dashboard() {
   const router = useRouter();
   const { user } = Route.useRouteContext();
   const fetchAll = useServerFn(listAllOrders);
+  const fetchAmIAdmin = useServerFn(amIAdmin);
   const updateStatus = useServerFn(updateOrderStatus);
   const [tab, setTab] = useState<"custom" | "shop">("custom");
 
-  const isAdmin = isAdminEmail(user?.email);
+  const { data: adminCheck, isLoading: adminLoading } = useQuery({
+    queryKey: ["am-i-admin", user?.id],
+    queryFn: () => fetchAmIAdmin(),
+  });
+  const isAdmin = Boolean(adminCheck?.isAdmin);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["dashboard-orders"],
@@ -78,6 +83,20 @@ function Dashboard() {
     } catch {
       toast.error("No se pudo actualizar el estado");
     }
+  }
+
+  if (adminLoading) {
+    return (
+      <>
+        <Header />
+        <main className="grain bg-background py-24">
+          <p className="mx-auto max-w-md px-4 text-center text-sm text-muted-foreground">
+            Comprobando permisos…
+          </p>
+        </main>
+        <Footer />
+      </>
+    );
   }
 
   if (!isAdmin) {
