@@ -19,6 +19,7 @@ import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EncargosIndexRouteImport } from './routes/encargos.index'
 import { Route as TiendaReservadoRouteImport } from './routes/tienda.reservado'
 import { Route as TiendaPagoCompletadoRouteImport } from './routes/tienda.pago-completado'
 import { Route as TiendaSlugRouteImport } from './routes/tienda.$slug'
@@ -82,6 +83,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const EncargosIndexRoute = EncargosIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EncargosRoute,
 } as any)
 const TiendaReservadoRoute = TiendaReservadoRouteImport.update({
   id: '/reservado',
@@ -175,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/tienda/reservado': typeof TiendaReservadoRoute
+  '/encargos/': typeof EncargosIndexRoute
   '/encargos/pagar/$token': typeof EncargosPagarTokenRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -186,7 +193,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/contacto': typeof ContactoRoute
-  '/encargos': typeof EncargosRouteWithChildren
   '/galeria': typeof GaleriaRoute
   '/privacidad': typeof PrivacidadRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -200,6 +206,7 @@ export interface FileRoutesByTo {
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/tienda/reservado': typeof TiendaReservadoRoute
+  '/encargos': typeof EncargosIndexRoute
   '/encargos/pagar/$token': typeof EncargosPagarTokenRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -227,6 +234,7 @@ export interface FileRoutesById {
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/tienda/reservado': typeof TiendaReservadoRoute
+  '/encargos/': typeof EncargosIndexRoute
   '/encargos/pagar/$token': typeof EncargosPagarTokenRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -254,6 +262,7 @@ export interface FileRouteTypes {
     | '/tienda/$slug'
     | '/tienda/pago-completado'
     | '/tienda/reservado'
+    | '/encargos/'
     | '/encargos/pagar/$token'
     | '/api/public/media/$'
     | '/api/public/payments/webhook'
@@ -265,7 +274,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/contacto'
-    | '/encargos'
     | '/galeria'
     | '/privacidad'
     | '/reset-password'
@@ -279,6 +287,7 @@ export interface FileRouteTypes {
     | '/tienda/$slug'
     | '/tienda/pago-completado'
     | '/tienda/reservado'
+    | '/encargos'
     | '/encargos/pagar/$token'
     | '/api/public/media/$'
     | '/api/public/payments/webhook'
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/tienda/$slug'
     | '/tienda/pago-completado'
     | '/tienda/reservado'
+    | '/encargos/'
     | '/encargos/pagar/$token'
     | '/api/public/media/$'
     | '/api/public/payments/webhook'
@@ -402,6 +412,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/encargos/': {
+      id: '/encargos/'
+      path: '/'
+      fullPath: '/encargos/'
+      preLoaderRoute: typeof EncargosIndexRouteImport
+      parentRoute: typeof EncargosRoute
     }
     '/tienda/reservado': {
       id: '/tienda/reservado'
@@ -523,11 +540,13 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface EncargosRouteChildren {
   EncargosPagoCompletadoRoute: typeof EncargosPagoCompletadoRoute
+  EncargosIndexRoute: typeof EncargosIndexRoute
   EncargosPagarTokenRoute: typeof EncargosPagarTokenRoute
 }
 
 const EncargosRouteChildren: EncargosRouteChildren = {
   EncargosPagoCompletadoRoute: EncargosPagoCompletadoRoute,
+  EncargosIndexRoute: EncargosIndexRoute,
   EncargosPagarTokenRoute: EncargosPagarTokenRoute,
 }
 
