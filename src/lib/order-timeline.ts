@@ -221,6 +221,14 @@ export function buildCustomOrderTimeline(row: CustomOrderTimelineInput): Timelin
       kind: "success",
     });
   }
+  if (row.completed_at) {
+    events.push({
+      key: "completed",
+      label: "Pedido entregado · finalizado",
+      at: row.completed_at,
+      kind: "success",
+    });
+  }
   // Dedupe by key (some paths add both payment + webhook + confirmed).
   const seen = new Set<string>();
   return events
