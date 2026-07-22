@@ -128,6 +128,12 @@ function PayQuotePage() {
             </div>
           )}
 
+          {quote && timeline.length > 0 && (
+            <div className="mt-6">
+              <OrderTimeline events={timeline} />
+            </div>
+          )}
+
           {quote && quote.payment_status !== "paid" && (
             <div className="mt-8 space-y-6">
               <div className="rounded-sm border border-foreground/15 bg-card p-6">
