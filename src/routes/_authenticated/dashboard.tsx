@@ -473,7 +473,8 @@ function PickupControls({ row }: { row: CustomRow }) {
   const router = useRouter();
   const markReady = useServerFn(markCustomOrderReadyForPickup);
   const markPaid = useServerFn(markCustomOrderInStorePaid);
-  const [busy, setBusy] = useState<"ready" | "instore" | null>(null);
+  const markCompleted = useServerFn(markCustomOrderCompleted);
+  const [busy, setBusy] = useState<"ready" | "instore" | "complete" | null>(null);
 
   const total = row.quote_total_cents ?? 0;
   const paid = row.amount_paid_cents ?? 0;
