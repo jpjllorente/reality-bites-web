@@ -437,3 +437,84 @@ function Field({
     </label>
   );
 }
+
+function ProductAddForm({
+  product,
+  onAdd,
+}: {
+  product: Product;
+  onAdd: (opts: { variantId?: string; variantName?: string; portion?: boolean }) => void;
+}) {
+  const activeVariants = (product.variants ?? []).filter((v) => v.active);
+  const hasVariants = activeVariants.length > 0;
+  const hasPortion = product.portionPrice != null && product.portionPrice > 0;
+  const [variantId, setVariantId] = useState<string | undefined>(activeVariants[0]?.id);
+  const [portion, setPortion] = useState(false);
+  const outOfStock = product.inStock === false;
+  const unitPrice = portion && hasPortion ? (product.portionPrice as number) : product.price;
+
+  if (outOfStock) {
+    return (
+      <button
+        disabled
+        className="mt-auto inline-flex cursor-not-allowed items-center justify-center rounded-sm border border-foreground/20 bg-muted px-4 py-2.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+      >
+        Agotado
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-auto flex flex-col gap-3">
+      {hasPortion && (
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => setPortion(false)}
+            className={`flex-1 rounded-sm border px-2 py-1.5 text-[11px] font-medium transition ${!portion ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}
+          >
+            Completo · {formatPrice(product.price)}
+          </button>
+          <button
+            type="button"
+            onClick={() => setPortion(true)}
+            className={`flex-1 rounded-sm border px-2 py-1.5 text-[11px] font-medium transition ${portion ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}
+          >
+            Porción · {formatPrice(product.portionPrice as number)}
+          </button>
+        </div>
+      )}
+      {hasVariants && (
+        <div>
+          <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Variante</span>
+          <div className="flex flex-wrap gap-1.5">
+            {activeVariants.map((v) => (
+              <button
+                key={v.id}
+                type="button"
+                onClick={() => setVariantId(v.id)}
+                className={`rounded-sm border px-2.5 py-1.5 text-[11px] transition ${variantId === v.id ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}
+              >
+                {v.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <button
+        onClick={() => {
+          const variant = activeVariants.find((v) => v.id === variantId);
+          onAdd({
+            variantId: variant?.id,
+            variantName: variant?.name,
+            portion: portion && hasPortion,
+          });
+        }}
+        className="inline-flex items-center justify-center rounded-sm border border-primary/30 bg-transparent px-4 py-2.5 text-xs font-semibold uppercase tracking-widest text-primary transition hover:bg-primary hover:text-primary-foreground"
+      >
+        + Añadir {formatPrice(unitPrice)}
+      </button>
+    </div>
+  );
+}
+
