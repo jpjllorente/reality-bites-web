@@ -51,7 +51,7 @@ function PayQuotePage() {
   useEffect(() => {
     getCustomOrderQuote({ data: { token } })
       .then((r) => {
-        if ("error" in r) setErr(r.error);
+        if ("error" in r) setErr(r.error ?? "Error");
         else setQuote(r.quote as Quote);
       })
       .catch((e) => setErr(e instanceof Error ? e.message : "Error"));

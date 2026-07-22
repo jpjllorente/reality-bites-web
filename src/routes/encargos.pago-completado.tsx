@@ -42,7 +42,7 @@ function Page() {
       data: { environment: getStripeEnvironment(), sessionId: session_id },
     })
       .then((r) => {
-        if ("error" in r) setState({ kind: "error", message: r.error });
+        if ("error" in r) setState({ kind: "error", message: r.error ?? "Error." });
         else
           setState({
             kind: "ok",

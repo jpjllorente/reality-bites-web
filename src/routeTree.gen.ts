@@ -22,10 +22,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TiendaReservadoRouteImport } from './routes/tienda.reservado'
 import { Route as TiendaPagoCompletadoRouteImport } from './routes/tienda.pago-completado'
 import { Route as TiendaSlugRouteImport } from './routes/tienda.$slug'
+import { Route as EncargosPagoCompletadoRouteImport } from './routes/encargos.pago-completado'
 import { Route as AuthenticatedProductosRouteImport } from './routes/_authenticated/productos'
 import { Route as AuthenticatedPagosRouteImport } from './routes/_authenticated/pagos'
 import { Route as AuthenticatedGaleriaAdminRouteImport } from './routes/_authenticated/galeria-admin'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as EncargosPagarTokenRouteImport } from './routes/encargos.pagar.$token'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -96,6 +98,11 @@ const TiendaSlugRoute = TiendaSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => TiendaRoute,
 } as any)
+const EncargosPagoCompletadoRoute = EncargosPagoCompletadoRouteImport.update({
+  id: '/pago-completado',
+  path: '/pago-completado',
+  getParentRoute: () => EncargosRoute,
+} as any)
 const AuthenticatedProductosRoute = AuthenticatedProductosRouteImport.update({
   id: '/productos',
   path: '/productos',
@@ -116,6 +123,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const EncargosPagarTokenRoute = EncargosPagarTokenRouteImport.update({
+  id: '/pagar/$token',
+  path: '/pagar/$token',
+  getParentRoute: () => EncargosRoute,
 } as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
@@ -149,7 +161,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/contacto': typeof ContactoRoute
-  '/encargos': typeof EncargosRoute
+  '/encargos': typeof EncargosRouteWithChildren
   '/galeria': typeof GaleriaRoute
   '/privacidad': typeof PrivacidadRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -159,9 +171,11 @@ export interface FileRoutesByFullPath {
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/pagos': typeof AuthenticatedPagosRoute
   '/productos': typeof AuthenticatedProductosRoute
+  '/encargos/pago-completado': typeof EncargosPagoCompletadoRoute
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/tienda/reservado': typeof TiendaReservadoRoute
+  '/encargos/pagar/$token': typeof EncargosPagarTokenRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -172,7 +186,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/contacto': typeof ContactoRoute
-  '/encargos': typeof EncargosRoute
+  '/encargos': typeof EncargosRouteWithChildren
   '/galeria': typeof GaleriaRoute
   '/privacidad': typeof PrivacidadRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -182,9 +196,11 @@ export interface FileRoutesByTo {
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/pagos': typeof AuthenticatedPagosRoute
   '/productos': typeof AuthenticatedProductosRoute
+  '/encargos/pago-completado': typeof EncargosPagoCompletadoRoute
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/tienda/reservado': typeof TiendaReservadoRoute
+  '/encargos/pagar/$token': typeof EncargosPagarTokenRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -197,7 +213,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/contacto': typeof ContactoRoute
-  '/encargos': typeof EncargosRoute
+  '/encargos': typeof EncargosRouteWithChildren
   '/galeria': typeof GaleriaRoute
   '/privacidad': typeof PrivacidadRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -207,9 +223,11 @@ export interface FileRoutesById {
   '/_authenticated/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/_authenticated/pagos': typeof AuthenticatedPagosRoute
   '/_authenticated/productos': typeof AuthenticatedProductosRoute
+  '/encargos/pago-completado': typeof EncargosPagoCompletadoRoute
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/tienda/reservado': typeof TiendaReservadoRoute
+  '/encargos/pagar/$token': typeof EncargosPagarTokenRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -232,9 +250,11 @@ export interface FileRouteTypes {
     | '/galeria-admin'
     | '/pagos'
     | '/productos'
+    | '/encargos/pago-completado'
     | '/tienda/$slug'
     | '/tienda/pago-completado'
     | '/tienda/reservado'
+    | '/encargos/pagar/$token'
     | '/api/public/media/$'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -255,9 +275,11 @@ export interface FileRouteTypes {
     | '/galeria-admin'
     | '/pagos'
     | '/productos'
+    | '/encargos/pago-completado'
     | '/tienda/$slug'
     | '/tienda/pago-completado'
     | '/tienda/reservado'
+    | '/encargos/pagar/$token'
     | '/api/public/media/$'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -279,9 +301,11 @@ export interface FileRouteTypes {
     | '/_authenticated/galeria-admin'
     | '/_authenticated/pagos'
     | '/_authenticated/productos'
+    | '/encargos/pago-completado'
     | '/tienda/$slug'
     | '/tienda/pago-completado'
     | '/tienda/reservado'
+    | '/encargos/pagar/$token'
     | '/api/public/media/$'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -294,7 +318,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ContactoRoute: typeof ContactoRoute
-  EncargosRoute: typeof EncargosRoute
+  EncargosRoute: typeof EncargosRouteWithChildren
   GaleriaRoute: typeof GaleriaRoute
   PrivacidadRoute: typeof PrivacidadRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -400,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TiendaSlugRouteImport
       parentRoute: typeof TiendaRoute
     }
+    '/encargos/pago-completado': {
+      id: '/encargos/pago-completado'
+      path: '/pago-completado'
+      fullPath: '/encargos/pago-completado'
+      preLoaderRoute: typeof EncargosPagoCompletadoRouteImport
+      parentRoute: typeof EncargosRoute
+    }
     '/_authenticated/productos': {
       id: '/_authenticated/productos'
       path: '/productos'
@@ -427,6 +458,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/encargos/pagar/$token': {
+      id: '/encargos/pagar/$token'
+      path: '/pagar/$token'
+      fullPath: '/encargos/pagar/$token'
+      preLoaderRoute: typeof EncargosPagarTokenRouteImport
+      parentRoute: typeof EncargosRoute
     }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
@@ -483,6 +521,20 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface EncargosRouteChildren {
+  EncargosPagoCompletadoRoute: typeof EncargosPagoCompletadoRoute
+  EncargosPagarTokenRoute: typeof EncargosPagarTokenRoute
+}
+
+const EncargosRouteChildren: EncargosRouteChildren = {
+  EncargosPagoCompletadoRoute: EncargosPagoCompletadoRoute,
+  EncargosPagarTokenRoute: EncargosPagarTokenRoute,
+}
+
+const EncargosRouteWithChildren = EncargosRoute._addFileChildren(
+  EncargosRouteChildren,
+)
+
 interface TiendaRouteChildren {
   TiendaSlugRoute: typeof TiendaSlugRoute
   TiendaPagoCompletadoRoute: typeof TiendaPagoCompletadoRoute
@@ -503,7 +555,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ContactoRoute: ContactoRoute,
-  EncargosRoute: EncargosRoute,
+  EncargosRoute: EncargosRouteWithChildren,
   GaleriaRoute: GaleriaRoute,
   PrivacidadRoute: PrivacidadRoute,
   ResetPasswordRoute: ResetPasswordRoute,
