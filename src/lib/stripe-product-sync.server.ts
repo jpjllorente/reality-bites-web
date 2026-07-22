@@ -24,13 +24,18 @@ export async function syncProductToStripeInternal(
   try {
     const stripe = createStripeClient("sandbox");
     const active = p.is_active && p.in_stock;
+    const validImage =
+      typeof p.image_url === "string" && /^https:\/\//i.test(p.image_url)
+        ? p.image_url
+        : null;
     const productPayload = {
       name: p.name,
       description: p.description || undefined,
-      images: p.image_url ? [p.image_url] : undefined,
+      images: validImage ? [validImage] : undefined,
       active,
       metadata: { db_id: p.id },
     };
+
 
     let stripeProductId = p.stripe_product_id as string | null;
     if (stripeProductId) {
