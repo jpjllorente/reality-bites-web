@@ -215,7 +215,10 @@ function ProductsPage() {
       refetch();
     } catch (e) {
       toast.error((e as Error).message);
+    }
   }
+
+
 
   async function onSync(id: string) {
     setSyncing(id);
