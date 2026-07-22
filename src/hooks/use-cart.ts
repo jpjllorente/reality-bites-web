@@ -2,11 +2,18 @@ import { useEffect, useState } from "react";
 import type { Product } from "@/lib/products";
 
 export interface CartItem {
+  /** Composite unique key: slug::variantId::portion */
+  key: string;
   product: Product;
+  variantId?: string;
+  variantName?: string;
+  portion: boolean;
+  /** Unit price in EUR at the moment of adding to the cart. */
+  unitPrice: number;
   qty: number;
 }
 
-const STORAGE_KEY = "144reality_cart_v1";
+const STORAGE_KEY = "144reality_cart_v2";
 
 type Listener = (items: CartItem[]) => void;
 const listeners = new Set<Listener>();
@@ -18,7 +25,13 @@ function hydrate() {
   hydrated = true;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) state = JSON.parse(raw) as CartItem[];
+    if (raw) {
+      const parsed = JSON.parse(raw) as CartItem[];
+      // Drop legacy shape (no `key` field).
+      state = Array.isArray(parsed)
+        ? parsed.filter((i) => i && typeof i.key === "string" && typeof i.unitPrice === "number")
+        : [];
+    }
   } catch {
     // ignore
   }
@@ -30,6 +43,17 @@ function commit(next: CartItem[]) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   }
   listeners.forEach((l) => l(next));
+}
+
+export function buildCartKey(slug: string, variantId?: string, portion?: boolean): string {
+  return `${slug}::${variantId ?? ""}::${portion ? "p" : "f"}`;
+}
+
+export interface AddOptions {
+  qty?: number;
+  variantId?: string;
+  variantName?: string;
+  portion?: boolean;
 }
 
 export function useCart() {
@@ -47,20 +71,35 @@ export function useCart() {
 
   return {
     items,
-    add(product: Product, qty = 1) {
+    add(product: Product, opts: AddOptions = {}) {
       hydrate();
-      const existing = state.find((i) => i.product.id === product.id);
+      const portion = !!opts.portion && product.portionPrice != null;
+      const unitPrice = portion ? (product.portionPrice ?? product.price) : product.price;
+      const key = buildCartKey(product.slug, opts.variantId, portion);
+      const qty = opts.qty ?? 1;
+      const existing = state.find((i) => i.key === key);
       const next = existing
-        ? state.map((i) => (i.product.id === product.id ? { ...i, qty: i.qty + qty } : i))
-        : [...state, { product, qty }];
+        ? state.map((i) => (i.key === key ? { ...i, qty: i.qty + qty } : i))
+        : [
+            ...state,
+            {
+              key,
+              product,
+              variantId: opts.variantId,
+              variantName: opts.variantName,
+              portion,
+              unitPrice,
+              qty,
+            },
+          ];
       commit(next);
     },
-    remove(id: string) {
-      commit(state.filter((i) => i.product.id !== id));
+    remove(key: string) {
+      commit(state.filter((i) => i.key !== key));
     },
-    setQty(id: string, qty: number) {
-      if (qty <= 0) return commit(state.filter((i) => i.product.id !== id));
-      commit(state.map((i) => (i.product.id === id ? { ...i, qty } : i)));
+    setQty(key: string, qty: number) {
+      if (qty <= 0) return commit(state.filter((i) => i.key !== key));
+      commit(state.map((i) => (i.key === key ? { ...i, qty } : i)));
     },
     clear() {
       commit([]);
@@ -69,7 +108,7 @@ export function useCart() {
       return items.reduce((s, i) => s + i.qty, 0);
     },
     get total() {
-      return items.reduce((s, i) => s + i.qty * i.product.price, 0);
+      return items.reduce((s, i) => s + i.qty * i.unitPrice, 0);
     },
   };
 }

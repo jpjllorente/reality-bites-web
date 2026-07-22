@@ -25,12 +25,15 @@ export const Route = createFileRoute("/_authenticated/productos")({
 
 const CATEGORIES = ["Repostería", "Café", "Bites"] as const;
 
+type Variant = { id: string; name: string; active: boolean };
+
 type Row = {
   id: string;
   slug: string;
   name: string;
   description: string;
   price_cents: number;
+  portion_price_cents: number | null;
   category: string;
   image_url: string;
   sort_order: number;
@@ -39,6 +42,7 @@ type Row = {
   tags: string[];
   seo_title: string;
   seo_description: string;
+  variants: Variant[];
 };
 
 const EMPTY: Row = {
@@ -47,6 +51,7 @@ const EMPTY: Row = {
   name: "",
   description: "",
   price_cents: 0,
+  portion_price_cents: null,
   category: "Repostería",
   image_url: "",
   sort_order: 0,
@@ -55,7 +60,9 @@ const EMPTY: Row = {
   tags: [],
   seo_title: "",
   seo_description: "",
+  variants: [],
 };
+
 
 function ProductsPage() {
   const { user } = Route.useRouteContext();
@@ -147,6 +154,11 @@ function ProductsPage() {
       toast.error("Nombre y slug obligatorios");
       return;
     }
+    const ids = editing.variants.map((v) => v.id);
+    if (new Set(ids).size !== ids.length) {
+      toast.error("Hay variantes con el mismo identificador");
+      return;
+    }
     try {
       await save({
         data: {
@@ -155,6 +167,10 @@ function ProductsPage() {
           name: editing.name.trim(),
           description: editing.description,
           price_cents: Math.round(editing.price_cents),
+          portion_price_cents:
+            editing.portion_price_cents && editing.portion_price_cents > 0
+              ? Math.round(editing.portion_price_cents)
+              : null,
           category: editing.category,
           image_url: editing.image_url,
           sort_order: editing.sort_order,
@@ -163,6 +179,9 @@ function ProductsPage() {
           tags: editing.tags.map((t) => t.trim()).filter(Boolean),
           seo_title: editing.seo_title.trim(),
           seo_description: editing.seo_description.trim(),
+          variants: editing.variants
+            .map((v) => ({ id: v.id.trim(), name: v.name.trim(), active: v.active }))
+            .filter((v) => v.id && v.name),
         },
       });
       toast.success("Guardado");
@@ -184,7 +203,38 @@ function ProductsPage() {
     }
   }
 
-  const rows = (data ?? []) as Row[];
+  function variantsFromDb(v: unknown): Variant[] {
+    if (!Array.isArray(v)) return [];
+    return v
+      .map((x): Variant | null => {
+        if (!x || typeof x !== "object") return null;
+        const o = x as Record<string, unknown>;
+        const id = typeof o.id === "string" ? o.id : "";
+        const name = typeof o.name === "string" ? o.name : "";
+        if (!id || !name) return null;
+        return { id, name, active: o.active !== false };
+      })
+      .filter((x): x is Variant => !!x);
+  }
+
+  const rows: Row[] = (data ?? []).map((r: any) => ({
+    id: r.id,
+    slug: r.slug ?? "",
+    name: r.name,
+    description: r.description ?? "",
+    price_cents: r.price_cents ?? 0,
+    portion_price_cents: r.portion_price_cents ?? null,
+    category: r.category ?? "Repostería",
+    image_url: r.image_url ?? "",
+    sort_order: r.sort_order ?? 0,
+    is_active: r.is_active ?? true,
+    in_stock: r.in_stock ?? true,
+    tags: (r.tags as string[] | null) ?? [],
+    seo_title: r.seo_title ?? "",
+    seo_description: r.seo_description ?? "",
+    variants: variantsFromDb(r.variants),
+  }));
+
 
   return (
     <>
@@ -372,6 +422,17 @@ function ProductsPage() {
                   <span className="text-xs uppercase tracking-widest">En stock</span>
                 </label>
               </div>
+
+              <PortionPriceEditor
+                value={editing.portion_price_cents}
+                onChange={(cents) => setEditing((s) => (s ? { ...s, portion_price_cents: cents } : s))}
+              />
+
+              <VariantsEditor
+                variants={editing.variants}
+                onChange={(vs) => setEditing((s) => (s ? { ...s, variants: vs } : s))}
+              />
+
               <Text
                 label="Etiquetas (separadas por comas)"
                 value={editing.tags.join(", ")}
@@ -453,6 +514,174 @@ function Text({ label, value, onChange }: { label: string; value: string; onChan
         className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
       />
     </label>
+  );
+}
+
+function PortionPriceEditor({
+  value,
+  onChange,
+}: {
+  value: number | null;
+  onChange: (cents: number | null) => void;
+}) {
+  const enabled = value != null && value > 0;
+  const [open, setOpen] = useState(enabled);
+  const [input, setInput] = useState(enabled ? ((value as number) / 100).toFixed(2) : "0.00");
+
+  if (!open && !enabled) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true);
+          setInput("0.00");
+        }}
+        className="rounded-sm border border-dashed border-foreground/30 px-3 py-2 text-[11px] uppercase tracking-widest text-muted-foreground hover:border-primary hover:text-primary"
+      >
+        + Añadir precio por porción
+      </button>
+    );
+  }
+  return (
+    <div className="rounded-sm border border-dashed border-foreground/20 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-secondary">
+          Precio por porción (opcional)
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            setInput("0.00");
+            onChange(null);
+          }}
+          className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive"
+        >
+          Quitar
+        </button>
+      </div>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={input}
+        onChange={(e) => {
+          const raw = e.target.value.replace(",", ".");
+          if (raw !== "" && !/^\d*\.?\d{0,2}$/.test(raw)) return;
+          setInput(raw);
+          const parsed = parseFloat(raw);
+          onChange(isNaN(parsed) ? null : Math.round(parsed * 100));
+        }}
+        onBlur={() => {
+          if (value != null && value > 0) setInput((value / 100).toFixed(2));
+        }}
+        className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+      />
+      <p className="mt-1 text-[10px] text-muted-foreground">
+        Se sincroniza con Stripe como precio adicional del mismo producto.
+      </p>
+    </div>
+  );
+}
+
+function VariantsEditor({
+  variants,
+  onChange,
+}: {
+  variants: { id: string; name: string; active: boolean }[];
+  onChange: (v: { id: string; name: string; active: boolean }[]) => void;
+}) {
+  function slugId(s: string) {
+    return s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60);
+  }
+  function add() {
+    const base = "variante";
+    let idx = variants.length + 1;
+    let id = `${base}-${idx}`;
+    while (variants.some((v) => v.id === id)) {
+      idx += 1;
+      id = `${base}-${idx}`;
+    }
+    onChange([...variants, { id, name: "", active: true }]);
+  }
+  return (
+    <div className="rounded-sm border border-dashed border-foreground/20 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-secondary">
+          Variantes (ej: topping, sabor…)
+        </p>
+        <button
+          type="button"
+          onClick={add}
+          className="rounded-sm border border-foreground/20 px-2 py-1 text-[10px] uppercase tracking-widest hover:border-primary hover:text-primary"
+        >
+          + Añadir
+        </button>
+      </div>
+      {variants.length === 0 && (
+        <p className="text-[11px] text-muted-foreground">
+          Sin variantes. El producto se vende tal cual.
+        </p>
+      )}
+      <ul className="space-y-2">
+        {variants.map((v, i) => (
+          <li key={i} className="flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              value={v.name}
+              placeholder="Nombre (ej: Oreo)"
+              onChange={(e) => {
+                const name = e.target.value;
+                const next = [...variants];
+                const autoId = slugId(name) || `variante-${i + 1}`;
+                next[i] = {
+                  ...v,
+                  name,
+                  id: v.id.startsWith("variante-") || v.id === "" ? autoId : v.id,
+                };
+                onChange(next);
+              }}
+              className="min-w-[140px] flex-1 rounded-sm border border-foreground/20 bg-background px-2 py-1 text-sm focus:border-primary focus:outline-none"
+            />
+            <input
+              type="text"
+              value={v.id}
+              placeholder="id"
+              onChange={(e) => {
+                const next = [...variants];
+                next[i] = { ...v, id: slugId(e.target.value) };
+                onChange(next);
+              }}
+              className="w-32 rounded-sm border border-foreground/20 bg-background px-2 py-1 font-mono text-[11px] focus:border-primary focus:outline-none"
+            />
+            <label className="flex items-center gap-1 text-[10px] uppercase tracking-widest">
+              <input
+                type="checkbox"
+                checked={v.active}
+                onChange={(e) => {
+                  const next = [...variants];
+                  next[i] = { ...v, active: e.target.checked };
+                  onChange(next);
+                }}
+              />
+              Activa
+            </label>
+            <button
+              type="button"
+              onClick={() => onChange(variants.filter((_, j) => j !== i))}
+              className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive"
+            >
+              Borrar
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

@@ -36,7 +36,7 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
 
   const [payOpen, setPayOpen] = useState(false);
   const [checkoutPayload, setCheckoutPayload] = useState<{
-    items: { slug: string; qty: number }[];
+    items: { slug: string; qty: number; variantId?: string; portion?: boolean }[];
     customer: { name: string; phone: string; email?: string; notes?: string };
   } | null>(null);
 
@@ -51,7 +51,12 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
 
   function buildPayload() {
     return {
-      items: cart.items.map((i) => ({ slug: i.product.slug, qty: i.qty })),
+      items: cart.items.map((i) => ({
+        slug: i.product.slug,
+        qty: i.qty,
+        variantId: i.variantId,
+        portion: i.portion || undefined,
+      })),
       customer: {
         name: form.name.trim(),
         phone: form.phone.trim(),
@@ -60,6 +65,7 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
       },
     };
   }
+
 
   function onGoToPayment() {
     if (!validateForm()) return;
@@ -259,7 +265,7 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
               ) : (
                 <ul className="space-y-4">
                   {cart.items.map((i) => (
-                    <li key={i.product.id} className="flex gap-3 border-b border-foreground/10 pb-4">
+                    <li key={i.key} className="flex gap-3 border-b border-foreground/10 pb-4">
                       <img
                         src={i.product.image}
                         alt=""
@@ -270,36 +276,45 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
                       />
                       <div className="flex flex-1 flex-col">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="font-serif text-sm font-semibold">{i.product.name}</p>
+                          <p className="font-serif text-sm font-semibold">
+                            {i.product.name}
+                            {i.variantName && (
+                              <span className="ml-1 text-muted-foreground">— {i.variantName}</span>
+                            )}
+                            {i.portion && (
+                              <span className="ml-1 rounded bg-secondary/15 px-1 text-[10px] uppercase text-secondary">porción</span>
+                            )}
+                          </p>
                           <button
-                            onClick={() => cart.remove(i.product.id)}
+                            onClick={() => cart.remove(i.key)}
                             className="text-xs text-muted-foreground hover:text-destructive"
                           >
                             Quitar
                           </button>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {formatPrice(i.product.price)}
+                          {formatPrice(i.unitPrice)}
                         </p>
                         <div className="mt-2 flex items-center gap-2">
                           <button
-                            onClick={() => cart.setQty(i.product.id, i.qty - 1)}
+                            onClick={() => cart.setQty(i.key, i.qty - 1)}
                             className="grid h-7 w-7 place-items-center rounded-sm border border-foreground/20 hover:border-primary"
                             aria-label="Restar"
                           >−</button>
                           <span className="w-6 text-center font-mono text-sm">{i.qty}</span>
                           <button
-                            onClick={() => cart.setQty(i.product.id, i.qty + 1)}
+                            onClick={() => cart.setQty(i.key, i.qty + 1)}
                             className="grid h-7 w-7 place-items-center rounded-sm border border-foreground/20 hover:border-primary"
                             aria-label="Sumar"
                           >+</button>
                           <span className="ml-auto font-display text-lg text-primary">
-                            {formatPrice(i.qty * i.product.price)}
+                            {formatPrice(i.qty * i.unitPrice)}
                           </span>
                         </div>
                       </div>
                     </li>
                   ))}
+
                 </ul>
               )}
             </div>

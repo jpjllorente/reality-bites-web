@@ -9,6 +9,8 @@ import { createShopCheckoutSession } from "@/lib/payments.functions";
 export interface CheckoutCartItem {
   slug: string;
   qty: number;
+  variantId?: string;
+  portion?: boolean;
 }
 
 export interface CheckoutCustomer {
