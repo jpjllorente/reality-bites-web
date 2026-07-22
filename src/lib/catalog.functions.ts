@@ -188,13 +188,32 @@ export const uploadMedia = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const bytes = Uint8Array.from(atob(data.data_base64), (c) => c.charCodeAt(0));
+    const originalBytes = Uint8Array.from(atob(data.data_base64), (c) => c.charCodeAt(0));
     const safe = data.filename.toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
-    const { error } = await supabaseAdmin.storage.from("media").upload(path, bytes, {
-      contentType: data.content_type,
+
+    // Intentamos mejorar la imagen con OpenAI. Si falla, subimos el original.
+    let bytesToStore: Uint8Array = originalBytes;
+    let contentType = data.content_type;
+    let filename = safe;
+    let enhanced = false;
+    try {
+      const { enhanceProductImage } = await import("./product-image-enhance.server");
+      const improved = await enhanceProductImage(originalBytes, data.content_type);
+      if (improved) {
+        bytesToStore = improved;
+        contentType = "image/png";
+        filename = safe.replace(/\.[a-z0-9]+$/i, "") + ".enhanced.png";
+        enhanced = true;
+      }
+    } catch (e) {
+      console.warn("[uploadMedia] enhance error, uso original", e);
+    }
+
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${filename}`;
+    const { error } = await supabaseAdmin.storage.from("media").upload(path, bytesToStore, {
+      contentType,
       upsert: false,
     });
     if (error) throw new Error(error.message);
-    return { ok: true, url: `/api/public/media/${path}`, path };
+    return { ok: true, url: `/api/public/media/${path}`, path, enhanced };
   });
