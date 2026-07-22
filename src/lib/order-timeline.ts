@@ -141,12 +141,25 @@ export function buildCustomOrderTimeline(row: CustomOrderTimelineInput): Timelin
       kind: "info",
     });
   }
+  // Distinguish deposit vs full online payment. When the rest was later
+  // cobrado en mostrador, amount_paid_cents equals the total — so we compute
+  // the deposit amount from quote * pct and treat paid_at as the deposit event.
+  const hasInStore = !!row.in_store_paid_at;
+  const depositCents =
+    row.quote_total_cents != null && row.deposit_percent != null
+      ? Math.max(50, Math.round((row.quote_total_cents * row.deposit_percent) / 100))
+      : null;
   if (row.paid_at) {
-    const isDeposit = row.payment_mode === "deposit" && row.payment_status === "deposit_paid";
+    const isDeposit =
+      row.payment_mode === "deposit" &&
+      (row.payment_status === "deposit_paid" || hasInStore);
+    const shownAmount = isDeposit
+      ? depositCents ?? row.amount_paid_cents ?? null
+      : row.amount_paid_cents ?? null;
     events.push({
       key: "payment",
       label: isDeposit ? "Anticipo pagado" : "Pago completo recibido",
-      detail: row.amount_paid_cents ? `Importe: ${fmtEUR(row.amount_paid_cents)}` : null,
+      detail: shownAmount != null ? `Importe: ${fmtEUR(shownAmount)}` : null,
       at: row.paid_at,
       kind: "success",
     });
@@ -154,7 +167,10 @@ export function buildCustomOrderTimeline(row: CustomOrderTimelineInput): Timelin
   if (
     row.stripe_payment_intent_id &&
     row.paid_at &&
-    (row.payment_status === "paid" || row.payment_status === "deposit_paid")
+    (row.payment_status === "paid" || row.payment_status === "deposit_paid" || hasInStore) &&
+    // If the full payment happened in-store (no online payment_intent tied to
+    // the total), suppress the webhook confirmation label to avoid confusion.
+    !(hasInStore && row.payment_mode !== "deposit")
   ) {
     events.push({
       key: "webhook",
@@ -189,10 +205,17 @@ export function buildCustomOrderTimeline(row: CustomOrderTimelineInput): Timelin
     });
   }
   if (row.in_store_paid_at) {
+    // Remainder collected at the counter = total − online deposit (when there
+    // was one) or the full total (fresh in-store sale).
+    const paidInStore =
+      row.payment_mode === "deposit" && depositCents != null && row.quote_total_cents != null
+        ? Math.max(0, row.quote_total_cents - depositCents)
+        : row.amount_paid_cents ?? row.quote_total_cents ?? null;
+    const isRemainder = row.payment_mode === "deposit";
     events.push({
       key: "in-store-paid",
-      label: "Resto cobrado en mostrador",
-      detail: row.amount_paid_cents ? `Total abonado: ${fmtEUR(row.amount_paid_cents)}` : null,
+      label: isRemainder ? "Resto cobrado en mostrador" : "Cobrado en mostrador",
+      detail: paidInStore != null ? `Importe: ${fmtEUR(paidInStore)}` : null,
       at: row.in_store_paid_at,
       kind: "success",
     });

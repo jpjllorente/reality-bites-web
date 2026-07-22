@@ -291,14 +291,22 @@ export const finalizeCustomOrderPayment = createServerFn({ method: "POST" })
         const { supabaseAdmin } = await import(
           "@/integrations/supabase/client.server"
         );
-        // Read previous amount to sum (a "full" payment after a deposit only
-        // charges the remainder — sum keeps amount_paid_cents = true total).
+        const sessionPI =
+          typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : (session.payment_intent as any)?.id ?? null;
         const { data: prev } = await supabaseAdmin
           .from("custom_orders")
-          .select("amount_paid_cents, payment_status")
+          .select("amount_paid_cents, payment_status, stripe_payment_intent_id")
           .eq("id", orderId)
           .maybeSingle();
-        if (prev?.payment_status !== "paid") {
+        // Idempotency guard: if the webhook already recorded THIS session's
+        // payment intent, don't sum again (that produced amount_paid = 2×
+        // deposit and a wrong remainder in the ready-for-pickup email).
+        const alreadyProcessed =
+          sessionPI &&
+          (prev as any)?.stripe_payment_intent_id === sessionPI;
+        if (prev?.payment_status !== "paid" && !alreadyProcessed) {
           const nextStatus = mode === "full" ? "paid" : "deposit_paid";
           const previousPaid = prev?.amount_paid_cents ?? 0;
           const summed = previousPaid + (session.amount_total ?? 0);
@@ -309,10 +317,7 @@ export const finalizeCustomOrderPayment = createServerFn({ method: "POST" })
               paid_at: new Date().toISOString(),
               payment_mode: mode,
               status: "confirmed",
-              stripe_payment_intent_id:
-                typeof session.payment_intent === "string"
-                  ? session.payment_intent
-                  : (session.payment_intent as any)?.id ?? null,
+              stripe_payment_intent_id: sessionPI,
             })
             .eq("id", orderId);
 
@@ -442,7 +447,7 @@ export const markCustomOrderInStorePaid = createServerFn({ method: "POST" })
     const { data: row, error } = await supabaseAdmin
       .from("custom_orders")
       .select(
-        "id, quote_total_cents, amount_paid_cents, payment_status, ready_at",
+        "id, quote_total_cents, amount_paid_cents, payment_status, payment_mode, paid_at, ready_at",
       )
       .eq("id", data.orderId)
       .maybeSingle();
@@ -454,17 +459,24 @@ export const markCustomOrderInStorePaid = createServerFn({ method: "POST" })
       return { error: "Falta el presupuesto para poder cobrar." };
     }
 
+    // Preserve online-deposit info so the timeline can still show "Anticipo
+    // pagado" alongside "Resto cobrado en mostrador". Only stamp payment_mode
+    // / paid_at when there was NO prior online payment (fresh in-store sale).
+    const hadOnlineDeposit = row.payment_status === "deposit_paid";
     const now = new Date().toISOString();
+    const updates: Record<string, unknown> = {
+      payment_status: "paid",
+      amount_paid_cents: row.quote_total_cents,
+      in_store_paid_at: now,
+      status: "confirmed",
+      ready_at: row.ready_at ?? now,
+    };
+    if (!hadOnlineDeposit) {
+      updates.payment_mode = "full";
+      updates.paid_at = row.paid_at ?? now;
+    }
     await (supabaseAdmin.from("custom_orders") as any)
-      .update({
-        payment_status: "paid",
-        payment_mode: "full",
-        amount_paid_cents: row.quote_total_cents,
-        paid_at: now,
-        in_store_paid_at: now,
-        status: "confirmed",
-        ready_at: row.ready_at ?? now,
-      })
+      .update(updates)
       .eq("id", row.id);
 
     try {
