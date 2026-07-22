@@ -12,6 +12,12 @@ import {
   upsertProduct,
   deleteProduct,
 } from "@/lib/catalog.functions";
+import {
+  forceSyncProduct,
+  reconcileProductsWithStripe,
+  type ProductDiscrepancy,
+} from "@/lib/catalog-admin.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/_authenticated/productos")({
   head: () => ({
