@@ -25,12 +25,15 @@ export const Route = createFileRoute("/_authenticated/productos")({
 
 const CATEGORIES = ["Repostería", "Café", "Bites"] as const;
 
+type Variant = { id: string; name: string; active: boolean };
+
 type Row = {
   id: string;
   slug: string;
   name: string;
   description: string;
   price_cents: number;
+  portion_price_cents: number | null;
   category: string;
   image_url: string;
   sort_order: number;
@@ -39,6 +42,7 @@ type Row = {
   tags: string[];
   seo_title: string;
   seo_description: string;
+  variants: Variant[];
 };
 
 const EMPTY: Row = {
@@ -47,6 +51,7 @@ const EMPTY: Row = {
   name: "",
   description: "",
   price_cents: 0,
+  portion_price_cents: null,
   category: "Repostería",
   image_url: "",
   sort_order: 0,
@@ -55,7 +60,9 @@ const EMPTY: Row = {
   tags: [],
   seo_title: "",
   seo_description: "",
+  variants: [],
 };
+
 
 function ProductsPage() {
   const { user } = Route.useRouteContext();
