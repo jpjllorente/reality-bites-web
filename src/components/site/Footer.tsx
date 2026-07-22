@@ -17,6 +17,7 @@ export function Footer() {
           <Link to="/galeria" className="hover:text-secondary">Galería</Link>
           <Link to="/encargos" className="hover:text-secondary">Encargos</Link>
           <Link to="/contacto" className="hover:text-secondary">Contacto</Link>
+          <Link to="/privacidad" className="hover:text-secondary">Privacidad</Link>
           <a
             href="https://instagram.com/144reality_bitesandcoffee"
             target="_blank"
