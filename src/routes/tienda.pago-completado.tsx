@@ -6,7 +6,7 @@ import { finalizeShopCheckout } from "@/lib/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useCart } from "@/hooks/use-cart";
 
-const WHATSAPP_NUMBER = "34681634623";
+
 
 function formatPrice(cents: number) {
   return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(cents / 100);
@@ -85,19 +85,6 @@ function PagoCompletado() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session_id]);
 
-  function whatsappHref() {
-    if (state.kind !== "ok") return "#";
-    const lines = state.items.map(
-      (i) => `• ${i.qty} × ${i.name} — ${formatPrice(i.qty * i.price_cents)}`,
-    );
-    const short = state.orderId ? state.orderId.slice(0, 8) : "";
-    const msg =
-      `Hola 144 Reality, soy ${state.customer.name}. Acabo de pagar mi pedido${short ? ` #${short}` : ""}:%0A%0A` +
-      lines.join("%0A") +
-      `%0A%0ATotal: ${formatPrice(state.totalCents)}` +
-      (state.customer.notes ? `%0A%0ANotas: ${encodeURIComponent(state.customer.notes)}` : "");
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
-  }
 
   return (
     <>
@@ -128,7 +115,7 @@ function PagoCompletado() {
               <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-secondary">— Pago confirmado</p>
               <h1 className="mt-2 font-display text-4xl text-primary">¡Gracias, {state.customer.name.split(" ")[0]}!</h1>
               <p className="mt-3 text-sm text-foreground/80">
-                Tu pedido {state.orderId ? <span className="font-mono">#{state.orderId.slice(0, 8)}</span> : null} ha sido pagado correctamente. Confírmanos por WhatsApp la hora de recogida o los datos de entrega.
+                Tu pedido {state.orderId ? <span className="font-mono">#{state.orderId.slice(0, 8)}</span> : null} ha sido pagado correctamente. Te acabamos de enviar un email de confirmación con el detalle y el equipo ya ha recibido el aviso para prepararlo.
               </p>
 
               <ul className="mt-6 divide-y divide-foreground/10 border-y border-foreground/10">
@@ -147,21 +134,14 @@ function PagoCompletado() {
               </div>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a
-                  href={whatsappHref()}
-                  target="_blank"
-                  rel="noopener"
-                  className="rounded-sm bg-secondary px-5 py-3 text-center text-xs font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90"
-                >
-                  Confirmar por WhatsApp
-                </a>
                 <Link
                   to="/tienda"
-                  className="rounded-sm border border-foreground/20 px-5 py-3 text-center text-xs font-bold uppercase tracking-widest text-foreground hover:bg-muted"
+                  className="rounded-sm bg-secondary px-5 py-3 text-center text-xs font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90"
                 >
                   Seguir comprando
                 </Link>
               </div>
+
             </div>
           )}
 
