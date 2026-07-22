@@ -9,12 +9,19 @@ async function assertAdmin(context: { supabase: unknown; userId: string }) {
 
 /* ---------------- PRODUCTS ---------------- */
 
+const VariantSchema = z.object({
+  id: z.string().trim().min(1).max(60).regex(/^[a-z0-9-]+$/i, "Solo letras, números y guiones"),
+  name: z.string().trim().min(1).max(120),
+  active: z.boolean().default(true),
+});
+
 const ProductSchema = z.object({
   id: z.string().uuid().optional(),
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/, "Solo minúsculas, números y guiones"),
   name: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).default(""),
   price_cents: z.number().int().min(0).max(100_000_000),
+  portion_price_cents: z.number().int().min(0).max(100_000_000).nullable().optional(),
   category: z.string().trim().min(1).max(60),
   image_url: z.string().trim().max(1000).default(""),
   sort_order: z.number().int().default(0),
@@ -23,6 +30,7 @@ const ProductSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
   seo_title: z.string().trim().max(70).default(""),
   seo_description: z.string().trim().max(200).default(""),
+  variants: z.array(VariantSchema).max(30).default([]),
 });
 
 export const listProductsAdmin = createServerFn({ method: "GET" })
@@ -45,32 +53,56 @@ export const upsertProduct = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Ensure variant ids are unique.
+    const seen = new Set<string>();
+    for (const v of data.variants) {
+      if (seen.has(v.id)) throw new Error(`Variante duplicada: ${v.id}`);
+      seen.add(v.id);
+    }
+    // Normalize portion price: null when 0 or missing.
+    const portion = data.portion_price_cents && data.portion_price_cents > 0
+      ? data.portion_price_cents
+      : null;
+    const payload = { ...data, portion_price_cents: portion } as any;
     let productId: string;
     if (data.id) {
-      const { id, ...rest } = data;
-      const { error } = await supabaseAdmin.from("products").update(rest).eq("id", id);
+      const { id, ...rest } = payload;
+      const { error } = await (supabaseAdmin.from("products") as any).update(rest).eq("id", id);
       if (error) throw new Error(error.message);
       productId = id;
     } else {
-      const { data: inserted, error } = await supabaseAdmin
-        .from("products")
-        .insert(data)
+      const { data: inserted, error } = await (supabaseAdmin
+        .from("products") as any)
+        .insert(payload)
         .select("id")
         .single();
       if (error) throw new Error(error.message);
       productId = inserted.id;
+    }
+    // Resolve caller origin so relative /api/public/media/* URLs become
+    // https:// absolute URLs Stripe will accept.
+    let origin: string | null = null;
+    try {
+      const { getRequest } = await import("@tanstack/react-start/server");
+      const req = getRequest();
+      const proto = req.headers.get("x-forwarded-proto") ?? "https";
+      const host = req.headers.get("host") ?? "";
+      if (host) origin = `${proto}://${host}`;
+    } catch {
+      // Non-request contexts (unlikely here). Sync will just skip images.
     }
     // Fire-and-forget mirror to Stripe. Never block save on Stripe errors.
     try {
       const { syncProductToStripeInternal } = await import(
         "./stripe-product-sync.server"
       );
-      await syncProductToStripeInternal(productId);
+      await syncProductToStripeInternal(productId, origin);
     } catch (e) {
       console.warn("[upsertProduct] Stripe sync failed", e);
     }
     return { ok: true, id: productId };
   });
+
 
 export const deleteProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

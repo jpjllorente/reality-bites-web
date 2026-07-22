@@ -11,6 +11,8 @@ const StripeEnvSchema = z.enum(["sandbox", "live"]);
 const CartItemSchema = z.object({
   slug: z.string().trim().min(1).max(120),
   qty: z.number().int().min(1).max(99),
+  variantId: z.string().trim().max(60).optional(),
+  portion: z.boolean().optional(),
 });
 
 const CreateCheckoutSchema = z.object({
@@ -35,6 +37,15 @@ type CheckoutResult =
   | { clientSecret: string; orderId: string }
   | { error: string };
 
+type ProductVariantRow = { id: string; name: string; active?: boolean };
+
+function resolveVariantName(variants: unknown, variantId?: string): string | null {
+  if (!variantId || !Array.isArray(variants)) return null;
+  const v = (variants as ProductVariantRow[]).find((x) => x?.id === variantId);
+  if (!v || v.active === false) return null;
+  return v.name ?? null;
+}
+
 export const createShopCheckoutSession = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => CreateCheckoutSchema.parse(data))
   .handler(async ({ data }): Promise<CheckoutResult> => {
@@ -45,9 +56,9 @@ export const createShopCheckoutSession = createServerFn({ method: "POST" })
 
       // Resolve prices server-side from the DB to prevent tampering.
       const slugs = Array.from(new Set(data.items.map((i) => i.slug)));
-      const { data: dbProducts, error: productsError } = await supabaseAdmin
-        .from("products")
-        .select("slug, name, price_cents, image_url, is_active, in_stock")
+      const { data: dbProducts, error: productsError } = await (supabaseAdmin
+        .from("products") as any)
+        .select("slug, name, price_cents, portion_price_cents, image_url, is_active, in_stock, variants")
         .in("slug", slugs);
 
       if (productsError) throw new Error(productsError.message);
@@ -55,13 +66,15 @@ export const createShopCheckoutSession = createServerFn({ method: "POST" })
         return { error: "No se encontraron los productos del pedido." };
       }
 
-      const bySlug = new Map(dbProducts.map((p) => [p.slug, p]));
+      const bySlug = new Map<string, any>(dbProducts.map((p: any) => [p.slug, p]));
       const lineItems: Array<{
         name: string;
         qty: number;
         unit_amount: number;
         image?: string | null;
         slug: string;
+        variantId?: string;
+        portion?: boolean;
       }> = [];
       let totalCents = 0;
 
@@ -72,19 +85,36 @@ export const createShopCheckoutSession = createServerFn({ method: "POST" })
             error: !product ? `El producto "${item.slug}" ya no está disponible.` : `"${product.name}" está agotado o inactivo.`,
           };
         }
-        const unitAmount = product.price_cents ?? 0;
-        if (unitAmount < 30) {
-          return {
-            error: `El producto "${product.name}" tiene un precio inválido.`,
-          };
+        const wantsPortion = item.portion === true;
+        const portionCents = product.portion_price_cents as number | null;
+        if (wantsPortion && (portionCents == null || portionCents <= 0)) {
+          return { error: `"${product.name}" no tiene precio por porción.` };
         }
+        const unitAmount = wantsPortion ? (portionCents as number) : (product.price_cents ?? 0);
+        if (unitAmount < 30) {
+          return { error: `El producto "${product.name}" tiene un precio inválido.` };
+        }
+        let variantLabel: string | null = null;
+        if (item.variantId) {
+          variantLabel = resolveVariantName(product.variants, item.variantId);
+          if (!variantLabel) {
+            return { error: `La variante seleccionada de "${product.name}" ya no está disponible.` };
+          }
+        }
+        const displayName = [
+          product.name,
+          variantLabel ? `— ${variantLabel}` : null,
+          wantsPortion ? "(porción)" : null,
+        ].filter(Boolean).join(" ");
         totalCents += unitAmount * item.qty;
         lineItems.push({
           slug: product.slug,
-          name: product.name,
+          name: displayName,
           qty: item.qty,
           unit_amount: unitAmount,
           image: product.image_url,
+          variantId: item.variantId,
+          portion: wantsPortion,
         });
       }
 
@@ -106,6 +136,8 @@ export const createShopCheckoutSession = createServerFn({ method: "POST" })
             name: li.name,
             qty: li.qty,
             price_cents: li.unit_amount,
+            variant_id: li.variantId ?? null,
+            portion: !!li.portion,
           })),
           total_cents: totalCents,
           payment_status: "unpaid",
@@ -130,7 +162,7 @@ export const createShopCheckoutSession = createServerFn({ method: "POST" })
             unit_amount: li.unit_amount,
             product_data: {
               name: li.name,
-              ...(li.image ? { images: [li.image] } : {}),
+              ...(li.image && /^https:\/\//i.test(li.image) ? { images: [li.image] } : {}),
             },
           },
         })),
@@ -156,6 +188,7 @@ export const createShopCheckoutSession = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(error) };
     }
   });
+
 
 const FinalizeSchema = z.object({
   environment: StripeEnvSchema,
