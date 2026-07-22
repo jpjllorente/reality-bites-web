@@ -9,7 +9,6 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
   const orderId = session?.metadata?.shop_order_id as string | undefined;
   const stripe = createStripeClient(env);
 
-  // Resolve the PaymentIntent id for reconciliation, even for one-off charges.
   const paymentIntentId =
     typeof session?.payment_intent === "string"
       ? session.payment_intent
@@ -39,8 +38,9 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
 
   if (!paid) return;
 
-  // Idempotent update: only flip unpaid → paid, stamp payment info.
-  await (supabaseAdmin.from("shop_orders") as any)
+  // Idempotent update: only flip unpaid → paid. Row-level guard ensures
+  // duplicate deliveries don't re-send emails.
+  const { data: updated } = await (supabaseAdmin.from("shop_orders") as any)
     .update({
       payment_status: "paid",
       amount_paid_cents: session.amount_total ?? null,
@@ -49,10 +49,9 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
       payment_confirmed_at: new Date().toISOString(),
     })
     .eq("id", orderId)
-    .neq("payment_status", "paid");
+    .neq("payment_status", "paid")
+    .select("id");
 
-  // Also stamp payment_intent alone if the row was already paid (finalize
-  // ran first with just amount_paid_cents but no intent id).
   if (paymentIntentId) {
     await (supabaseAdmin.from("shop_orders") as any)
       .update({ stripe_payment_intent_id: paymentIntentId })
@@ -60,13 +59,15 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
       .is("stripe_payment_intent_id", null);
   }
 
-  await sendShopOrderEmails(orderId);
+  // Only send emails when the transition actually happened.
+  if (updated && updated.length > 0) {
+    await sendShopOrderEmails(orderId);
+  }
 
-  // Suppress unused-import warning for stripe when we don't need retrieval.
   void stripe;
 }
 
-async function handleChargeRefunded(charge: any, env: StripeEnv) {
+async function handleChargeRefunded(charge: any) {
   const paymentIntentId =
     typeof charge?.payment_intent === "string"
       ? charge.payment_intent
@@ -104,7 +105,6 @@ async function handleChargeRefunded(charge: any, env: StripeEnv) {
     return;
   }
 
-  // Idempotent: only update if refund amount grew
   const prevRefunded = row.amount_refunded_cents ?? 0;
   if (amountRefunded <= prevRefunded) return;
 
@@ -136,19 +136,21 @@ async function handlePaymentFailed(
   const { sendPaymentFailedNotification } = await import(
     "@/lib/shop-order-mailer.server"
   );
-  await (supabaseAdmin.from("shop_orders") as any)
+  const { data: updated } = await (supabaseAdmin.from("shop_orders") as any)
     .update({
       payment_status: "failed",
       payment_failed_at: new Date().toISOString(),
       payment_failure_reason: reason || "Pago no completado",
     })
     .eq("id", orderId)
-    .not("payment_status", "in", "(paid,refunded,partially_refunded)");
-  await sendPaymentFailedNotification({ orderId, reason: reason || undefined });
+    .not("payment_status", "in", "(paid,refunded,partially_refunded,failed)")
+    .select("id");
+  if (updated && updated.length > 0) {
+    await sendPaymentFailedNotification({ orderId, reason: reason || undefined });
+  }
 }
 
-async function handleWebhookEvent(request: Request, env: StripeEnv) {
-  const event = await verifyWebhook(request, env);
+async function dispatchEvent(event: any, env: StripeEnv) {
   switch (event.type) {
     case "checkout.session.completed":
     case "checkout.session.async_payment_succeeded":
@@ -156,7 +158,7 @@ async function handleWebhookEvent(request: Request, env: StripeEnv) {
       break;
     case "charge.refunded":
     case "charge.refund.updated":
-      await handleChargeRefunded(event.data.object, env);
+      await handleChargeRefunded(event.data.object);
       break;
     case "checkout.session.async_payment_failed":
       await handlePaymentFailed(event.data.object, "Pago asíncrono rechazado");
@@ -177,6 +179,54 @@ async function handleWebhookEvent(request: Request, env: StripeEnv) {
     }
     default:
       console.log("[stripe webhook] unhandled event", event.type);
+  }
+}
+
+async function handleWebhookEvent(request: Request, env: StripeEnv) {
+  const event: any = await verifyWebhook(request, env);
+  const eventId: string | undefined = event?.id;
+
+  const { supabaseAdmin } = await import(
+    "@/integrations/supabase/client.server"
+  );
+
+  // Idempotency: try to claim this event id. If it already exists, skip.
+  if (eventId) {
+    const { error: insertErr } = await (supabaseAdmin
+      .from("stripe_webhook_events") as any)
+      .insert({
+        event_id: eventId,
+        event_type: event.type,
+        environment: env,
+      });
+    if (insertErr) {
+      // Unique violation → already processed (or in-flight). Ack.
+      if ((insertErr as any).code === "23505") {
+        console.log("[stripe webhook] duplicate event, skipping", eventId);
+        return;
+      }
+      throw insertErr;
+    }
+  }
+
+  try {
+    await dispatchEvent(event, env);
+    if (eventId) {
+      await (supabaseAdmin.from("stripe_webhook_events") as any)
+        .update({ processed_at: new Date().toISOString() })
+        .eq("event_id", eventId);
+    }
+  } catch (e: any) {
+    if (eventId) {
+      // Delete the claim so Stripe retries re-run the handler.
+      await (supabaseAdmin.from("stripe_webhook_events") as any)
+        .update({ error: String(e?.message ?? e) })
+        .eq("event_id", eventId);
+      await (supabaseAdmin.from("stripe_webhook_events") as any)
+        .delete()
+        .eq("event_id", eventId);
+    }
+    throw e;
   }
 }
 

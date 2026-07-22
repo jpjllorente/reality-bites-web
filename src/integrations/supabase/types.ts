@@ -248,6 +248,33 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          environment: string
+          error: string | null
+          event_id: string
+          event_type: string
+          processed_at: string | null
+          received_at: string
+        }
+        Insert: {
+          environment: string
+          error?: string | null
+          event_id: string
+          event_type: string
+          processed_at?: string | null
+          received_at?: string
+        }
+        Update: {
+          environment?: string
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          processed_at?: string | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
