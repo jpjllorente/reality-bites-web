@@ -77,6 +77,7 @@ function PagoCompletado() {
           totalCents: res.total_cents,
           items: res.items,
           customer: res.customer,
+          timeline: res.timeline,
         });
         // Clear cart on any successful finalize (paid or pending capture).
         // The order row already exists server-side, so keeping items in the
