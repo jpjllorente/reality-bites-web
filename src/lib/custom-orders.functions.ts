@@ -44,15 +44,8 @@ export const submitCustomOrder = createServerFn({ method: "POST" })
     // Try to send an email notification. If the template registry / email
     // domain aren't ready yet, we don't fail the request — the row is safe.
     try {
-      const modPath = "@/lib/email-templates/send-email";
-      const mod = (await import(/* @vite-ignore */ modPath)) as {
-        sendTemplateEmail: (
-          name: string,
-          to: string,
-          opts: { templateData: Record<string, string>; idempotencyKey: string },
-        ) => Promise<unknown>;
-      };
-      await mod.sendTemplateEmail("custom-order-notification", "hola@144reality.com", {
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      await sendTemplateEmail("custom-order-notification", "hola@144reality.com", {
         templateData: {
           name: data.name,
           email: data.email,
@@ -66,13 +59,14 @@ export const submitCustomOrder = createServerFn({ method: "POST" })
           message: data.message || "-",
         },
         idempotencyKey: `custom-order-${inserted.id}`,
+        replyTo: data.email,
       });
-      await mod.sendTemplateEmail("custom-order-confirmation", data.email, {
+      await sendTemplateEmail("custom-order-confirmation", data.email, {
         templateData: { name: data.name, orderType: data.orderType },
         idempotencyKey: `custom-order-confirm-${inserted.id}`,
       });
     } catch (err) {
-      console.warn("[custom_orders] email skipped", err);
+      console.error("[custom_orders] email send failed", err);
     }
 
 
