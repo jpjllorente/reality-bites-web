@@ -517,6 +517,174 @@ function Text({ label, value, onChange }: { label: string; value: string; onChan
   );
 }
 
+function PortionPriceEditor({
+  value,
+  onChange,
+}: {
+  value: number | null;
+  onChange: (cents: number | null) => void;
+}) {
+  const enabled = value != null && value > 0;
+  const [open, setOpen] = useState(enabled);
+  const [input, setInput] = useState(enabled ? ((value as number) / 100).toFixed(2) : "0.00");
+
+  if (!open && !enabled) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true);
+          setInput("0.00");
+        }}
+        className="rounded-sm border border-dashed border-foreground/30 px-3 py-2 text-[11px] uppercase tracking-widest text-muted-foreground hover:border-primary hover:text-primary"
+      >
+        + Añadir precio por porción
+      </button>
+    );
+  }
+  return (
+    <div className="rounded-sm border border-dashed border-foreground/20 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-secondary">
+          Precio por porción (opcional)
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            setInput("0.00");
+            onChange(null);
+          }}
+          className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive"
+        >
+          Quitar
+        </button>
+      </div>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={input}
+        onChange={(e) => {
+          const raw = e.target.value.replace(",", ".");
+          if (raw !== "" && !/^\d*\.?\d{0,2}$/.test(raw)) return;
+          setInput(raw);
+          const parsed = parseFloat(raw);
+          onChange(isNaN(parsed) ? null : Math.round(parsed * 100));
+        }}
+        onBlur={() => {
+          if (value != null && value > 0) setInput((value / 100).toFixed(2));
+        }}
+        className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+      />
+      <p className="mt-1 text-[10px] text-muted-foreground">
+        Se sincroniza con Stripe como precio adicional del mismo producto.
+      </p>
+    </div>
+  );
+}
+
+function VariantsEditor({
+  variants,
+  onChange,
+}: {
+  variants: { id: string; name: string; active: boolean }[];
+  onChange: (v: { id: string; name: string; active: boolean }[]) => void;
+}) {
+  function slugId(s: string) {
+    return s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60);
+  }
+  function add() {
+    const base = "variante";
+    let idx = variants.length + 1;
+    let id = `${base}-${idx}`;
+    while (variants.some((v) => v.id === id)) {
+      idx += 1;
+      id = `${base}-${idx}`;
+    }
+    onChange([...variants, { id, name: "", active: true }]);
+  }
+  return (
+    <div className="rounded-sm border border-dashed border-foreground/20 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-secondary">
+          Variantes (ej: topping, sabor…)
+        </p>
+        <button
+          type="button"
+          onClick={add}
+          className="rounded-sm border border-foreground/20 px-2 py-1 text-[10px] uppercase tracking-widest hover:border-primary hover:text-primary"
+        >
+          + Añadir
+        </button>
+      </div>
+      {variants.length === 0 && (
+        <p className="text-[11px] text-muted-foreground">
+          Sin variantes. El producto se vende tal cual.
+        </p>
+      )}
+      <ul className="space-y-2">
+        {variants.map((v, i) => (
+          <li key={i} className="flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              value={v.name}
+              placeholder="Nombre (ej: Oreo)"
+              onChange={(e) => {
+                const name = e.target.value;
+                const next = [...variants];
+                const autoId = slugId(name) || `variante-${i + 1}`;
+                next[i] = {
+                  ...v,
+                  name,
+                  id: v.id.startsWith("variante-") || v.id === "" ? autoId : v.id,
+                };
+                onChange(next);
+              }}
+              className="min-w-[140px] flex-1 rounded-sm border border-foreground/20 bg-background px-2 py-1 text-sm focus:border-primary focus:outline-none"
+            />
+            <input
+              type="text"
+              value={v.id}
+              placeholder="id"
+              onChange={(e) => {
+                const next = [...variants];
+                next[i] = { ...v, id: slugId(e.target.value) };
+                onChange(next);
+              }}
+              className="w-32 rounded-sm border border-foreground/20 bg-background px-2 py-1 font-mono text-[11px] focus:border-primary focus:outline-none"
+            />
+            <label className="flex items-center gap-1 text-[10px] uppercase tracking-widest">
+              <input
+                type="checkbox"
+                checked={v.active}
+                onChange={(e) => {
+                  const next = [...variants];
+                  next[i] = { ...v, active: e.target.checked };
+                  onChange(next);
+                }}
+              />
+              Activa
+            </label>
+            <button
+              type="button"
+              onClick={() => onChange(variants.filter((_, j) => j !== i))}
+              className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive"
+            >
+              Borrar
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function NavTabs({ current }: { current: "dashboard" | "productos" | "galeria" | "pagos" }) {
   const tabs = [
     { to: "/dashboard", key: "dashboard", label: "Pedidos" },
