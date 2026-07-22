@@ -263,12 +263,13 @@ export const finalizeShopCheckout = createServerFn({ method: "POST" })
           total_cents: session.amount_total ?? 0,
           items: [],
           customer: { name: "", phone: "", email: null, notes: null },
+          timeline: [],
         };
       }
 
       const { data: order, error } = await supabaseAdmin
         .from("shop_orders")
-        .select("id, name, phone, email, notes, items, total_cents, payment_status")
+        .select("*")
         .eq("id", orderId)
         .single();
 
@@ -283,22 +284,20 @@ export const finalizeShopCheckout = createServerFn({ method: "POST" })
             ? "pending"
             : "failed";
 
+      const { buildShopOrderTimeline } = await import("@/lib/order-timeline");
+
       return {
         status,
         orderId: order.id,
         total_cents: order.total_cents,
-        items: (order.items as Array<{
-          id: string;
-          name: string;
-          qty: number;
-          price_cents: number;
-        }>) ?? [],
+        items: (order.items as FinalizeItem[]) ?? [],
         customer: {
           name: order.name,
           phone: order.phone,
           email: order.email,
           notes: order.notes,
         },
+        timeline: buildShopOrderTimeline(order as any),
       };
     } catch (error) {
       console.error("[stripe] finalizeShopCheckout", error);
