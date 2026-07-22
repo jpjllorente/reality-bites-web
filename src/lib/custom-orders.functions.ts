@@ -468,7 +468,10 @@ export const markCustomOrderInStorePaid = createServerFn({ method: "POST" })
       payment_status: "paid",
       amount_paid_cents: row.quote_total_cents,
       in_store_paid_at: now,
-      status: "confirmed",
+      // Pago en mostrador cierra el ciclo: el cliente se lleva el pedido en
+      // el mismo acto, así que lo marcamos como finalizado directamente.
+      status: "completed",
+      completed_at: now,
       ready_at: row.ready_at ?? now,
     };
     if (!hadOnlineDeposit) {
@@ -488,6 +491,44 @@ export const markCustomOrderInStorePaid = createServerFn({ method: "POST" })
       console.error("[custom_orders] in-store paid email failed", e);
     }
 
+    return { ok: true };
+  });
+
+const CompleteSchema = z.object({
+  orderId: z.string().uuid(),
+});
+
+/**
+ * Marca un encargo como entregado/recogido cuando el pago ya se hizo online.
+ * Los pagos en mostrador ya se cierran solos en `markCustomOrderInStorePaid`.
+ */
+export const markCustomOrderCompleted = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => CompleteSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { data: row, error } = await supabaseAdmin
+      .from("custom_orders")
+      .select("id, payment_status, completed_at")
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (error || !row) return { error: "Encargo no encontrado." };
+    if ((row as any).completed_at) {
+      return { error: "Este encargo ya está finalizado." };
+    }
+    if (row.payment_status !== "paid") {
+      return {
+        error:
+          "Solo se puede finalizar cuando el pago está completado. Cobra primero el importe restante.",
+      };
+    }
+    const now = new Date().toISOString();
+    await (supabaseAdmin.from("custom_orders") as any)
+      .update({ status: "completed", completed_at: now })
+      .eq("id", row.id);
     return { ok: true };
   });
 

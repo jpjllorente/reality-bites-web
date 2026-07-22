@@ -19,6 +19,7 @@ export type Database = {
           allergens: string | null
           amount_paid_cents: number | null
           budget_range: string | null
+          completed_at: string | null
           confirmation_sent_at: string | null
           created_at: string
           deposit_percent: number | null
@@ -49,6 +50,7 @@ export type Database = {
           allergens?: string | null
           amount_paid_cents?: number | null
           budget_range?: string | null
+          completed_at?: string | null
           confirmation_sent_at?: string | null
           created_at?: string
           deposit_percent?: number | null
@@ -79,6 +81,7 @@ export type Database = {
           allergens?: string | null
           amount_paid_cents?: number | null
           budget_range?: string | null
+          completed_at?: string | null
           confirmation_sent_at?: string | null
           created_at?: string
           deposit_percent?: number | null

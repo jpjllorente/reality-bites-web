@@ -118,6 +118,7 @@ export interface CustomOrderTimelineInput {
   ready_at?: string | null;
   ready_notified_at?: string | null;
   in_store_paid_at?: string | null;
+  completed_at?: string | null;
 }
 
 export function buildCustomOrderTimeline(row: CustomOrderTimelineInput): TimelineEvent[] {
@@ -217,6 +218,14 @@ export function buildCustomOrderTimeline(row: CustomOrderTimelineInput): Timelin
       label: isRemainder ? "Resto cobrado en mostrador" : "Cobrado en mostrador",
       detail: paidInStore != null ? `Importe: ${fmtEUR(paidInStore)}` : null,
       at: row.in_store_paid_at,
+      kind: "success",
+    });
+  }
+  if (row.completed_at) {
+    events.push({
+      key: "completed",
+      label: "Pedido entregado · finalizado",
+      at: row.completed_at,
       kind: "success",
     });
   }
