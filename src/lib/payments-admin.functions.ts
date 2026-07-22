@@ -31,7 +31,7 @@ export const listPayments = createServerFn({ method: "POST" })
     );
     let q = (supabaseAdmin.from("shop_orders") as any)
       .select(
-        "id, created_at, name, email, phone, total_cents, amount_paid_cents, amount_refunded_cents, payment_status, payment_method, stripe_session_id, stripe_payment_intent_id, payment_confirmed_at, refunded_at, payment_failed_at, payment_failure_reason, status",
+        "id, created_at, name, email, phone, total_cents, amount_paid_cents, amount_refunded_cents, payment_status, stripe_session_id, stripe_payment_intent_id, payment_confirmed_at, refunded_at, payment_failed_at, payment_failure_reason, status",
         { count: "exact" },
       )
       .order("created_at", { ascending: false })
