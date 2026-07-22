@@ -306,18 +306,42 @@ export function Catalog() {
               <span className="font-display text-2xl text-primary">{formatPrice(cart.total)}</span>
               <button
                 disabled={submitting}
-                onClick={onConfirmOrder}
+                onClick={onGoToPayment}
                 className="rounded-sm bg-secondary px-5 py-3 text-xs font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 disabled:opacity-50"
               >
-                {submitting ? "Enviando…" : "Guardar y abrir WhatsApp"}
+                {submitting ? "Cargando…" : "Pagar con tarjeta"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {payOpen && checkoutPayload && (
+        <div className="fixed inset-0 z-[70] grid place-items-start overflow-y-auto bg-primary/80 p-4" role="dialog" aria-modal="true">
+          <div className="mx-auto my-8 w-full max-w-3xl rounded-sm border border-foreground/15 bg-background p-4 shadow-2xl">
+            <div className="flex items-start justify-between gap-3 pb-3">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-secondary">— Pago seguro</p>
+                <h3 className="mt-1 font-display text-2xl text-primary">Completa tu pedido</h3>
+              </div>
+              <button
+                onClick={() => { setPayOpen(false); setCheckoutPayload(null); }}
+                className="rounded-sm p-2 text-foreground/60 hover:bg-muted"
+                aria-label="Cerrar"
+              >✕</button>
+            </div>
+            <StripeEmbeddedCheckout
+              items={checkoutPayload.items}
+              customer={checkoutPayload.customer}
+              returnUrl={returnUrl}
+            />
           </div>
         </div>
       )}
     </section>
   );
 }
+
 
 function Field({
   label,
