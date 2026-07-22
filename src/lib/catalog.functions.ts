@@ -1,11 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { isAdminEmail } from "./admin";
+import { assertAdmin as assertAdminRole } from "./auth-admin.functions";
 
-function assertAdmin(context: { claims: unknown }) {
-  const email = (context.claims as { email?: string })?.email;
-  if (!isAdminEmail(email)) throw new Error("Forbidden");
+async function assertAdmin(context: { supabase: unknown; userId: string }) {
+  await assertAdminRole(context.supabase, context.userId);
 }
 
 /* ---------------- PRODUCTS ---------------- */
