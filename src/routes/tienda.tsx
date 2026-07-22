@@ -26,7 +26,7 @@ export const Route = createFileRoute("/tienda")({
           content: "Catálogo online de repostería y café. Pedidos por WhatsApp.",
         },
         { property: "og:type", content: "website" },
-        { property: "og:url", content: "/tienda" },
+        { property: "og:url", content: "https://144reality.com/tienda" },
         { property: "og:image", content: absImage },
         { property: "og:image:alt", content: "Repostería de 144 Reality" },
         { name: "twitter:card", content: "summary_large_image" },
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/tienda")({
         },
         { name: "twitter:image", content: absImage },
       ],
-      links: [{ rel: "canonical", href: "/tienda" }],
+      links: [{ rel: "canonical", href: "https://144reality.com/tienda" }],
       scripts: [
         {
           type: "application/ld+json",
