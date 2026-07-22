@@ -139,6 +139,7 @@ const card = {
   backgroundColor: "#faf7f0",
 };
 const p = { color: "#222", fontSize: "14px", lineHeight: "22px", margin: "4px 0" };
+const pMeta = { color: "#555", fontSize: "12px", margin: "0 0 4px 12px", fontStyle: "italic" as const };
 const pMono = {
   color: "#666",
   fontSize: "12px",
