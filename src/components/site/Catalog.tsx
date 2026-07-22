@@ -312,7 +312,7 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
                 Continuar pedido
               </button>
               <p className="mt-3 text-center text-[11px] text-muted-foreground">
-                Te pedimos unos datos y abrimos WhatsApp para confirmar.
+                Elige pagar ahora con tarjeta/Bizum o reservar y pagar en tienda.
               </p>
             </div>
           </aside>
@@ -345,15 +345,28 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
                 />
               </label>
             </div>
-            <div className="mt-6 flex items-center justify-between gap-3">
-              <span className="font-display text-2xl text-primary">{formatPrice(cart.total)}</span>
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Total</span>
+                <span className="font-display text-2xl text-primary">{formatPrice(cart.total)}</span>
+              </div>
               <button
                 disabled={submitting}
                 onClick={onGoToPayment}
-                className="rounded-sm bg-secondary px-5 py-3 text-xs font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 disabled:opacity-50"
+                className="w-full rounded-sm bg-secondary px-5 py-3 text-xs font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 disabled:opacity-50"
               >
-                {submitting ? "Cargando…" : "Pagar con tarjeta"}
+                {submitting ? "Cargando…" : "Pagar ahora online"}
               </button>
+              <button
+                disabled={submitting}
+                onClick={onPayInStore}
+                className="w-full rounded-sm border border-primary bg-transparent px-5 py-3 text-xs font-bold uppercase tracking-widest text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+              >
+                {submitting ? "Enviando…" : "Reservar y pagar en tienda"}
+              </button>
+              <p className="text-center text-[11px] text-muted-foreground">
+                Pago online seguro con tarjeta, Bizum o Apple/Google Pay (según lo que tengas activo).
+              </p>
             </div>
           </div>
         </div>
