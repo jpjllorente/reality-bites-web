@@ -462,7 +462,116 @@ function QuotePanel({ row }: { row: CustomRow }) {
           </button>
         </div>
       )}
+      <PickupControls row={row} />
     </form>
+  );
+}
+
+function PickupControls({ row }: { row: CustomRow }) {
+  const router = useRouter();
+  const markReady = useServerFn(markCustomOrderReadyForPickup);
+  const markPaid = useServerFn(markCustomOrderInStorePaid);
+  const [busy, setBusy] = useState<"ready" | "instore" | null>(null);
+
+  const total = row.quote_total_cents ?? 0;
+  const paid = row.amount_paid_cents ?? 0;
+  const remaining = Math.max(0, total - paid);
+  const quoted = row.quote_total_cents != null;
+  const fullyPaid = row.payment_status === "paid";
+
+  if (!quoted) return null;
+
+  async function onReady(notify: boolean) {
+    setBusy("ready");
+    try {
+      const res = await markReady({
+        data: {
+          orderId: row.id,
+          publicOrigin: window.location.origin,
+          notify,
+        },
+      });
+      if ("error" in res && res.error) toast.error(res.error);
+      else {
+        toast.success(
+          notify ? "Cliente avisado por email." : "Marcado como listo.",
+        );
+        router.invalidate();
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function onInStorePaid() {
+    if (!confirm(`¿Confirmar cobro en mostrador de ${formatEUR(remaining)}?`)) return;
+    setBusy("instore");
+    try {
+      const res = await markPaid({ data: { orderId: row.id } });
+      if ("error" in res && res.error) toast.error(res.error);
+      else {
+        toast.success("Cobro registrado.");
+        router.invalidate();
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-sm border border-foreground/15 bg-background/50 p-3">
+      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        Entrega y cobro final
+      </p>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        Pagado: {formatEUR(paid)} · Pendiente:{" "}
+        <span className={remaining > 0 ? "text-secondary font-semibold" : ""}>
+          {formatEUR(remaining)}
+        </span>
+        {row.ready_at ? ` · Listo desde ${formatDate(row.ready_at)}` : ""}
+        {row.in_store_paid_at ? " · Cobrado en mostrador" : ""}
+      </p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={() => onReady(true)}
+          className="rounded-sm bg-primary px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+        >
+          {busy === "ready"
+            ? "Enviando…"
+            : row.ready_notified_at
+              ? "Reenviar aviso de recogida"
+              : remaining > 0
+                ? "Listo · avisar y enviar link del resto"
+                : "Listo · avisar al cliente"}
+        </button>
+        {!row.ready_at && (
+          <button
+            type="button"
+            disabled={busy !== null}
+            onClick={() => onReady(false)}
+            className="rounded-sm border border-foreground/20 px-3 py-1.5 text-[11px] uppercase tracking-widest hover:bg-muted disabled:opacity-50"
+          >
+            Marcar listo sin avisar
+          </button>
+        )}
+        {!fullyPaid && remaining > 0 && (
+          <button
+            type="button"
+            disabled={busy !== null}
+            onClick={onInStorePaid}
+            className="rounded-sm bg-secondary px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-secondary-foreground hover:bg-secondary/90 disabled:opacity-50"
+          >
+            {busy === "instore" ? "Guardando…" : `Cobrado en mostrador (${formatEUR(remaining)})`}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
