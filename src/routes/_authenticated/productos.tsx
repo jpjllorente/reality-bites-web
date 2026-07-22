@@ -154,6 +154,11 @@ function ProductsPage() {
       toast.error("Nombre y slug obligatorios");
       return;
     }
+    const ids = editing.variants.map((v) => v.id);
+    if (new Set(ids).size !== ids.length) {
+      toast.error("Hay variantes con el mismo identificador");
+      return;
+    }
     try {
       await save({
         data: {
@@ -162,6 +167,10 @@ function ProductsPage() {
           name: editing.name.trim(),
           description: editing.description,
           price_cents: Math.round(editing.price_cents),
+          portion_price_cents:
+            editing.portion_price_cents && editing.portion_price_cents > 0
+              ? Math.round(editing.portion_price_cents)
+              : null,
           category: editing.category,
           image_url: editing.image_url,
           sort_order: editing.sort_order,
@@ -170,6 +179,9 @@ function ProductsPage() {
           tags: editing.tags.map((t) => t.trim()).filter(Boolean),
           seo_title: editing.seo_title.trim(),
           seo_description: editing.seo_description.trim(),
+          variants: editing.variants
+            .map((v) => ({ id: v.id.trim(), name: v.name.trim(), active: v.active }))
+            .filter((v) => v.id && v.name),
         },
       });
       toast.success("Guardado");
@@ -191,7 +203,38 @@ function ProductsPage() {
     }
   }
 
-  const rows = (data ?? []) as Row[];
+  function variantsFromDb(v: unknown): Variant[] {
+    if (!Array.isArray(v)) return [];
+    return v
+      .map((x): Variant | null => {
+        if (!x || typeof x !== "object") return null;
+        const o = x as Record<string, unknown>;
+        const id = typeof o.id === "string" ? o.id : "";
+        const name = typeof o.name === "string" ? o.name : "";
+        if (!id || !name) return null;
+        return { id, name, active: o.active !== false };
+      })
+      .filter((x): x is Variant => !!x);
+  }
+
+  const rows: Row[] = (data ?? []).map((r: any) => ({
+    id: r.id,
+    slug: r.slug ?? "",
+    name: r.name,
+    description: r.description ?? "",
+    price_cents: r.price_cents ?? 0,
+    portion_price_cents: r.portion_price_cents ?? null,
+    category: r.category ?? "Repostería",
+    image_url: r.image_url ?? "",
+    sort_order: r.sort_order ?? 0,
+    is_active: r.is_active ?? true,
+    in_stock: r.in_stock ?? true,
+    tags: (r.tags as string[] | null) ?? [],
+    seo_title: r.seo_title ?? "",
+    seo_description: r.seo_description ?? "",
+    variants: variantsFromDb(r.variants),
+  }));
+
 
   return (
     <>
