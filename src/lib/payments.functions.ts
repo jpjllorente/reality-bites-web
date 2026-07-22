@@ -195,13 +195,23 @@ const FinalizeSchema = z.object({
   sessionId: z.string().min(1).max(200),
 });
 
+type FinalizeItem = {
+  id: string;
+  name: string;
+  qty: number;
+  price_cents: number;
+  variant_name?: string | null;
+  portion?: boolean | null;
+};
+
 type FinalizeResult =
   | {
       status: "paid" | "pending" | "failed";
       orderId: string | null;
       total_cents: number;
-      items: Array<{ id: string; name: string; qty: number; price_cents: number }>;
+      items: FinalizeItem[];
       customer: { name: string; phone: string; email: string | null; notes: string | null };
+      timeline: import("@/lib/order-timeline").TimelineEvent[];
     }
   | { error: string };
 
