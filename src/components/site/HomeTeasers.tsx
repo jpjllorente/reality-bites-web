@@ -77,11 +77,8 @@ export function HomeTeasers() {
       {/* Encargos + Contacto CTA split */}
       <section className="grid gap-0 lg:grid-cols-2">
         <div className="relative overflow-hidden bg-primary p-10 text-primary-foreground sm:p-16">
-          <img
-            src={customCake}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover opacity-25"
-          />
+
+
           <div className="relative">
             <p className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-secondary">
               — Encargos a medida
