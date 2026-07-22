@@ -128,9 +128,10 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
               Catálogo & <span className="text-secondary">tienda</span>
             </h2>
             <p className="mt-4 max-w-xl text-muted-foreground">
-              Elige lo que te apetezca, arma tu pedido y lo enviamos a WhatsApp para confirmar
-              recogida o entrega. Sin trámites raros.
+              Elige lo que te apetezca, arma tu pedido y te enviamos la confirmación por email.
+              Sin trámites raros.
             </p>
+
           </div>
 
           <button
