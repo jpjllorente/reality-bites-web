@@ -206,7 +206,7 @@ export const createCustomOrderPayment = createServerFn({ method: "POST" })
       const { data: row, error } = await supabaseAdmin
         .from("custom_orders")
         .select(
-          "id, name, email, order_type, quote_total_cents, deposit_percent, payment_status",
+          "id, name, email, order_type, quote_total_cents, deposit_percent, payment_status, amount_paid_cents",
         )
         .eq("payment_token", data.token)
         .maybeSingle();
@@ -223,7 +223,11 @@ export const createCustomOrderPayment = createServerFn({ method: "POST" })
 
       const total = row.quote_total_cents;
       const deposit = Math.max(50, Math.round((total * row.deposit_percent) / 100));
-      const amount = data.mode === "deposit" ? deposit : total;
+      const alreadyPaid = row.amount_paid_cents ?? 0;
+      const amount =
+        data.mode === "deposit"
+          ? deposit
+          : Math.max(0, total - alreadyPaid);
       if (amount < 50) return { error: "Importe demasiado bajo." };
 
       const stripe = createStripeClient(data.environment);
