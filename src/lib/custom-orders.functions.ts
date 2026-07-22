@@ -356,3 +356,126 @@ export const finalizeCustomOrderPayment = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(e) };
     }
   });
+
+// =============================================================
+// Admin: mark ready for pickup / cobrar en mostrador
+// =============================================================
+
+const ReadySchema = z.object({
+  orderId: z.string().uuid(),
+  publicOrigin: z.string().url().max(500),
+  notify: z.boolean().optional(),
+});
+
+export const markCustomOrderReadyForPickup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => ReadySchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { data: row, error } = await supabaseAdmin
+      .from("custom_orders")
+      .select(
+        "id, name, email, order_type, quote_total_cents, amount_paid_cents, payment_status, payment_token, ready_at",
+      )
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (error || !row) return { error: "Encargo no encontrado." };
+
+    const now = new Date().toISOString();
+    const updates: Record<string, unknown> = {
+      ready_at: row.ready_at ?? now,
+    };
+
+    const total = row.quote_total_cents ?? 0;
+    const paid = row.amount_paid_cents ?? 0;
+    const remaining = Math.max(0, total - paid);
+    const shouldNotify = data.notify !== false && !!row.email;
+
+    if (shouldNotify) {
+      try {
+        const { sendTemplateEmail } = await import(
+          "@/lib/email-templates/send-email"
+        );
+        const paymentUrl = row.payment_token
+          ? `${data.publicOrigin.replace(/\/$/, "")}/encargos/pagar/${row.payment_token}`
+          : "";
+        await sendTemplateEmail("custom-order-ready", row.email!, {
+          idempotencyKey: `custom-ready-${row.id}`,
+          templateData: {
+            name: row.name,
+            orderType: row.order_type,
+            remainingCents: remaining,
+            totalCents: total,
+            amountPaidCents: paid,
+            paymentUrl,
+          },
+        });
+        updates.ready_notified_at = now;
+      } catch (e) {
+        console.error("[custom_orders] ready email failed", e);
+        return { error: "No se pudo enviar el aviso al cliente." };
+      }
+    }
+
+    await (supabaseAdmin.from("custom_orders") as any)
+      .update(updates)
+      .eq("id", row.id);
+
+    return { ok: true, remainingCents: remaining, notified: shouldNotify };
+  });
+
+const InStorePaidSchema = z.object({
+  orderId: z.string().uuid(),
+});
+
+export const markCustomOrderInStorePaid = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => InStorePaidSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { data: row, error } = await supabaseAdmin
+      .from("custom_orders")
+      .select(
+        "id, quote_total_cents, amount_paid_cents, payment_status, ready_at",
+      )
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (error || !row) return { error: "Encargo no encontrado." };
+    if (row.payment_status === "paid") {
+      return { error: "Este encargo ya está pagado por completo." };
+    }
+    if (row.quote_total_cents == null) {
+      return { error: "Falta el presupuesto para poder cobrar." };
+    }
+
+    const now = new Date().toISOString();
+    await (supabaseAdmin.from("custom_orders") as any)
+      .update({
+        payment_status: "paid",
+        payment_mode: "full",
+        amount_paid_cents: row.quote_total_cents,
+        paid_at: now,
+        in_store_paid_at: now,
+        status: "confirmed",
+        ready_at: row.ready_at ?? now,
+      })
+      .eq("id", row.id);
+
+    try {
+      const { sendCustomOrderPaidEmail } = await import(
+        "@/lib/custom-order-mailer.server"
+      );
+      await sendCustomOrderPaidEmail(row.id);
+    } catch (e) {
+      console.error("[custom_orders] in-store paid email failed", e);
+    }
+
+    return { ok: true };
+  });
+
