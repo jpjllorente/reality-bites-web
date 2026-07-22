@@ -1,9 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useState } from "react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { getRequestOrigin } from "@/lib/origin.functions";
 import { breadcrumbJsonLd } from "@/lib/breadcrumbs";
 import { fetchPublicProductBySlug, type Product } from "@/lib/products";
+import { useCart } from "@/hooks/use-cart";
+
 
 export const Route = createFileRoute("/tienda/$slug")({
   loader: async ({ params }) => {
@@ -127,6 +130,30 @@ function formatPrice(v: number) {
 
 function ProductPage() {
   const { product } = Route.useLoaderData() as { product: Product };
+  return <ProductDetail product={product} />;
+}
+
+function ProductDetail({ product }: { product: Product }) {
+  const navigate = Route.useNavigate();
+  const cart = useCart();
+  const activeVariants = (product.variants ?? []).filter((v) => v.active);
+  const [variantId, setVariantId] = useState<string | undefined>(activeVariants[0]?.id);
+  const hasPortion = product.portionPrice != null && product.portionPrice > 0;
+  const [portion, setPortion] = useState<boolean>(false);
+  const outOfStock = product.inStock === false;
+  const unitPrice = portion && hasPortion ? (product.portionPrice as number) : product.price;
+
+  function addToCart(goToCart: boolean) {
+    if (outOfStock) return;
+    const variant = activeVariants.find((v) => v.id === variantId);
+    cart.add(product, {
+      variantId: variant?.id,
+      variantName: variant?.name,
+      portion: portion && hasPortion,
+    });
+    if (goToCart) navigate({ to: "/tienda" });
+  }
+
   return (
     <>
       <Header />
@@ -180,9 +207,42 @@ function ProductPage() {
 
               <p className="text-lg leading-relaxed text-foreground/80">{product.description}</p>
 
+              {hasPortion && (
+                <fieldset className="rounded-sm border border-foreground/15 p-3">
+                  <legend className="px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Tamaño</legend>
+                  <div className="flex flex-wrap gap-2">
+                    <label className={`flex-1 cursor-pointer rounded-sm border px-3 py-2 text-sm transition ${!portion ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}>
+                      <input type="radio" name="size" checked={!portion} onChange={() => setPortion(false)} className="sr-only" />
+                      Artículo completo · {formatPrice(product.price)}
+                    </label>
+                    <label className={`flex-1 cursor-pointer rounded-sm border px-3 py-2 text-sm transition ${portion ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}>
+                      <input type="radio" name="size" checked={portion} onChange={() => setPortion(true)} className="sr-only" />
+                      Porción · {formatPrice(product.portionPrice as number)}
+                    </label>
+                  </div>
+                </fieldset>
+              )}
+
+              {activeVariants.length > 0 && (
+                <fieldset className="rounded-sm border border-foreground/15 p-3">
+                  <legend className="px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Variante</legend>
+                  <div className="flex flex-wrap gap-2">
+                    {activeVariants.map((v) => (
+                      <label
+                        key={v.id}
+                        className={`cursor-pointer rounded-sm border px-3 py-2 text-sm transition ${variantId === v.id ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}
+                      >
+                        <input type="radio" name="variant" checked={variantId === v.id} onChange={() => setVariantId(v.id)} className="sr-only" />
+                        {v.name}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
+
               <div className="flex items-baseline gap-3 border-y border-foreground/15 py-4">
                 <span className="font-display text-5xl text-primary">
-                  {formatPrice(product.price)}
+                  {formatPrice(unitPrice)}
                 </span>
                 <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   IVA incluido
@@ -190,12 +250,14 @@ function ProductPage() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Link
-                  to="/tienda"
-                  className="inline-flex items-center rounded-sm bg-primary px-5 py-3 text-xs font-semibold uppercase tracking-widest text-primary-foreground hover:bg-primary/90"
+                <button
+                  type="button"
+                  disabled={outOfStock}
+                  onClick={() => addToCart(true)}
+                  className="inline-flex items-center rounded-sm bg-primary px-5 py-3 text-xs font-semibold uppercase tracking-widest text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Añadir al pedido
-                </Link>
+                  {outOfStock ? "Agotado" : "Añadir al pedido"}
+                </button>
                 <Link
                   to="/encargos"
                   className="inline-flex items-center rounded-sm border border-primary px-5 py-3 text-xs font-semibold uppercase tracking-widest text-primary hover:bg-primary hover:text-primary-foreground"
@@ -211,3 +273,4 @@ function ProductPage() {
     </>
   );
 }
+
