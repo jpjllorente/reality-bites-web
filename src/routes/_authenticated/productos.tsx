@@ -215,6 +215,35 @@ function ProductsPage() {
       refetch();
     } catch (e) {
       toast.error((e as Error).message);
+  }
+
+  async function onSync(id: string) {
+    setSyncing(id);
+    try {
+      const res = await syncOne({ data: { id } });
+      if ("error" in res) toast.error(`Stripe: ${res.error}`);
+      else toast.success("Sincronizado con Stripe");
+      refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSyncing(null);
+    }
+  }
+
+  async function onReconcile() {
+    setReconciling(true);
+    setReconcileResult(null);
+    try {
+      const res = await reconcile({ data: { environment: getStripeEnvironment() } });
+      setReconcileResult(res);
+      if ("error" in res) toast.error(`Stripe: ${res.error}`);
+      else if (res.discrepancies.length === 0) toast.success("Sin discrepancias");
+      else toast.warning(`${res.discrepancies.length} discrepancia(s)`);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setReconciling(false);
     }
   }
 
