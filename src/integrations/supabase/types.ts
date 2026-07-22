@@ -155,6 +155,7 @@ export type Database = {
       shop_orders: {
         Row: {
           amount_paid_cents: number | null
+          amount_refunded_cents: number | null
           confirmation_sent_at: string | null
           created_at: string
           email: string | null
@@ -166,6 +167,8 @@ export type Database = {
           payment_confirmed_at: string | null
           payment_status: string
           phone: string
+          refund_notified_at: string | null
+          refunded_at: string | null
           status: Database["public"]["Enums"]["shop_order_status"]
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
@@ -173,6 +176,7 @@ export type Database = {
         }
         Insert: {
           amount_paid_cents?: number | null
+          amount_refunded_cents?: number | null
           confirmation_sent_at?: string | null
           created_at?: string
           email?: string | null
@@ -184,6 +188,8 @@ export type Database = {
           payment_confirmed_at?: string | null
           payment_status?: string
           phone: string
+          refund_notified_at?: string | null
+          refunded_at?: string | null
           status?: Database["public"]["Enums"]["shop_order_status"]
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
@@ -191,6 +197,7 @@ export type Database = {
         }
         Update: {
           amount_paid_cents?: number | null
+          amount_refunded_cents?: number | null
           confirmation_sent_at?: string | null
           created_at?: string
           email?: string | null
@@ -202,6 +209,8 @@ export type Database = {
           payment_confirmed_at?: string | null
           payment_status?: string
           phone?: string
+          refund_notified_at?: string | null
+          refunded_at?: string | null
           status?: Database["public"]["Enums"]["shop_order_status"]
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
