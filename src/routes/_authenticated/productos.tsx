@@ -300,6 +300,13 @@ function ProductsPage() {
             <div className="flex flex-wrap gap-2">
               <NavTabs current="productos" />
               <button
+                onClick={onReconcile}
+                disabled={reconciling}
+                className="rounded-sm border border-foreground/20 px-4 py-2 text-xs font-semibold uppercase tracking-widest hover:border-primary hover:text-primary disabled:opacity-50"
+              >
+                {reconciling ? "Conciliando…" : "Conciliar Stripe"}
+              </button>
+              <button
                 onClick={openNew}
                 className="rounded-sm bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-widest text-primary-foreground hover:bg-primary/90"
               >
