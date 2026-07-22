@@ -59,6 +59,15 @@ function PagoCompletado() {
       setState({ kind: "error", message: "Falta el identificador de la sesión de pago." });
       return;
     }
+    // The user has returned from Stripe with a session id — the order row
+    // already exists server-side. Clear the cart immediately so we don't
+    // depend on the finalize response landing successfully.
+    try {
+      window.localStorage.removeItem("144reality_cart_v2");
+    } catch {
+      // ignore
+    }
+    cart.clear();
     let cancelled = false;
     (async () => {
       try {
@@ -79,10 +88,6 @@ function PagoCompletado() {
           customer: res.customer,
           timeline: res.timeline,
         });
-        // Clear cart on any successful finalize (paid or pending capture).
-        // The order row already exists server-side, so keeping items in the
-        // cart would cause duplicate orders on the next visit.
-        if (res.status === "paid" || res.status === "pending") cart.clear();
       } catch (e) {
         if (!cancelled) {
           setState({
