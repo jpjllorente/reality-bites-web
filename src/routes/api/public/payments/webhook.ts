@@ -164,10 +164,21 @@ async function handleCustomOrderCheckoutCompleted(session: any) {
     "@/integrations/supabase/client.server"
   );
   const nextStatus = mode === "full" ? "paid" : "deposit_paid";
+  // Sum with previous paid amount so a "full" payment after a deposit adds
+  // the remainder instead of overwriting the total (Stripe only charged the
+  // difference; the sum is the real amount paid across both sessions).
+  const { data: prev } = await supabaseAdmin
+    .from("custom_orders")
+    .select("amount_paid_cents, payment_status")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (prev?.payment_status === "paid") return;
+  const previousPaid = (prev as any)?.amount_paid_cents ?? 0;
+  const summed = previousPaid + (session.amount_total ?? 0);
   const { data: updated } = await (supabaseAdmin.from("custom_orders") as any)
     .update({
       payment_status: nextStatus,
-      amount_paid_cents: session.amount_total ?? null,
+      amount_paid_cents: summed,
       paid_at: new Date().toISOString(),
       payment_mode: mode,
       status: "confirmed",
