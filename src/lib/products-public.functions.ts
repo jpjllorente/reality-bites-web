@@ -13,6 +13,7 @@ export type PublicProduct = {
   tags: string[];
   seoTitle: string;
   seoDescription: string;
+  inStock: boolean;
 };
 
 /**
@@ -41,7 +42,7 @@ export const fetchPublicProductsServer = createServerFn({ method: "GET" }).handl
     const { data, error } = await client
       .from("products")
       .select(
-        "id, slug, name, description, price_cents, category, image_url, sort_order, tags, seo_title, seo_description",
+        "id, slug, name, description, price_cents, category, image_url, sort_order, tags, seo_title, seo_description, in_stock",
       )
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
@@ -58,6 +59,7 @@ export const fetchPublicProductsServer = createServerFn({ method: "GET" }).handl
       tags: (r.tags as string[] | null) ?? [],
       seoTitle: r.seo_title ?? "",
       seoDescription: r.seo_description ?? "",
+      inStock: r.in_stock ?? true,
     }));
   },
 );

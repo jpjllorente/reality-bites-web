@@ -7,6 +7,11 @@ import { toast } from "sonner";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { listAllOrders, updateOrderStatus } from "@/lib/shop-orders.functions";
+import {
+  markInStorePaid,
+  refundShopOrder,
+  cancelShopOrder,
+} from "@/lib/payments.functions";
 import { amIAdmin } from "@/lib/auth-admin.functions";
 import { NavTabs } from "./productos";
 
@@ -182,7 +187,7 @@ function Dashboard() {
             <CustomOrdersTable rows={custom} onStatus={(id, s) => onChangeStatus("custom", id, s)} />
           )}
           {!isLoading && !error && tab === "shop" && (
-            <ShopOrdersTable rows={shop} onStatus={(id, s) => onChangeStatus("shop", id, s)} />
+            <ShopOrdersTable rows={shop} onStatus={(id, s) => onChangeStatus("shop", id, s)} onRefresh={() => refetch()} />
           )}
         </div>
       </main>
@@ -368,16 +373,66 @@ function PaymentBadge({ row }: { row: ShopRow }) {
 function ShopOrdersTable({
   rows,
   onStatus,
+  onRefresh,
 }: {
   rows: ShopRow[];
   onStatus: (id: string, s: ShopStatus) => void;
+  onRefresh: () => void;
 }) {
+  const markPaidFn = useServerFn(markInStorePaid);
+  const refundFn = useServerFn(refundShopOrder);
+  const cancelFn = useServerFn(cancelShopOrder);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState<ShopRow | null>(null);
+
+  async function onMarkInStorePaid(id: string) {
+    if (!confirm("¿Confirmar cobro en mostrador?")) return;
+    setBusy(id);
+    try {
+      const r = (await markPaidFn({ data: { orderId: id } })) as any;
+      if (r?.error) toast.error(r.error);
+      else { toast.success("Cobro registrado y aviso enviado."); onRefresh(); }
+    } finally { setBusy(null); }
+  }
+
+  async function onRefund(row: ShopRow) {
+    const paid = row.amount_paid_cents ?? 0;
+    const already = (row as any).amount_refunded_cents ?? 0;
+    const remaining = Math.max(0, paid - already);
+    if (remaining <= 0) return toast.error("Nada que reembolsar.");
+    const input = prompt(
+      `Importe a reembolsar en € (máx ${(remaining / 100).toFixed(2)}). Vacío = total.`,
+    );
+    if (input === null) return;
+    let cents: number | undefined;
+    if (input.trim() !== "") {
+      const v = parseFloat(input.replace(",", "."));
+      if (isNaN(v) || v <= 0) return toast.error("Importe inválido.");
+      cents = Math.round(v * 100);
+      if (cents > remaining) return toast.error("Excede el importe cobrado.");
+    }
+    setBusy(row.id);
+    try {
+      const r = (await refundFn({
+        data: { orderId: row.id, amountCents: cents, environment: "sandbox" },
+      })) as any;
+      if (r?.error) toast.error(r.error);
+      else { toast.success("Reembolso enviado a Stripe."); onRefresh(); }
+    } finally { setBusy(null); }
+  }
+
   if (rows.length === 0)
     return <p className="mt-10 text-sm text-muted-foreground">Sin pedidos todavía.</p>;
+
   return (
     <div className="mt-8 space-y-3">
       {rows.map((r) => {
         const items = (Array.isArray(r.items) ? r.items : []) as ShopItem[];
+        const ps = r.payment_status ?? "unpaid";
+        const canMarkInStorePaid = ps === "pay_in_store" || ps === "unpaid";
+        const canRefund =
+          (ps === "paid" || ps === "partially_refunded") && !!r.stripe_payment_intent_id;
+        const canCancel = r.status !== "cancelled" && r.status !== "completed";
         return (
           <details
             key={r.id}
@@ -388,9 +443,7 @@ function ShopOrdersTable({
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-serif text-base font-semibold text-foreground">
                     {r.name}{" "}
-                    <span className="text-secondary">
-                      · {formatEUR(r.total_cents)}
-                    </span>
+                    <span className="text-secondary">· {formatEUR(r.total_cents)}</span>
                   </p>
                   <PaymentBadge row={r} />
                 </div>
@@ -410,9 +463,7 @@ function ShopOrdersTable({
             <ul className="mt-4 divide-y divide-foreground/10 text-sm">
               {items.map((it, i) => (
                 <li key={i} className="flex items-center justify-between py-2">
-                  <span>
-                    {it.qty} × {it.name}
-                  </span>
+                  <span>{it.qty} × {it.name}</span>
                   <span className="font-mono">{formatEUR(it.qty * it.price_cents)}</span>
                 </li>
               ))}
@@ -437,9 +488,162 @@ function ShopOrdersTable({
                 </p>
               </div>
             )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {canMarkInStorePaid && (
+                <button
+                  disabled={busy === r.id}
+                  onClick={() => onMarkInStorePaid(r.id)}
+                  className="rounded-sm bg-primary px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                >
+                  Cobrado en mostrador
+                </button>
+              )}
+              {canRefund && (
+                <button
+                  disabled={busy === r.id}
+                  onClick={() => onRefund(r)}
+                  className="rounded-sm border border-orange-500/50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-orange-700 hover:bg-orange-500/10 disabled:opacity-50"
+                >
+                  Reembolsar
+                </button>
+              )}
+              {canCancel && (
+                <button
+                  disabled={busy === r.id}
+                  onClick={() => setCancelling(r)}
+                  className="rounded-sm border border-destructive/50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                >
+                  Cancelar pedido
+                </button>
+              )}
+            </div>
           </details>
         );
       })}
+      {cancelling && (
+        <CancelDialog
+          row={cancelling}
+          onClose={() => setCancelling(null)}
+          onConfirm={async ({ reason, refundCents }) => {
+            setBusy(cancelling.id);
+            try {
+              const r = (await cancelFn({
+                data: {
+                  orderId: cancelling.id,
+                  reason,
+                  refundAmountCents: refundCents,
+                  environment: "sandbox",
+                },
+              })) as any;
+              if (r?.error) toast.error(r.error);
+              else { toast.success("Pedido cancelado."); setCancelling(null); onRefresh(); }
+            } finally { setBusy(null); }
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CancelDialog({
+  row,
+  onClose,
+  onConfirm,
+}: {
+  row: ShopRow;
+  onClose: () => void;
+  onConfirm: (v: { reason?: string; refundCents?: number }) => void;
+}) {
+  const paid = row.amount_paid_cents ?? 0;
+  const already = (row as any).amount_refunded_cents ?? 0;
+  const remaining = Math.max(0, paid - already);
+  const canRefund = remaining > 0 && !!row.stripe_payment_intent_id;
+  const [reason, setReason] = useState("");
+  const [mode, setMode] = useState<"none" | "full" | "partial">(canRefund ? "full" : "none");
+  const [amount, setAmount] = useState((remaining / 100).toFixed(2));
+
+  function confirm() {
+    let refundCents: number | undefined;
+    if (mode === "full") refundCents = remaining;
+    if (mode === "partial") {
+      const v = parseFloat(amount.replace(",", "."));
+      if (isNaN(v) || v <= 0 || Math.round(v * 100) > remaining) {
+        toast.error("Importe de reembolso inválido.");
+        return;
+      }
+      refundCents = Math.round(v * 100);
+    }
+    onConfirm({ reason: reason.trim() || undefined, refundCents });
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] grid place-items-center bg-primary/70 p-4" role="dialog" aria-modal="true">
+      <div className="w-full max-w-md rounded-sm border border-foreground/15 bg-background p-6">
+        <h2 className="font-display text-3xl text-primary">Cancelar pedido</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {row.name} · {formatEUR(row.total_cents)}
+        </p>
+        <label className="mt-4 block">
+          <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Motivo (opcional, se incluirá en el email al cliente)
+          </span>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={3}
+            className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
+        </label>
+        {canRefund ? (
+          <fieldset className="mt-4">
+            <legend className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Reembolso (disponible: {formatEUR(remaining)})
+            </legend>
+            <div className="space-y-2 text-sm">
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={mode === "full"} onChange={() => setMode("full")} />
+                Reembolso total ({formatEUR(remaining)})
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={mode === "partial"} onChange={() => setMode("partial")} />
+                Parcial
+                {mode === "partial" && (
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="ml-2 w-24 rounded-sm border border-foreground/20 bg-background px-2 py-1 text-sm"
+                  />
+                )}
+                €
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={mode === "none"} onChange={() => setMode("none")} />
+                Sin reembolso
+              </label>
+            </div>
+          </fieldset>
+        ) : (
+          <p className="mt-4 rounded-sm bg-muted/40 p-3 text-xs text-muted-foreground">
+            No hay importe cobrado por Stripe, así que no se enviará reembolso.
+          </p>
+        )}
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-sm border border-foreground/20 px-4 py-2 text-xs uppercase tracking-widest"
+          >
+            Volver
+          </button>
+          <button
+            onClick={confirm}
+            className="rounded-sm bg-destructive px-4 py-2 text-xs font-bold uppercase tracking-widest text-destructive-foreground hover:bg-destructive/90"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

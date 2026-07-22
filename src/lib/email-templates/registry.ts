@@ -16,6 +16,9 @@ import { template as shopOrderNotification } from './shop-order-notification'
 import { template as shopOrderOrphanPayment } from './shop-order-orphan-payment'
 import { template as shopOrderRefund } from './shop-order-refund'
 import { template as shopOrderInStore } from './shop-order-in-store'
+import { template as shopOrderInStorePaid } from './shop-order-in-store-paid'
+import { template as shopOrderFailed } from './shop-order-failed'
+import { template as shopOrderCancelled } from './shop-order-cancelled'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'custom-order-confirmation': customOrderConfirmation,
@@ -25,4 +28,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'shop-order-orphan-payment': shopOrderOrphanPayment,
   'shop-order-refund': shopOrderRefund,
   'shop-order-in-store': shopOrderInStore,
+  'shop-order-in-store-paid': shopOrderInStorePaid,
+  'shop-order-failed': shopOrderFailed,
+  'shop-order-cancelled': shopOrderCancelled,
 }

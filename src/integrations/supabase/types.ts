@@ -108,6 +108,7 @@ export type Database = {
           description: string
           id: string
           image_url: string
+          in_stock: boolean
           is_active: boolean
           name: string
           price_cents: number
@@ -115,6 +116,8 @@ export type Database = {
           seo_title: string
           slug: string
           sort_order: number
+          stripe_price_id: string | null
+          stripe_product_id: string | null
           tags: string[]
           updated_at: string
         }
@@ -124,6 +127,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string
+          in_stock?: boolean
           is_active?: boolean
           name: string
           price_cents?: number
@@ -131,6 +135,8 @@ export type Database = {
           seo_title?: string
           slug: string
           sort_order?: number
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
           tags?: string[]
           updated_at?: string
         }
@@ -140,6 +146,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string
+          in_stock?: boolean
           is_active?: boolean
           name?: string
           price_cents?: number
@@ -147,6 +154,8 @@ export type Database = {
           seo_title?: string
           slug?: string
           sort_order?: number
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
           tags?: string[]
           updated_at?: string
         }
@@ -156,15 +165,22 @@ export type Database = {
         Row: {
           amount_paid_cents: number | null
           amount_refunded_cents: number | null
+          cancellation_notified_at: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
           confirmation_sent_at: string | null
           created_at: string
           email: string | null
+          failure_notified_at: string | null
           id: string
+          in_store_paid_at: string | null
           items: Json
           name: string
           notes: string | null
           notification_sent_at: string | null
           payment_confirmed_at: string | null
+          payment_failed_at: string | null
+          payment_failure_reason: string | null
           payment_status: string
           phone: string
           refund_notified_at: string | null
@@ -177,15 +193,22 @@ export type Database = {
         Insert: {
           amount_paid_cents?: number | null
           amount_refunded_cents?: number | null
+          cancellation_notified_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           confirmation_sent_at?: string | null
           created_at?: string
           email?: string | null
+          failure_notified_at?: string | null
           id?: string
+          in_store_paid_at?: string | null
           items: Json
           name: string
           notes?: string | null
           notification_sent_at?: string | null
           payment_confirmed_at?: string | null
+          payment_failed_at?: string | null
+          payment_failure_reason?: string | null
           payment_status?: string
           phone: string
           refund_notified_at?: string | null
@@ -198,15 +221,22 @@ export type Database = {
         Update: {
           amount_paid_cents?: number | null
           amount_refunded_cents?: number | null
+          cancellation_notified_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           confirmation_sent_at?: string | null
           created_at?: string
           email?: string | null
+          failure_notified_at?: string | null
           id?: string
+          in_store_paid_at?: string | null
           items?: Json
           name?: string
           notes?: string | null
           notification_sent_at?: string | null
           payment_confirmed_at?: string | null
+          payment_failed_at?: string | null
+          payment_failure_reason?: string | null
           payment_status?: string
           phone?: string
           refund_notified_at?: string | null
