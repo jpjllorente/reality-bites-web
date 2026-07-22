@@ -5,6 +5,8 @@ import { Footer } from "@/components/site/Footer";
 import { finalizeShopCheckout } from "@/lib/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useCart } from "@/hooks/use-cart";
+import { OrderTimeline } from "@/components/site/OrderTimeline";
+import type { TimelineEvent } from "@/lib/order-timeline";
 
 
 
@@ -25,6 +27,15 @@ export const Route = createFileRoute("/tienda/pago-completado")({
   component: PagoCompletado,
 });
 
+type Item = {
+  id: string;
+  name: string;
+  qty: number;
+  price_cents: number;
+  variant_name?: string | null;
+  portion?: boolean | null;
+};
+
 type State =
   | { kind: "loading" }
   | { kind: "error"; message: string }
@@ -33,8 +44,9 @@ type State =
       status: "paid" | "pending" | "failed";
       orderId: string | null;
       totalCents: number;
-      items: Array<{ id: string; name: string; qty: number; price_cents: number }>;
+      items: Item[];
       customer: { name: string; phone: string; email: string | null; notes: string | null };
+      timeline: TimelineEvent[];
     };
 
 function PagoCompletado() {
