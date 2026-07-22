@@ -179,6 +179,24 @@ export function buildCustomOrderTimeline(row: CustomOrderTimelineInput): Timelin
       kind: "warning",
     });
   }
+  if (row.ready_at) {
+    events.push({
+      key: "ready",
+      label: "Listo para recoger",
+      detail: row.ready_notified_at ? "Cliente avisado por email." : null,
+      at: row.ready_at,
+      kind: "success",
+    });
+  }
+  if (row.in_store_paid_at) {
+    events.push({
+      key: "in-store-paid",
+      label: "Resto cobrado en mostrador",
+      detail: row.amount_paid_cents ? `Total abonado: ${fmtEUR(row.amount_paid_cents)}` : null,
+      at: row.in_store_paid_at,
+      kind: "success",
+    });
+  }
   // Dedupe by key (some paths add both payment + webhook + confirmed).
   const seen = new Set<string>();
   return events
