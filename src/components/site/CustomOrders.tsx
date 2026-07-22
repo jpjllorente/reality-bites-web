@@ -134,6 +134,32 @@ export function CustomOrders() {
           </dl>
         </div>
 
+        {done ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex flex-col items-center justify-center rounded-sm border border-primary-foreground/15 bg-background p-8 text-center text-foreground shadow-[var(--shadow-plate)] sm:p-12"
+          >
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            </div>
+            <h3 className="mt-6 font-display text-3xl text-primary">¡Solicitud enviada!</h3>
+            <p className="mt-3 max-w-sm text-sm text-muted-foreground">
+              Gracias por confiar en nosotros. Hemos recibido tu solicitud y te
+              contactaremos en menos de 24h. Revisa tu email (también la carpeta
+              de spam) para la confirmación.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDone(false)}
+              className="mt-8 rounded-sm border border-primary px-6 py-3 text-xs font-bold uppercase tracking-widest text-primary transition hover:bg-primary hover:text-primary-foreground"
+            >
+              Enviar otra solicitud
+            </button>
+          </div>
+        ) : (
         <form
           onSubmit={onSubmit}
           className="rounded-sm border border-primary-foreground/15 bg-background p-6 text-foreground shadow-[var(--shadow-plate)] sm:p-8"
@@ -142,12 +168,6 @@ export function CustomOrders() {
           <p className="mt-1 text-sm text-muted-foreground">
             Rellena estos campos y te respondemos en menos de 24h.
           </p>
-
-          {done && (
-            <div className="mt-4 rounded-sm border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
-              Solicitud recibida. Revisa tu email para la confirmación.
-            </div>
-          )}
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <Field label="Nombre">
@@ -287,6 +307,7 @@ export function CustomOrders() {
             Al enviar aceptas que te contactemos por email o teléfono.
           </p>
         </form>
+        )}
       </div>
 
       <style>{`
