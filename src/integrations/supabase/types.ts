@@ -154,36 +154,45 @@ export type Database = {
       }
       shop_orders: {
         Row: {
+          amount_paid_cents: number | null
           created_at: string
           email: string | null
           id: string
           items: Json
           name: string
           notes: string | null
+          payment_status: string
           phone: string
           status: Database["public"]["Enums"]["shop_order_status"]
+          stripe_session_id: string | null
           total_cents: number
         }
         Insert: {
+          amount_paid_cents?: number | null
           created_at?: string
           email?: string | null
           id?: string
           items: Json
           name: string
           notes?: string | null
+          payment_status?: string
           phone: string
           status?: Database["public"]["Enums"]["shop_order_status"]
+          stripe_session_id?: string | null
           total_cents: number
         }
         Update: {
+          amount_paid_cents?: number | null
           created_at?: string
           email?: string | null
           id?: string
           items?: Json
           name?: string
           notes?: string | null
+          payment_status?: string
           phone?: string
           status?: Database["public"]["Enums"]["shop_order_status"]
+          stripe_session_id?: string | null
           total_cents?: number
         }
         Relationships: []
