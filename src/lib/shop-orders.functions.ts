@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { isAdminEmail } from "./admin";
+import { assertAdmin } from "./auth-admin.functions";
 
 const ItemSchema = z.object({
   id: z.string().max(80),
@@ -52,10 +52,7 @@ const CUSTOM_STATUS = z.enum(["new", "reviewing", "confirmed", "declined"]);
 export const listAllOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const email = (context.claims as { email?: string })?.email;
-    if (!isAdminEmail(email)) {
-      throw new Error("Forbidden");
-    }
+    await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import(
       "@/integrations/supabase/client.server"
     );
@@ -85,10 +82,7 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => UpdateStatusSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const email = (context.claims as { email?: string })?.email;
-    if (!isAdminEmail(email)) {
-      throw new Error("Forbidden");
-    }
+    await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import(
       "@/integrations/supabase/client.server"
     );
