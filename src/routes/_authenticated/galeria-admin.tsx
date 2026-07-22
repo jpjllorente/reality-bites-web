@@ -7,7 +7,7 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { MediaUpload } from "@/components/admin/MediaUpload";
 import { NavTabs } from "./productos";
-import { isAdminEmail } from "@/lib/admin";
+import { amIAdmin } from "@/lib/auth-admin.functions";
 import {
   listGalleryAdmin,
   upsertGalleryItem,
@@ -48,7 +48,12 @@ const EMPTY: Row = {
 
 function GalleryAdminPage() {
   const { user } = Route.useRouteContext();
-  const isAdmin = isAdminEmail(user?.email);
+  const fetchAmIAdmin = useServerFn(amIAdmin);
+  const { data: adminCheck } = useQuery({
+    queryKey: ["am-i-admin", user?.id],
+    queryFn: () => fetchAmIAdmin(),
+  });
+  const isAdmin = Boolean(adminCheck?.isAdmin);
   const list = useServerFn(listGalleryAdmin);
   const save = useServerFn(upsertGalleryItem);
   const remove = useServerFn(deleteGalleryItem);

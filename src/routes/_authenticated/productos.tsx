@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { MediaUpload } from "@/components/admin/MediaUpload";
-import { isAdminEmail } from "@/lib/admin";
+import { amIAdmin } from "@/lib/auth-admin.functions";
 import {
   listProductsAdmin,
   upsertProduct,
@@ -57,7 +57,12 @@ const EMPTY: Row = {
 
 function ProductsPage() {
   const { user } = Route.useRouteContext();
-  const isAdmin = isAdminEmail(user?.email);
+  const fetchAmIAdmin = useServerFn(amIAdmin);
+  const { data: adminCheck } = useQuery({
+    queryKey: ["am-i-admin", user?.id],
+    queryFn: () => fetchAmIAdmin(),
+  });
+  const isAdmin = Boolean(adminCheck?.isAdmin);
   const list = useServerFn(listProductsAdmin);
   const save = useServerFn(upsertProduct);
   const remove = useServerFn(deleteProduct);
