@@ -448,10 +448,13 @@ function ProductAddForm({
   const activeVariants = (product.variants ?? []).filter((v) => v.active);
   const hasVariants = activeVariants.length > 0;
   const hasPortion = product.portionPrice != null && product.portionPrice > 0;
-  const [variantId, setVariantId] = useState<string | undefined>(activeVariants[0]?.id);
-  const [portion, setPortion] = useState(false);
+  // Force explicit selection: no defaults when there are options.
+  const [variantId, setVariantId] = useState<string | undefined>(undefined);
+  const [portion, setPortion] = useState<boolean | null>(hasPortion ? null : false);
+  const [error, setError] = useState<string | null>(null);
   const outOfStock = product.inStock === false;
-  const unitPrice = portion && hasPortion ? (product.portionPrice as number) : product.price;
+  const effectivePortion = portion === true;
+  const unitPrice = effectivePortion && hasPortion ? (product.portionPrice as number) : product.price;
 
   if (outOfStock) {
     return (
@@ -464,35 +467,60 @@ function ProductAddForm({
     );
   }
 
+  function handleAdd() {
+    if (hasPortion && portion === null) {
+      setError("Elige el tamaño (completo o porción).");
+      return;
+    }
+    if (hasVariants && !variantId) {
+      setError("Selecciona una variante antes de añadir.");
+      return;
+    }
+    const variant = activeVariants.find((v) => v.id === variantId);
+    setError(null);
+    onAdd({
+      variantId: variant?.id,
+      variantName: variant?.name,
+      portion: effectivePortion && hasPortion,
+    });
+  }
+
   return (
     <div className="mt-auto flex flex-col gap-3">
       {hasPortion && (
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            onClick={() => setPortion(false)}
-            className={`flex-1 rounded-sm border px-2 py-1.5 text-[11px] font-medium transition ${!portion ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}
-          >
-            Completo · {formatPrice(product.price)}
-          </button>
-          <button
-            type="button"
-            onClick={() => setPortion(true)}
-            className={`flex-1 rounded-sm border px-2 py-1.5 text-[11px] font-medium transition ${portion ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}
-          >
-            Porción · {formatPrice(product.portionPrice as number)}
-          </button>
+        <div>
+          <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Tamaño <span className="text-destructive">*</span>
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => { setPortion(false); setError(null); }}
+              className={`flex-1 rounded-sm border px-2 py-1.5 text-[11px] font-medium transition ${portion === false ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}
+            >
+              Completo · {formatPrice(product.price)}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setPortion(true); setError(null); }}
+              className={`flex-1 rounded-sm border px-2 py-1.5 text-[11px] font-medium transition ${portion === true ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}
+            >
+              Porción · {formatPrice(product.portionPrice as number)}
+            </button>
+          </div>
         </div>
       )}
       {hasVariants && (
         <div>
-          <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Variante</span>
+          <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Variante <span className="text-destructive">*</span>
+          </span>
           <div className="flex flex-wrap gap-1.5">
             {activeVariants.map((v) => (
               <button
                 key={v.id}
                 type="button"
-                onClick={() => setVariantId(v.id)}
+                onClick={() => { setVariantId(v.id); setError(null); }}
                 className={`rounded-sm border px-2.5 py-1.5 text-[11px] transition ${variantId === v.id ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}
               >
                 {v.name}
@@ -501,15 +529,13 @@ function ProductAddForm({
           </div>
         </div>
       )}
+      {error && (
+        <p role="alert" className="text-[11px] text-destructive">
+          {error}
+        </p>
+      )}
       <button
-        onClick={() => {
-          const variant = activeVariants.find((v) => v.id === variantId);
-          onAdd({
-            variantId: variant?.id,
-            variantName: variant?.name,
-            portion: portion && hasPortion,
-          });
-        }}
+        onClick={handleAdd}
         className="inline-flex items-center justify-center rounded-sm border border-primary/30 bg-transparent px-4 py-2.5 text-xs font-semibold uppercase tracking-widest text-primary transition hover:bg-primary hover:text-primary-foreground"
       >
         + Añadir {formatPrice(unitPrice)}
@@ -517,4 +543,5 @@ function ProductAddForm({
     </div>
   );
 }
+
 
