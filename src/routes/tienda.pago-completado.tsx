@@ -6,7 +6,7 @@ import { finalizeShopCheckout } from "@/lib/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useCart } from "@/hooks/use-cart";
 
-const WHATSAPP_NUMBER = "34681634623";
+
 
 function formatPrice(cents: number) {
   return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(cents / 100);
