@@ -115,6 +115,9 @@ export interface CustomOrderTimelineInput {
   stripe_session_id?: string | null;
   stripe_payment_intent_id?: string | null;
   status?: string | null;
+  ready_at?: string | null;
+  ready_notified_at?: string | null;
+  in_store_paid_at?: string | null;
 }
 
 export function buildCustomOrderTimeline(row: CustomOrderTimelineInput): TimelineEvent[] {
@@ -174,6 +177,24 @@ export function buildCustomOrderTimeline(row: CustomOrderTimelineInput): Timelin
       label: "Encargo rechazado",
       at: row.created_at ?? new Date(0).toISOString(),
       kind: "warning",
+    });
+  }
+  if (row.ready_at) {
+    events.push({
+      key: "ready",
+      label: "Listo para recoger",
+      detail: row.ready_notified_at ? "Cliente avisado por email." : null,
+      at: row.ready_at,
+      kind: "success",
+    });
+  }
+  if (row.in_store_paid_at) {
+    events.push({
+      key: "in-store-paid",
+      label: "Resto cobrado en mostrador",
+      detail: row.amount_paid_cents ? `Total abonado: ${fmtEUR(row.amount_paid_cents)}` : null,
+      at: row.in_store_paid_at,
+      kind: "success",
     });
   }
   // Dedupe by key (some paths add both payment + webhook + confirmed).

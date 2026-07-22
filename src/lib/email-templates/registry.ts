@@ -13,6 +13,7 @@ import { template as customOrderConfirmation } from './custom-order-confirmation
 import { template as customOrderNotification } from './custom-order-notification'
 import { template as customOrderQuote } from './custom-order-quote'
 import { template as customOrderPaid } from './custom-order-paid'
+import { template as customOrderReady } from './custom-order-ready'
 import { template as shopOrderConfirmation } from './shop-order-confirmation'
 import { template as shopOrderNotification } from './shop-order-notification'
 import { template as shopOrderOrphanPayment } from './shop-order-orphan-payment'
@@ -27,6 +28,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'custom-order-notification': customOrderNotification,
   'custom-order-quote': customOrderQuote,
   'custom-order-paid': customOrderPaid,
+  'custom-order-ready': customOrderReady,
   'shop-order-confirmation': shopOrderConfirmation,
   'shop-order-notification': shopOrderNotification,
   'shop-order-orphan-payment': shopOrderOrphanPayment,

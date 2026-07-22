@@ -206,7 +206,7 @@ export const createCustomOrderPayment = createServerFn({ method: "POST" })
       const { data: row, error } = await supabaseAdmin
         .from("custom_orders")
         .select(
-          "id, name, email, order_type, quote_total_cents, deposit_percent, payment_status",
+          "id, name, email, order_type, quote_total_cents, deposit_percent, payment_status, amount_paid_cents",
         )
         .eq("payment_token", data.token)
         .maybeSingle();
@@ -223,7 +223,11 @@ export const createCustomOrderPayment = createServerFn({ method: "POST" })
 
       const total = row.quote_total_cents;
       const deposit = Math.max(50, Math.round((total * row.deposit_percent) / 100));
-      const amount = data.mode === "deposit" ? deposit : total;
+      const alreadyPaid = row.amount_paid_cents ?? 0;
+      const amount =
+        data.mode === "deposit"
+          ? deposit
+          : Math.max(0, total - alreadyPaid);
       if (amount < 50) return { error: "Importe demasiado bajo." };
 
       const stripe = createStripeClient(data.environment);
@@ -287,29 +291,39 @@ export const finalizeCustomOrderPayment = createServerFn({ method: "POST" })
         const { supabaseAdmin } = await import(
           "@/integrations/supabase/client.server"
         );
-        const nextStatus = mode === "full" ? "paid" : "deposit_paid";
-        await (supabaseAdmin.from("custom_orders") as any)
-          .update({
-            payment_status: nextStatus,
-            amount_paid_cents: session.amount_total ?? null,
-            paid_at: new Date().toISOString(),
-            payment_mode: mode,
-            status: "confirmed",
-            stripe_payment_intent_id:
-              typeof session.payment_intent === "string"
-                ? session.payment_intent
-                : (session.payment_intent as any)?.id ?? null,
-          })
+        // Read previous amount to sum (a "full" payment after a deposit only
+        // charges the remainder — sum keeps amount_paid_cents = true total).
+        const { data: prev } = await supabaseAdmin
+          .from("custom_orders")
+          .select("amount_paid_cents, payment_status")
           .eq("id", orderId)
-          .neq("payment_status", "paid");
+          .maybeSingle();
+        if (prev?.payment_status !== "paid") {
+          const nextStatus = mode === "full" ? "paid" : "deposit_paid";
+          const previousPaid = prev?.amount_paid_cents ?? 0;
+          const summed = previousPaid + (session.amount_total ?? 0);
+          await (supabaseAdmin.from("custom_orders") as any)
+            .update({
+              payment_status: nextStatus,
+              amount_paid_cents: summed,
+              paid_at: new Date().toISOString(),
+              payment_mode: mode,
+              status: "confirmed",
+              stripe_payment_intent_id:
+                typeof session.payment_intent === "string"
+                  ? session.payment_intent
+                  : (session.payment_intent as any)?.id ?? null,
+            })
+            .eq("id", orderId);
 
-        try {
-          const { sendCustomOrderPaidEmail } = await import(
-            "@/lib/custom-order-mailer.server"
-          );
-          await sendCustomOrderPaidEmail(orderId);
-        } catch (e) {
-          console.error("[finalize custom] mail failed", e);
+          try {
+            const { sendCustomOrderPaidEmail } = await import(
+              "@/lib/custom-order-mailer.server"
+            );
+            await sendCustomOrderPaidEmail(orderId);
+          } catch (e) {
+            console.error("[finalize custom] mail failed", e);
+          }
         }
       }
 
@@ -342,3 +356,126 @@ export const finalizeCustomOrderPayment = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(e) };
     }
   });
+
+// =============================================================
+// Admin: mark ready for pickup / cobrar en mostrador
+// =============================================================
+
+const ReadySchema = z.object({
+  orderId: z.string().uuid(),
+  publicOrigin: z.string().url().max(500),
+  notify: z.boolean().optional(),
+});
+
+export const markCustomOrderReadyForPickup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => ReadySchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { data: row, error } = await supabaseAdmin
+      .from("custom_orders")
+      .select(
+        "id, name, email, order_type, quote_total_cents, amount_paid_cents, payment_status, payment_token, ready_at",
+      )
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (error || !row) return { error: "Encargo no encontrado." };
+
+    const now = new Date().toISOString();
+    const updates: Record<string, unknown> = {
+      ready_at: row.ready_at ?? now,
+    };
+
+    const total = row.quote_total_cents ?? 0;
+    const paid = row.amount_paid_cents ?? 0;
+    const remaining = Math.max(0, total - paid);
+    const shouldNotify = data.notify !== false && !!row.email;
+
+    if (shouldNotify) {
+      try {
+        const { sendTemplateEmail } = await import(
+          "@/lib/email-templates/send-email"
+        );
+        const paymentUrl = row.payment_token
+          ? `${data.publicOrigin.replace(/\/$/, "")}/encargos/pagar/${row.payment_token}`
+          : "";
+        await sendTemplateEmail("custom-order-ready", row.email!, {
+          idempotencyKey: `custom-ready-${row.id}`,
+          templateData: {
+            name: row.name,
+            orderType: row.order_type,
+            remainingCents: remaining,
+            totalCents: total,
+            amountPaidCents: paid,
+            paymentUrl,
+          },
+        });
+        updates.ready_notified_at = now;
+      } catch (e) {
+        console.error("[custom_orders] ready email failed", e);
+        return { error: "No se pudo enviar el aviso al cliente." };
+      }
+    }
+
+    await (supabaseAdmin.from("custom_orders") as any)
+      .update(updates)
+      .eq("id", row.id);
+
+    return { ok: true, remainingCents: remaining, notified: shouldNotify };
+  });
+
+const InStorePaidSchema = z.object({
+  orderId: z.string().uuid(),
+});
+
+export const markCustomOrderInStorePaid = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => InStorePaidSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { data: row, error } = await supabaseAdmin
+      .from("custom_orders")
+      .select(
+        "id, quote_total_cents, amount_paid_cents, payment_status, ready_at",
+      )
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (error || !row) return { error: "Encargo no encontrado." };
+    if (row.payment_status === "paid") {
+      return { error: "Este encargo ya está pagado por completo." };
+    }
+    if (row.quote_total_cents == null) {
+      return { error: "Falta el presupuesto para poder cobrar." };
+    }
+
+    const now = new Date().toISOString();
+    await (supabaseAdmin.from("custom_orders") as any)
+      .update({
+        payment_status: "paid",
+        payment_mode: "full",
+        amount_paid_cents: row.quote_total_cents,
+        paid_at: now,
+        in_store_paid_at: now,
+        status: "confirmed",
+        ready_at: row.ready_at ?? now,
+      })
+      .eq("id", row.id);
+
+    try {
+      const { sendCustomOrderPaidEmail } = await import(
+        "@/lib/custom-order-mailer.server"
+      );
+      await sendCustomOrderPaidEmail(row.id);
+    } catch (e) {
+      console.error("[custom_orders] in-store paid email failed", e);
+    }
+
+    return { ok: true };
+  });
+

@@ -26,6 +26,7 @@ export type Database = {
           event_date: string | null
           flavors: string | null
           id: string
+          in_store_paid_at: string | null
           message: string | null
           name: string
           order_type: string
@@ -37,6 +38,8 @@ export type Database = {
           quote_notes: string | null
           quote_sent_at: string | null
           quote_total_cents: number | null
+          ready_at: string | null
+          ready_notified_at: string | null
           servings: number | null
           status: Database["public"]["Enums"]["custom_order_status"]
           stripe_payment_intent_id: string | null
@@ -53,6 +56,7 @@ export type Database = {
           event_date?: string | null
           flavors?: string | null
           id?: string
+          in_store_paid_at?: string | null
           message?: string | null
           name: string
           order_type: string
@@ -64,6 +68,8 @@ export type Database = {
           quote_notes?: string | null
           quote_sent_at?: string | null
           quote_total_cents?: number | null
+          ready_at?: string | null
+          ready_notified_at?: string | null
           servings?: number | null
           status?: Database["public"]["Enums"]["custom_order_status"]
           stripe_payment_intent_id?: string | null
@@ -80,6 +86,7 @@ export type Database = {
           event_date?: string | null
           flavors?: string | null
           id?: string
+          in_store_paid_at?: string | null
           message?: string | null
           name?: string
           order_type?: string
@@ -91,6 +98,8 @@ export type Database = {
           quote_notes?: string | null
           quote_sent_at?: string | null
           quote_total_cents?: number | null
+          ready_at?: string | null
+          ready_notified_at?: string | null
           servings?: number | null
           status?: Database["public"]["Enums"]["custom_order_status"]
           stripe_payment_intent_id?: string | null
