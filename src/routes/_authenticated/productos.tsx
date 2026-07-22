@@ -456,12 +456,14 @@ function Text({ label, value, onChange }: { label: string; value: string; onChan
   );
 }
 
-export function NavTabs({ current }: { current: "dashboard" | "productos" | "galeria" }) {
+export function NavTabs({ current }: { current: "dashboard" | "productos" | "galeria" | "pagos" }) {
   const tabs = [
     { to: "/dashboard", key: "dashboard", label: "Pedidos" },
+    { to: "/pagos", key: "pagos", label: "Pagos" },
     { to: "/productos", key: "productos", label: "Productos" },
     { to: "/galeria-admin", key: "galeria", label: "Galería" },
   ] as const;
+
   return (
     <div className="flex gap-2">
       {tabs.map((t) => (

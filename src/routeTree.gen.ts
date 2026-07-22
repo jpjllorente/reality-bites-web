@@ -23,6 +23,7 @@ import { Route as TiendaReservadoRouteImport } from './routes/tienda.reservado'
 import { Route as TiendaPagoCompletadoRouteImport } from './routes/tienda.pago-completado'
 import { Route as TiendaSlugRouteImport } from './routes/tienda.$slug'
 import { Route as AuthenticatedProductosRouteImport } from './routes/_authenticated/productos'
+import { Route as AuthenticatedPagosRouteImport } from './routes/_authenticated/pagos'
 import { Route as AuthenticatedGaleriaAdminRouteImport } from './routes/_authenticated/galeria-admin'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -100,6 +101,11 @@ const AuthenticatedProductosRoute = AuthenticatedProductosRouteImport.update({
   path: '/productos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPagosRoute = AuthenticatedPagosRouteImport.update({
+  id: '/pagos',
+  path: '/pagos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedGaleriaAdminRoute =
   AuthenticatedGaleriaAdminRouteImport.update({
     id: '/galeria-admin',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/tienda': typeof TiendaRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
+  '/pagos': typeof AuthenticatedPagosRoute
   '/productos': typeof AuthenticatedProductosRoute
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/tienda': typeof TiendaRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
+  '/pagos': typeof AuthenticatedPagosRoute
   '/productos': typeof AuthenticatedProductosRoute
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/tienda': typeof TiendaRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
+  '/_authenticated/pagos': typeof AuthenticatedPagosRoute
   '/_authenticated/productos': typeof AuthenticatedProductosRoute
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/tienda'
     | '/dashboard'
     | '/galeria-admin'
+    | '/pagos'
     | '/productos'
     | '/tienda/$slug'
     | '/tienda/pago-completado'
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
     | '/tienda'
     | '/dashboard'
     | '/galeria-admin'
+    | '/pagos'
     | '/productos'
     | '/tienda/$slug'
     | '/tienda/pago-completado'
@@ -266,6 +277,7 @@ export interface FileRouteTypes {
     | '/tienda'
     | '/_authenticated/dashboard'
     | '/_authenticated/galeria-admin'
+    | '/_authenticated/pagos'
     | '/_authenticated/productos'
     | '/tienda/$slug'
     | '/tienda/pago-completado'
@@ -395,6 +407,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pagos': {
+      id: '/_authenticated/pagos'
+      path: '/pagos'
+      fullPath: '/pagos'
+      preLoaderRoute: typeof AuthenticatedPagosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/galeria-admin': {
       id: '/_authenticated/galeria-admin'
       path: '/galeria-admin'
@@ -450,12 +469,14 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGaleriaAdminRoute: typeof AuthenticatedGaleriaAdminRoute
+  AuthenticatedPagosRoute: typeof AuthenticatedPagosRoute
   AuthenticatedProductosRoute: typeof AuthenticatedProductosRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGaleriaAdminRoute: AuthenticatedGaleriaAdminRoute,
+  AuthenticatedPagosRoute: AuthenticatedPagosRoute,
   AuthenticatedProductosRoute: AuthenticatedProductosRoute,
 }
 
