@@ -447,7 +447,7 @@ export const markCustomOrderInStorePaid = createServerFn({ method: "POST" })
     const { data: row, error } = await supabaseAdmin
       .from("custom_orders")
       .select(
-        "id, quote_total_cents, amount_paid_cents, payment_status, ready_at",
+        "id, quote_total_cents, amount_paid_cents, payment_status, payment_mode, paid_at, ready_at",
       )
       .eq("id", data.orderId)
       .maybeSingle();
@@ -459,17 +459,24 @@ export const markCustomOrderInStorePaid = createServerFn({ method: "POST" })
       return { error: "Falta el presupuesto para poder cobrar." };
     }
 
+    // Preserve online-deposit info so the timeline can still show "Anticipo
+    // pagado" alongside "Resto cobrado en mostrador". Only stamp payment_mode
+    // / paid_at when there was NO prior online payment (fresh in-store sale).
+    const hadOnlineDeposit = row.payment_status === "deposit_paid";
     const now = new Date().toISOString();
+    const updates: Record<string, unknown> = {
+      payment_status: "paid",
+      amount_paid_cents: row.quote_total_cents,
+      in_store_paid_at: now,
+      status: "confirmed",
+      ready_at: row.ready_at ?? now,
+    };
+    if (!hadOnlineDeposit) {
+      updates.payment_mode = "full";
+      updates.paid_at = row.paid_at ?? now;
+    }
     await (supabaseAdmin.from("custom_orders") as any)
-      .update({
-        payment_status: "paid",
-        payment_mode: "full",
-        amount_paid_cents: row.quote_total_cents,
-        paid_at: now,
-        in_store_paid_at: now,
-        status: "confirmed",
-        ready_at: row.ready_at ?? now,
-      })
+      .update(updates)
       .eq("id", row.id);
 
     try {
