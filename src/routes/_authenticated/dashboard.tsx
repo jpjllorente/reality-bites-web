@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 const SHOP_STATUSES = ["new", "contacted", "confirmed", "completed", "cancelled"] as const;
-const CUSTOM_STATUSES = ["new", "reviewing", "confirmed", "declined"] as const;
+const CUSTOM_STATUSES = ["new", "reviewing", "confirmed", "declined", "completed"] as const;
 type ShopStatus = (typeof SHOP_STATUSES)[number];
 type CustomStatus = (typeof CUSTOM_STATUSES)[number];
 type AnyStatus = ShopStatus | CustomStatus;
