@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useCart } from "@/hooks/use-cart";
+
 
 const WHATSAPP_NUMBER = "34681634623";
 
@@ -17,6 +20,13 @@ export const Route = createFileRoute("/tienda/reservado")({
 
 function Reservado() {
   const { order_id } = Route.useSearch();
+  const cart = useCart();
+  useEffect(() => {
+    // Reservation was created server-side; clear the local cart so the
+    // shopper doesn't see stale items on their next visit to the shop.
+    cart.clear();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const short = order_id ? order_id.slice(0, 8) : "";
   const msg =
     `Hola 144 Reality, acabo de hacer una reserva${short ? ` (#${short})` : ""} para pagar en tienda. ¿Podemos coordinar la recogida?`;
