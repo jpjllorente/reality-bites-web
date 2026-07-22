@@ -66,7 +66,10 @@ function PagoCompletado() {
           items: res.items,
           customer: res.customer,
         });
-        if (res.status === "paid") cart.clear();
+        // Clear cart on any successful finalize (paid or pending capture).
+        // The order row already exists server-side, so keeping items in the
+        // cart would cause duplicate orders on the next visit.
+        if (res.status === "paid" || res.status === "pending") cart.clear();
       } catch (e) {
         if (!cancelled) {
           setState({
