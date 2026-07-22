@@ -268,6 +268,9 @@ type CustomRow = {
   payment_mode?: string | null;
   amount_paid_cents?: number | null;
   payment_token?: string | null;
+  ready_at?: string | null;
+  ready_notified_at?: string | null;
+  in_store_paid_at?: string | null;
 };
 
 function CustomOrdersTable({
