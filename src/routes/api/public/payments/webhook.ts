@@ -150,12 +150,53 @@ async function handlePaymentFailed(
   }
 }
 
+async function handleCustomOrderCheckoutCompleted(session: any) {
+  const orderId = session?.metadata?.custom_order_id as string | undefined;
+  if (!orderId) return;
+  const mode = (session?.metadata?.payment_mode as "deposit" | "full" | undefined) ?? "full";
+  const paid = session?.payment_status === "paid";
+  if (!paid) return;
+  const paymentIntentId =
+    typeof session?.payment_intent === "string"
+      ? session.payment_intent
+      : session?.payment_intent?.id ?? null;
+  const { supabaseAdmin } = await import(
+    "@/integrations/supabase/client.server"
+  );
+  const nextStatus = mode === "full" ? "paid" : "deposit_paid";
+  const { data: updated } = await (supabaseAdmin.from("custom_orders") as any)
+    .update({
+      payment_status: nextStatus,
+      amount_paid_cents: session.amount_total ?? null,
+      paid_at: new Date().toISOString(),
+      payment_mode: mode,
+      status: "confirmed",
+      stripe_session_id: session.id,
+      stripe_payment_intent_id: paymentIntentId,
+    })
+    .eq("id", orderId)
+    .neq("payment_status", "paid")
+    .select("id");
+  if (updated && updated.length > 0) {
+    const { sendCustomOrderPaidEmail } = await import(
+      "@/lib/custom-order-mailer.server"
+    );
+    await sendCustomOrderPaidEmail(orderId);
+  }
+}
+
 async function dispatchEvent(event: any, env: StripeEnv) {
   switch (event.type) {
     case "checkout.session.completed":
-    case "checkout.session.async_payment_succeeded":
-      await handleCheckoutCompleted(event.data.object, env);
+    case "checkout.session.async_payment_succeeded": {
+      const s = event.data.object;
+      if (s?.metadata?.custom_order_id) {
+        await handleCustomOrderCheckoutCompleted(s);
+      } else {
+        await handleCheckoutCompleted(s, env);
+      }
       break;
+    }
     case "charge.refunded":
     case "charge.refund.updated":
       await handleChargeRefunded(event.data.object);
