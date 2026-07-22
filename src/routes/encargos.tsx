@@ -27,7 +27,7 @@ export const Route = createFileRoute("/encargos")({
           content: "Tartas y catering diseñados a medida para tu ocasión.",
         },
         { property: "og:type", content: "website" },
-        { property: "og:url", content: "/encargos" },
+        { property: "og:url", content: "https://144reality.com/encargos" },
         { property: "og:image", content: absImage },
         { property: "og:image:alt", content: "Tarta personalizada de 144 Reality" },
         { name: "twitter:card", content: "summary_large_image" },
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/encargos")({
         },
         { name: "twitter:image", content: absImage },
       ],
-      links: [{ rel: "canonical", href: "/encargos" }],
+      links: [{ rel: "canonical", href: "https://144reality.com/encargos" }],
       scripts: [
         breadcrumbJsonLd(origin, [
           { name: "Inicio", path: "/" },

@@ -25,7 +25,7 @@ export const Route = createFileRoute("/contacto")({
           content: "Dirección, horarios y contacto de 144 Reality en Bullas, Murcia.",
         },
         { property: "og:type", content: "website" },
-        { property: "og:url", content: "/contacto" },
+        { property: "og:url", content: "https://144reality.com/contacto" },
         { property: "og:image", content: absImage },
         { property: "og:image:alt", content: "Interior acogedor de 144 Reality" },
         { name: "twitter:card", content: "summary_large_image" },
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/contacto")({
         },
         { name: "twitter:image", content: absImage },
       ],
-      links: [{ rel: "canonical", href: "/contacto" }],
+      links: [{ rel: "canonical", href: "https://144reality.com/contacto" }],
       scripts: [
         {
           type: "application/ld+json",

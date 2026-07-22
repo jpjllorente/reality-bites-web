@@ -26,7 +26,7 @@ export const Route = createFileRoute("/galeria")({
             "Feed visual de 144 Reality: repostería, café y momentos del local.",
         },
         { property: "og:type", content: "website" },
-        { property: "og:url", content: "/galeria" },
+        { property: "og:url", content: "https://144reality.com/galeria" },
         { property: "og:image", content: absImage },
         { property: "og:image:alt", content: "Tartaleta de 144 Reality" },
         { name: "twitter:card", content: "summary_large_image" },
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/galeria")({
         },
         { name: "twitter:image", content: absImage },
       ],
-      links: [{ rel: "canonical", href: "/galeria" }],
+      links: [{ rel: "canonical", href: "https://144reality.com/galeria" }],
       scripts: [
         breadcrumbJsonLd(origin, [
           { name: "Inicio", path: "/" },
