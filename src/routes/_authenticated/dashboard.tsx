@@ -542,7 +542,9 @@ function PickupControls({ row }: { row: CustomRow }) {
     }
   }
 
-  const completed = !!row.completed_at;
+  // Un cobro en mostrador cierra el ciclo aunque el registro sea previo a la
+  // columna completed_at, así que tratamos ambos como estado final.
+  const completed = !!(row.completed_at || row.in_store_paid_at);
 
   return (
     <div className="mt-4 rounded-sm border border-foreground/15 bg-background/50 p-3">
