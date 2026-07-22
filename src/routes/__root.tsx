@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { CookieBanner } from "@/components/site/CookieBanner";
 
 function NotFoundComponent() {
   return (
@@ -84,6 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
       },
       { name: "author", content: "144 Reality" },
+      { name: "google-site-verification", content: "BoqAg7KSjlWtfzde9AcAAAkz4X7k4Dl5BeqCKIkcHMg" },
       { property: "og:title", content: "144 Reality — Bites & Coffee | Repostería moderna & café de especialidad" },
       {
         property: "og:description",
@@ -133,6 +135,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <CookieBanner />
     </QueryClientProvider>
   );
 }
