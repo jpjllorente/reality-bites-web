@@ -291,29 +291,39 @@ export const finalizeCustomOrderPayment = createServerFn({ method: "POST" })
         const { supabaseAdmin } = await import(
           "@/integrations/supabase/client.server"
         );
-        const nextStatus = mode === "full" ? "paid" : "deposit_paid";
-        await (supabaseAdmin.from("custom_orders") as any)
-          .update({
-            payment_status: nextStatus,
-            amount_paid_cents: session.amount_total ?? null,
-            paid_at: new Date().toISOString(),
-            payment_mode: mode,
-            status: "confirmed",
-            stripe_payment_intent_id:
-              typeof session.payment_intent === "string"
-                ? session.payment_intent
-                : (session.payment_intent as any)?.id ?? null,
-          })
+        // Read previous amount to sum (a "full" payment after a deposit only
+        // charges the remainder — sum keeps amount_paid_cents = true total).
+        const { data: prev } = await supabaseAdmin
+          .from("custom_orders")
+          .select("amount_paid_cents, payment_status")
           .eq("id", orderId)
-          .neq("payment_status", "paid");
+          .maybeSingle();
+        if (prev?.payment_status !== "paid") {
+          const nextStatus = mode === "full" ? "paid" : "deposit_paid";
+          const previousPaid = prev?.amount_paid_cents ?? 0;
+          const summed = previousPaid + (session.amount_total ?? 0);
+          await (supabaseAdmin.from("custom_orders") as any)
+            .update({
+              payment_status: nextStatus,
+              amount_paid_cents: summed,
+              paid_at: new Date().toISOString(),
+              payment_mode: mode,
+              status: "confirmed",
+              stripe_payment_intent_id:
+                typeof session.payment_intent === "string"
+                  ? session.payment_intent
+                  : (session.payment_intent as any)?.id ?? null,
+            })
+            .eq("id", orderId);
 
-        try {
-          const { sendCustomOrderPaidEmail } = await import(
-            "@/lib/custom-order-mailer.server"
-          );
-          await sendCustomOrderPaidEmail(orderId);
-        } catch (e) {
-          console.error("[finalize custom] mail failed", e);
+          try {
+            const { sendCustomOrderPaidEmail } = await import(
+              "@/lib/custom-order-mailer.server"
+            );
+            await sendCustomOrderPaidEmail(orderId);
+          } catch (e) {
+            console.error("[finalize custom] mail failed", e);
+          }
         }
       }
 
