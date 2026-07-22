@@ -17,8 +17,11 @@ export type Database = {
       custom_orders: {
         Row: {
           allergens: string | null
+          amount_paid_cents: number | null
           budget_range: string | null
+          confirmation_sent_at: string | null
           created_at: string
+          deposit_percent: number | null
           email: string
           event_date: string | null
           flavors: string | null
@@ -26,14 +29,26 @@ export type Database = {
           message: string | null
           name: string
           order_type: string
+          paid_at: string | null
+          payment_mode: string | null
+          payment_status: string
+          payment_token: string | null
           phone: string | null
+          quote_notes: string | null
+          quote_sent_at: string | null
+          quote_total_cents: number | null
           servings: number | null
           status: Database["public"]["Enums"]["custom_order_status"]
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
         }
         Insert: {
           allergens?: string | null
+          amount_paid_cents?: number | null
           budget_range?: string | null
+          confirmation_sent_at?: string | null
           created_at?: string
+          deposit_percent?: number | null
           email: string
           event_date?: string | null
           flavors?: string | null
@@ -41,14 +56,26 @@ export type Database = {
           message?: string | null
           name: string
           order_type: string
+          paid_at?: string | null
+          payment_mode?: string | null
+          payment_status?: string
+          payment_token?: string | null
           phone?: string | null
+          quote_notes?: string | null
+          quote_sent_at?: string | null
+          quote_total_cents?: number | null
           servings?: number | null
           status?: Database["public"]["Enums"]["custom_order_status"]
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
         }
         Update: {
           allergens?: string | null
+          amount_paid_cents?: number | null
           budget_range?: string | null
+          confirmation_sent_at?: string | null
           created_at?: string
+          deposit_percent?: number | null
           email?: string
           event_date?: string | null
           flavors?: string | null
@@ -56,9 +83,18 @@ export type Database = {
           message?: string | null
           name?: string
           order_type?: string
+          paid_at?: string | null
+          payment_mode?: string | null
+          payment_status?: string
+          payment_token?: string | null
           phone?: string | null
+          quote_notes?: string | null
+          quote_sent_at?: string | null
+          quote_total_cents?: number | null
           servings?: number | null
           status?: Database["public"]["Enums"]["custom_order_status"]
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
         }
         Relationships: []
       }
