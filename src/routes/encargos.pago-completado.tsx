@@ -4,6 +4,8 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { finalizeCustomOrderPayment } from "@/lib/custom-orders.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import { OrderTimeline } from "@/components/site/OrderTimeline";
+import type { TimelineEvent } from "@/lib/order-timeline";
 
 export const Route = createFileRoute("/encargos/pago-completado")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -27,7 +29,13 @@ function fmt(cents: number) {
 type State =
   | { kind: "loading" }
   | { kind: "error"; message: string }
-  | { kind: "ok"; status: "paid" | "pending" | "failed"; mode: "deposit" | "full"; amountCents: number };
+  | {
+      kind: "ok";
+      status: "paid" | "pending" | "failed";
+      mode: "deposit" | "full";
+      amountCents: number;
+      timeline: TimelineEvent[];
+    };
 
 function Page() {
   const { session_id } = Route.useSearch();
