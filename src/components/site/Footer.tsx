@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { openCookiePreferences } from "@/components/site/CookieBanner";
 
 export function Footer() {
   return (
@@ -11,7 +12,7 @@ export function Footer() {
             Panel
           </Link>
         </p>
-        <div className="flex gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-6">
           <Link to="/tienda" className="hover:text-secondary">Tienda</Link>
           <Link to="/galeria" className="hover:text-secondary">Galería</Link>
           <Link to="/encargos" className="hover:text-secondary">Encargos</Link>
@@ -24,6 +25,13 @@ export function Footer() {
           >
             Instagram
           </a>
+          <button
+            type="button"
+            onClick={openCookiePreferences}
+            className="uppercase tracking-widest hover:text-secondary"
+          >
+            Cookies
+          </button>
         </div>
       </div>
     </footer>
