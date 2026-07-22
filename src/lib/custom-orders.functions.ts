@@ -313,10 +313,29 @@ export const finalizeCustomOrderPayment = createServerFn({ method: "POST" })
         }
       }
 
+      let timeline: import("@/lib/order-timeline").TimelineEvent[] = [];
+      if (orderId) {
+        const { supabaseAdmin } = await import(
+          "@/integrations/supabase/client.server"
+        );
+        const { data: row } = await supabaseAdmin
+          .from("custom_orders")
+          .select("*")
+          .eq("id", orderId)
+          .maybeSingle();
+        if (row) {
+          const { buildCustomOrderTimeline } = await import(
+            "@/lib/order-timeline"
+          );
+          timeline = buildCustomOrderTimeline(row as any);
+        }
+      }
+
       return {
         status: paid ? ("paid" as const) : session.payment_status === "unpaid" ? ("pending" as const) : ("failed" as const),
         mode,
         amountCents: session.amount_total ?? 0,
+        timeline,
       };
     } catch (e) {
       console.error("[custom_orders] finalize", e);
