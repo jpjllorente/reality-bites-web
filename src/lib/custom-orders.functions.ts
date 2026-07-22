@@ -291,14 +291,22 @@ export const finalizeCustomOrderPayment = createServerFn({ method: "POST" })
         const { supabaseAdmin } = await import(
           "@/integrations/supabase/client.server"
         );
-        // Read previous amount to sum (a "full" payment after a deposit only
-        // charges the remainder — sum keeps amount_paid_cents = true total).
+        const sessionPI =
+          typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : (session.payment_intent as any)?.id ?? null;
         const { data: prev } = await supabaseAdmin
           .from("custom_orders")
-          .select("amount_paid_cents, payment_status")
+          .select("amount_paid_cents, payment_status, stripe_payment_intent_id")
           .eq("id", orderId)
           .maybeSingle();
-        if (prev?.payment_status !== "paid") {
+        // Idempotency guard: if the webhook already recorded THIS session's
+        // payment intent, don't sum again (that produced amount_paid = 2×
+        // deposit and a wrong remainder in the ready-for-pickup email).
+        const alreadyProcessed =
+          sessionPI &&
+          (prev as any)?.stripe_payment_intent_id === sessionPI;
+        if (prev?.payment_status !== "paid" && !alreadyProcessed) {
           const nextStatus = mode === "full" ? "paid" : "deposit_paid";
           const previousPaid = prev?.amount_paid_cents ?? 0;
           const summed = previousPaid + (session.amount_total ?? 0);
@@ -309,10 +317,7 @@ export const finalizeCustomOrderPayment = createServerFn({ method: "POST" })
               paid_at: new Date().toISOString(),
               payment_mode: mode,
               status: "confirmed",
-              stripe_payment_intent_id:
-                typeof session.payment_intent === "string"
-                  ? session.payment_intent
-                  : (session.payment_intent as any)?.id ?? null,
+              stripe_payment_intent_id: sessionPI,
             })
             .eq("id", orderId);
 
