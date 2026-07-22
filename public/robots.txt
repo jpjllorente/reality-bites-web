@@ -1,2 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /dashboard
+Disallow: /productos
+Disallow: /galeria-admin
+Disallow: /lovable/
+
+Sitemap: https://144reality.com/sitemap.xml
