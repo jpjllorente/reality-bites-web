@@ -6,7 +6,8 @@ import { PaymentTestModeBanner } from "@/components/site/PaymentTestModeBanner";
 import { getRequestOrigin } from "@/lib/origin.functions";
 import { breadcrumbJsonLd } from "@/lib/breadcrumbs";
 import { fetchPublicProductsServer } from "@/lib/products-public.functions";
-import ogImage from "@/assets/product-1.jpg";
+
+const SOCIAL_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/2aTFzYNJqUYfQfMni6aWXLFYWj02/social-images/social-1784650264228-07408EC5-D139-47C6-8B5A-98C8F730DE42.webp";
 
 export const Route = createFileRoute("/tienda")({
   loader: async () => ({
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/tienda")({
   head: ({ loaderData }) => {
     const origin = loaderData?.origin ?? "";
     const products = loaderData?.products ?? [];
-    const absImage = `${origin}${ogImage}`;
+    const absImage = SOCIAL_IMAGE;
     const abs = (u: string) => (u.startsWith("http") ? u : `${origin}${u}`);
 
     const sectionFor = (cat: string) => ({

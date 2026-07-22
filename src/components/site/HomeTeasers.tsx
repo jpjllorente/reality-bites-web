@@ -1,23 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import customCake from "@/assets/custom-cake.jpg";
-import { fetchFeaturedGallery, galleryItems, type GalleryItem } from "@/lib/gallery";
+import { fetchFeaturedGallery, type GalleryItem } from "@/lib/gallery";
 
 const TEASER_COUNT = 3;
 
 export function HomeTeasers() {
-  const [featured, setFeatured] = useState<GalleryItem[]>(() => galleryItems.slice(0, TEASER_COUNT));
+  const [featured, setFeatured] = useState<GalleryItem[]>([]);
 
   useEffect(() => {
     let alive = true;
     fetchFeaturedGallery(TEASER_COUNT).then((items) => {
-      if (!alive || items.length === 0) return;
+      if (!alive) return;
       setFeatured(items);
     });
     return () => {
       alive = false;
     };
   }, []);
+
 
   return (
     <>
@@ -77,11 +77,8 @@ export function HomeTeasers() {
       {/* Encargos + Contacto CTA split */}
       <section className="grid gap-0 lg:grid-cols-2">
         <div className="relative overflow-hidden bg-primary p-10 text-primary-foreground sm:p-16">
-          <img
-            src={customCake}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover opacity-25"
-          />
+
+
           <div className="relative">
             <p className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-secondary">
               — Encargos a medida

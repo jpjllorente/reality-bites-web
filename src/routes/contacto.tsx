@@ -4,13 +4,14 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { getRequestOrigin } from "@/lib/origin.functions";
 import { breadcrumbJsonLd } from "@/lib/breadcrumbs";
-import ogImage from "@/assets/hero-3.jpg";
+
+const SOCIAL_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/2aTFzYNJqUYfQfMni6aWXLFYWj02/social-images/social-1784650264228-07408EC5-D139-47C6-8B5A-98C8F730DE42.webp";
 
 export const Route = createFileRoute("/contacto")({
   loader: async () => ({ origin: await getRequestOrigin() }),
   head: ({ loaderData }) => {
     const origin = loaderData?.origin ?? "";
-    const absImage = `${origin}${ogImage}`;
+    const absImage = SOCIAL_IMAGE;
     return {
       meta: [
         { title: "Contacto — 144 Reality Bites & Coffee" },
