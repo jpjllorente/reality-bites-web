@@ -422,6 +422,17 @@ function ProductsPage() {
                   <span className="text-xs uppercase tracking-widest">En stock</span>
                 </label>
               </div>
+
+              <PortionPriceEditor
+                value={editing.portion_price_cents}
+                onChange={(cents) => setEditing((s) => (s ? { ...s, portion_price_cents: cents } : s))}
+              />
+
+              <VariantsEditor
+                variants={editing.variants}
+                onChange={(vs) => setEditing((s) => (s ? { ...s, variants: vs } : s))}
+              />
+
               <Text
                 label="Etiquetas (separadas por comas)"
                 value={editing.tags.join(", ")}
