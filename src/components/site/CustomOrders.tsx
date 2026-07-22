@@ -307,6 +307,7 @@ export function CustomOrders() {
             Al enviar aceptas que te contactemos por email o teléfono.
           </p>
         </form>
+        )}
       </div>
 
       <style>{`
