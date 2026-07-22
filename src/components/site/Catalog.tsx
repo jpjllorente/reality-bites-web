@@ -14,6 +14,7 @@ function formatPrice(v: number) {
 
 
 export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {}) {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<Category | "Todo">("Todo");
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -23,7 +24,6 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
   const cart = useCart();
 
   useEffect(() => {
-    // Only refetch on the client if the loader didn't already give us data.
     if (initialProducts && initialProducts.length > 0) return;
     fetchPublicProducts().then(setItems).catch(() => setItems([]));
   }, [initialProducts]);
@@ -40,14 +40,17 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
     customer: { name: string; phone: string; email?: string; notes?: string };
   } | null>(null);
 
-  function onGoToPayment() {
+  function validateForm() {
     if (!form.name.trim() || !form.phone.trim()) {
       toast.error("Nombre y teléfono son obligatorios");
-      return;
+      return false;
     }
-    if (cart.items.length === 0) return;
-    setSubmitting(true);
-    setCheckoutPayload({
+    if (cart.items.length === 0) return false;
+    return true;
+  }
+
+  function buildPayload() {
+    return {
       items: cart.items.map((i) => ({ slug: i.product.slug, qty: i.qty })),
       customer: {
         name: form.name.trim(),
@@ -55,11 +58,48 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
         email: form.email.trim() || undefined,
         notes: form.notes.trim() || undefined,
       },
-    });
+    };
+  }
+
+  function onGoToPayment() {
+    if (!validateForm()) return;
+    setSubmitting(true);
+    setCheckoutPayload(buildPayload());
     setCheckoutOpen(false);
     setCartOpen(false);
     setPayOpen(true);
     setSubmitting(false);
+  }
+
+  async function onPayInStore() {
+    if (!validateForm()) return;
+    setSubmitting(true);
+    try {
+      const payload = buildPayload();
+      const res = await createInStoreOrder({
+        data: {
+          items: payload.items,
+          customer: {
+            name: payload.customer.name,
+            phone: payload.customer.phone,
+            email: payload.customer.email || "",
+            notes: payload.customer.notes || "",
+          },
+        },
+      });
+      if ("error" in res) {
+        toast.error(res.error);
+        return;
+      }
+      cart.clear();
+      setCheckoutOpen(false);
+      setCartOpen(false);
+      navigate({ to: "/tienda/reservado", search: { order_id: res.orderId } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo crear la reserva.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const returnUrl =
