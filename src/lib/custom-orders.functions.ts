@@ -160,16 +160,31 @@ export const getCustomOrderQuote = createServerFn({ method: "POST" })
     );
     const { data: row, error } = await supabaseAdmin
       .from("custom_orders")
-      .select(
-        "id, name, order_type, event_date, quote_total_cents, deposit_percent, quote_notes, quote_sent_at, payment_status, amount_paid_cents, payment_mode",
-      )
+      .select("*")
       .eq("payment_token", data.token)
       .maybeSingle();
     if (error) return { error: "No se pudo cargar el presupuesto." };
     if (!row || row.quote_total_cents == null) {
       return { error: "Presupuesto no disponible." };
     }
-    return { ok: true as const, quote: row };
+    const { buildCustomOrderTimeline } = await import("@/lib/order-timeline");
+    return {
+      ok: true as const,
+      quote: {
+        id: row.id,
+        name: row.name,
+        order_type: row.order_type,
+        event_date: row.event_date,
+        quote_total_cents: row.quote_total_cents,
+        deposit_percent: row.deposit_percent,
+        quote_notes: row.quote_notes,
+        quote_sent_at: row.quote_sent_at,
+        payment_status: row.payment_status,
+        amount_paid_cents: row.amount_paid_cents,
+        payment_mode: row.payment_mode,
+      },
+      timeline: buildCustomOrderTimeline(row as any),
+    };
   });
 
 // ---------- Public: create Stripe checkout for a quote ----------
