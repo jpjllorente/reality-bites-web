@@ -13,6 +13,7 @@ export type PublicProduct = {
   tags: string[];
   seoTitle: string;
   seoDescription: string;
+  inStock: boolean;
 };
 
 /**
