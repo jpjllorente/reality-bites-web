@@ -132,11 +132,18 @@ function PagoCompletado() {
               </p>
 
               <ul className="mt-6 divide-y divide-foreground/10 border-y border-foreground/10">
-                {state.items.map((i) => (
-                  <li key={i.id} className="flex items-center justify-between py-3 text-sm">
-                    <span>
-                      {i.qty} × {i.name}
-                    </span>
+                {state.items.map((i, idx) => (
+                  <li key={`${i.id}-${idx}`} className="flex items-start justify-between gap-3 py-3 text-sm">
+                    <div>
+                      <span>{i.qty} × {i.name}</span>
+                      {(i.variant_name || i.portion) && (
+                        <p className="text-xs text-muted-foreground">
+                          {i.variant_name ? `Variante: ${i.variant_name}` : ""}
+                          {i.variant_name && i.portion ? " · " : ""}
+                          {i.portion ? "Tamaño: porción" : ""}
+                        </p>
+                      )}
+                    </div>
                     <span className="font-mono">{formatPrice(i.qty * i.price_cents)}</span>
                   </li>
                 ))}
@@ -144,6 +151,10 @@ function PagoCompletado() {
               <div className="mt-4 flex items-center justify-between">
                 <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Total</span>
                 <span className="font-display text-2xl text-primary">{formatPrice(state.totalCents)}</span>
+              </div>
+
+              <div className="mt-6">
+                <OrderTimeline events={state.timeline} />
               </div>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
