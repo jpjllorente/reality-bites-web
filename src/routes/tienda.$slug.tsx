@@ -137,19 +137,31 @@ function ProductDetail({ product }: { product: Product }) {
   const navigate = Route.useNavigate();
   const cart = useCart();
   const activeVariants = (product.variants ?? []).filter((v) => v.active);
-  const [variantId, setVariantId] = useState<string | undefined>(activeVariants[0]?.id);
+  const hasVariants = activeVariants.length > 0;
   const hasPortion = product.portionPrice != null && product.portionPrice > 0;
-  const [portion, setPortion] = useState<boolean>(false);
+  const [variantId, setVariantId] = useState<string | undefined>(undefined);
+  const [portion, setPortion] = useState<boolean | null>(hasPortion ? null : false);
+  const [error, setError] = useState<string | null>(null);
   const outOfStock = product.inStock === false;
-  const unitPrice = portion && hasPortion ? (product.portionPrice as number) : product.price;
+  const effectivePortion = portion === true;
+  const unitPrice = effectivePortion && hasPortion ? (product.portionPrice as number) : product.price;
 
   function addToCart(goToCart: boolean) {
     if (outOfStock) return;
+    if (hasPortion && portion === null) {
+      setError("Elige el tamaño (completo o porción).");
+      return;
+    }
+    if (hasVariants && !variantId) {
+      setError("Selecciona una variante antes de continuar.");
+      return;
+    }
+    setError(null);
     const variant = activeVariants.find((v) => v.id === variantId);
     cart.add(product, {
       variantId: variant?.id,
       variantName: variant?.name,
-      portion: portion && hasPortion,
+      portion: effectivePortion && hasPortion,
     });
     if (goToCart) navigate({ to: "/tienda" });
   }
