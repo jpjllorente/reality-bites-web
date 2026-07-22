@@ -369,7 +369,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin"
-      custom_order_status: "new" | "reviewing" | "confirmed" | "declined"
+      custom_order_status:
+        | "new"
+        | "reviewing"
+        | "confirmed"
+        | "declined"
+        | "completed"
       shop_order_status:
         | "new"
         | "contacted"
@@ -504,7 +509,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin"],
-      custom_order_status: ["new", "reviewing", "confirmed", "declined"],
+      custom_order_status: [
+        "new",
+        "reviewing",
+        "confirmed",
+        "declined",
+        "completed",
+      ],
       shop_order_status: [
         "new",
         "contacted",

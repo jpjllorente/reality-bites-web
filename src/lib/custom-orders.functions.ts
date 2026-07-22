@@ -512,12 +512,12 @@ export const markCustomOrderCompleted = createServerFn({ method: "POST" })
     );
     const { data: row, error } = await supabaseAdmin
       .from("custom_orders")
-      .select("id, payment_status, completed_at")
+      .select("id, payment_status, completed_at, in_store_paid_at")
       .eq("id", data.orderId)
       .maybeSingle();
     if (error || !row) return { error: "Encargo no encontrado." };
     if ((row as any).completed_at) {
-      return { error: "Este encargo ya está finalizado." };
+      return { ok: true, alreadyCompleted: true };
     }
     if (row.payment_status !== "paid") {
       return {

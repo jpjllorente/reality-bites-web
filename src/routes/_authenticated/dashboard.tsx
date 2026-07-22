@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 const SHOP_STATUSES = ["new", "contacted", "confirmed", "completed", "cancelled"] as const;
-const CUSTOM_STATUSES = ["new", "reviewing", "confirmed", "declined"] as const;
+const CUSTOM_STATUSES = ["new", "reviewing", "confirmed", "declined", "completed"] as const;
 type ShopStatus = (typeof SHOP_STATUSES)[number];
 type CustomStatus = (typeof CUSTOM_STATUSES)[number];
 type AnyStatus = ShopStatus | CustomStatus;
@@ -542,7 +542,9 @@ function PickupControls({ row }: { row: CustomRow }) {
     }
   }
 
-  const completed = !!row.completed_at;
+  // Un cobro en mostrador cierra el ciclo aunque el registro sea previo a la
+  // columna completed_at, así que tratamos ambos como estado final.
+  const completed = !!(row.completed_at || row.in_store_paid_at);
 
   return (
     <div className="mt-4 rounded-sm border border-foreground/15 bg-background/50 p-3">
@@ -556,7 +558,7 @@ function PickupControls({ row }: { row: CustomRow }) {
         </span>
         {row.ready_at ? ` · Listo desde ${formatDate(row.ready_at)}` : ""}
         {row.in_store_paid_at ? " · Cobrado en mostrador" : ""}
-        {completed ? ` · Finalizado ${formatDate(row.completed_at!)}` : ""}
+        {completed ? ` · Finalizado ${formatDate(row.completed_at ?? row.in_store_paid_at!)}` : ""}
       </p>
       {completed ? (
         <p className="mt-2 text-[11px] font-semibold uppercase tracking-widest text-primary">
