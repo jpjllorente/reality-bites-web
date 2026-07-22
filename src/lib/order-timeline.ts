@@ -115,6 +115,9 @@ export interface CustomOrderTimelineInput {
   stripe_session_id?: string | null;
   stripe_payment_intent_id?: string | null;
   status?: string | null;
+  ready_at?: string | null;
+  ready_notified_at?: string | null;
+  in_store_paid_at?: string | null;
 }
 
 export function buildCustomOrderTimeline(row: CustomOrderTimelineInput): TimelineEvent[] {
