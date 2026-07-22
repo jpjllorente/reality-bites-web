@@ -98,6 +98,11 @@ function Page() {
                 {state.mode === "deposit" ? "como anticipo de tu encargo" : "por el encargo completo"}.
                 Te enviamos la confirmación por email y nos pondremos en contacto contigo.
               </p>
+              {state.timeline.length > 0 && (
+                <div className="mt-6">
+                  <OrderTimeline events={state.timeline} />
+                </div>
+              )}
             </div>
           )}
           {state.kind === "ok" && state.status !== "paid" && (
