@@ -169,10 +169,15 @@ async function handleCustomOrderCheckoutCompleted(session: any) {
   // difference; the sum is the real amount paid across both sessions).
   const { data: prev } = await supabaseAdmin
     .from("custom_orders")
-    .select("amount_paid_cents, payment_status")
+    .select("amount_paid_cents, payment_status, stripe_payment_intent_id")
     .eq("id", orderId)
     .maybeSingle();
   if (prev?.payment_status === "paid") return;
+  // Idempotency: if this exact PI was already recorded, skip (the return-page
+  // finalize may have processed it first).
+  if (paymentIntentId && (prev as any)?.stripe_payment_intent_id === paymentIntentId) {
+    return;
+  }
   const previousPaid = (prev as any)?.amount_paid_cents ?? 0;
   const summed = previousPaid + (session.amount_total ?? 0);
   const { data: updated } = await (supabaseAdmin.from("custom_orders") as any)
