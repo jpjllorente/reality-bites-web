@@ -16,6 +16,8 @@ interface Item {
   name: string;
   qty: number;
   price_cents: number;
+  variant_name?: string | null;
+  portion?: boolean;
 }
 
 interface Props {
@@ -66,9 +68,18 @@ const Email = ({
         <Heading as="h2" style={h2}>Artículos</Heading>
         <Section style={card}>
           {items.map((it, i) => (
-            <Text key={i} style={p}>
-              {it.qty} × {it.name} — {fmt(it.qty * it.price_cents)}
-            </Text>
+            <Section key={i} style={{ margin: "4px 0" }}>
+              <Text style={p}>
+                {it.qty} × {it.name} — {fmt(it.qty * it.price_cents)}
+              </Text>
+              {(it.variant_name || it.portion) && (
+                <Text style={pMeta}>
+                  {it.variant_name ? `Variante: ${it.variant_name}` : ""}
+                  {it.variant_name && it.portion ? " · " : ""}
+                  {it.portion ? "Tamaño: porción" : ""}
+                </Text>
+              )}
+            </Section>
           ))}
           <Hr style={hr} />
           <Text style={p}><strong>Total pedido:</strong> {fmt(totalCents)}</Text>
