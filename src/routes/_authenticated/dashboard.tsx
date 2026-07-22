@@ -275,6 +275,7 @@ type CustomRow = {
   ready_at?: string | null;
   ready_notified_at?: string | null;
   in_store_paid_at?: string | null;
+  completed_at?: string | null;
 };
 
 function CustomOrdersTable({
