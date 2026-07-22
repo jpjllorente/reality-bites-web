@@ -12,6 +12,12 @@ import {
   upsertProduct,
   deleteProduct,
 } from "@/lib/catalog.functions";
+import {
+  forceSyncProduct,
+  reconcileProductsWithStripe,
+  type ProductDiscrepancy,
+} from "@/lib/catalog-admin.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/_authenticated/productos")({
   head: () => ({
@@ -75,6 +81,15 @@ function ProductsPage() {
   const list = useServerFn(listProductsAdmin);
   const save = useServerFn(upsertProduct);
   const remove = useServerFn(deleteProduct);
+  const syncOne = useServerFn(forceSyncProduct);
+  const reconcile = useServerFn(reconcileProductsWithStripe);
+  const [syncing, setSyncing] = useState<string | null>(null);
+  const [reconciling, setReconciling] = useState(false);
+  const [reconcileResult, setReconcileResult] = useState<
+    | { checked: number; discrepancies: ProductDiscrepancy[] }
+    | { error: string }
+    | null
+  >(null);
   const [editing, setEditing] = useState<Row | null>(null);
   const [dirty, setDirty] = useState<{ slug: boolean; seo_title: boolean; seo_description: boolean }>({
     slug: false,
@@ -203,6 +218,38 @@ function ProductsPage() {
     }
   }
 
+
+
+  async function onSync(id: string) {
+    setSyncing(id);
+    try {
+      const res = await syncOne({ data: { id } });
+      if ("error" in res) toast.error(`Stripe: ${res.error}`);
+      else toast.success("Sincronizado con Stripe");
+      refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSyncing(null);
+    }
+  }
+
+  async function onReconcile() {
+    setReconciling(true);
+    setReconcileResult(null);
+    try {
+      const res = await reconcile({ data: { environment: getStripeEnvironment() } });
+      setReconcileResult(res);
+      if ("error" in res) toast.error(`Stripe: ${res.error}`);
+      else if (res.discrepancies.length === 0) toast.success("Sin discrepancias");
+      else toast.warning(`${res.discrepancies.length} discrepancia(s)`);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setReconciling(false);
+    }
+  }
+
   function variantsFromDb(v: unknown): Variant[] {
     if (!Array.isArray(v)) return [];
     return v
@@ -252,6 +299,13 @@ function ProductsPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <NavTabs current="productos" />
+              <button
+                onClick={onReconcile}
+                disabled={reconciling}
+                className="rounded-sm border border-foreground/20 px-4 py-2 text-xs font-semibold uppercase tracking-widest hover:border-primary hover:text-primary disabled:opacity-50"
+              >
+                {reconciling ? "Conciliando…" : "Conciliar Stripe"}
+              </button>
               <button
                 onClick={openNew}
                 className="rounded-sm bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-widest text-primary-foreground hover:bg-primary/90"
@@ -313,6 +367,13 @@ function ProductsPage() {
                     >
                       Borrar
                     </button>
+                    <button
+                      onClick={() => onSync(r.id)}
+                      disabled={syncing === r.id}
+                      className="rounded-sm border border-foreground/20 px-2 py-1 text-[11px] uppercase tracking-widest hover:border-primary hover:text-primary disabled:opacity-50"
+                    >
+                      {syncing === r.id ? "Sync…" : "Sync Stripe"}
+                    </button>
                   </div>
                 </div>
               </article>
@@ -323,6 +384,59 @@ function ProductsPage() {
             <p className="mt-10 text-sm text-muted-foreground">
               Sin productos en la base de datos. Mientras esté vacía, la tienda muestra los ejemplos por defecto.
             </p>
+          )}
+
+          {reconcileResult && (
+            <section className="mt-10 rounded-sm border border-foreground/15 bg-card p-5">
+              <h2 className="font-display text-2xl text-primary">Conciliación con Stripe</h2>
+              {"error" in reconcileResult ? (
+                <p className="mt-2 text-sm text-destructive">{reconcileResult.error}</p>
+              ) : (
+                <>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {reconcileResult.checked} producto(s) revisados ·{" "}
+                    {reconcileResult.discrepancies.length} discrepancia(s)
+                  </p>
+                  {reconcileResult.discrepancies.length === 0 ? (
+                    <p className="mt-3 text-sm text-primary">Todo sincronizado.</p>
+                  ) : (
+                    <ul className="mt-4 divide-y divide-foreground/10">
+                      {reconcileResult.discrepancies.map((d, i) => (
+                        <li key={i} className="flex flex-wrap items-start gap-3 py-3">
+                          <span
+                            className={`rounded px-2 py-0.5 text-[10px] uppercase tracking-widest ${
+                              d.severity === "error"
+                                ? "bg-destructive/15 text-destructive"
+                                : d.severity === "warning"
+                                  ? "bg-amber-500/15 text-amber-700"
+                                  : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {d.severity}
+                          </span>
+                          <div className="flex-1 min-w-[220px]">
+                            <p className="text-sm font-semibold">{d.name}</p>
+                            <p className="text-xs text-muted-foreground">{d.detail}</p>
+                            {(d.dbValue != null || d.stripeValue != null) && (
+                              <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
+                                BD: {String(d.dbValue ?? "—")} · Stripe: {String(d.stripeValue ?? "—")}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => onSync(d.productId)}
+                            disabled={syncing === d.productId}
+                            className="rounded-sm border border-foreground/20 px-2 py-1 text-[10px] uppercase tracking-widest hover:border-primary hover:text-primary disabled:opacity-50"
+                          >
+                            {syncing === d.productId ? "Sync…" : "Sincronizar"}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+            </section>
           )}
         </div>
       </main>
