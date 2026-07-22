@@ -221,14 +221,16 @@ function ProductDetail({ product }: { product: Product }) {
 
               {hasPortion && (
                 <fieldset className="rounded-sm border border-foreground/15 p-3">
-                  <legend className="px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Tamaño</legend>
+                  <legend className="px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Tamaño <span className="text-destructive">*</span>
+                  </legend>
                   <div className="flex flex-wrap gap-2">
-                    <label className={`flex-1 cursor-pointer rounded-sm border px-3 py-2 text-sm transition ${!portion ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}>
-                      <input type="radio" name="size" checked={!portion} onChange={() => setPortion(false)} className="sr-only" />
+                    <label className={`flex-1 cursor-pointer rounded-sm border px-3 py-2 text-sm transition ${portion === false ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}>
+                      <input type="radio" name="size" checked={portion === false} onChange={() => { setPortion(false); setError(null); }} className="sr-only" />
                       Artículo completo · {formatPrice(product.price)}
                     </label>
-                    <label className={`flex-1 cursor-pointer rounded-sm border px-3 py-2 text-sm transition ${portion ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}>
-                      <input type="radio" name="size" checked={portion} onChange={() => setPortion(true)} className="sr-only" />
+                    <label className={`flex-1 cursor-pointer rounded-sm border px-3 py-2 text-sm transition ${portion === true ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}>
+                      <input type="radio" name="size" checked={portion === true} onChange={() => { setPortion(true); setError(null); }} className="sr-only" />
                       Porción · {formatPrice(product.portionPrice as number)}
                     </label>
                   </div>
@@ -237,19 +239,27 @@ function ProductDetail({ product }: { product: Product }) {
 
               {activeVariants.length > 0 && (
                 <fieldset className="rounded-sm border border-foreground/15 p-3">
-                  <legend className="px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Variante</legend>
+                  <legend className="px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Variante <span className="text-destructive">*</span>
+                  </legend>
                   <div className="flex flex-wrap gap-2">
                     {activeVariants.map((v) => (
                       <label
                         key={v.id}
                         className={`cursor-pointer rounded-sm border px-3 py-2 text-sm transition ${variantId === v.id ? "border-primary bg-primary text-primary-foreground" : "border-foreground/20 hover:border-primary"}`}
                       >
-                        <input type="radio" name="variant" checked={variantId === v.id} onChange={() => setVariantId(v.id)} className="sr-only" />
+                        <input type="radio" name="variant" checked={variantId === v.id} onChange={() => { setVariantId(v.id); setError(null); }} className="sr-only" />
                         {v.name}
                       </label>
                     ))}
                   </div>
                 </fieldset>
+              )}
+
+              {error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
+                </p>
               )}
 
               <div className="flex items-baseline gap-3 border-y border-foreground/15 py-4">
