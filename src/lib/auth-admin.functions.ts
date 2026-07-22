@@ -3,18 +3,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * Server-side admin authorization. Uses the caller's own authenticated
- * supabase client + the has_role RPC (SECURITY DEFINER, RLS-safe). This
+ * supabase client + the `has_role` RPC (SECURITY DEFINER, RLS-safe). This
  * removes the parallel hardcoded ADMIN_EMAILS allowlist — the `user_roles`
- * table is now the single source of truth.
+ * table is now the single source of truth for admin authorization.
  */
 export async function assertAdmin(
-  supabase: Awaited<
-    ReturnType<Parameters<typeof requireSupabaseAuth["server"]>[0]>
-  > extends { context: infer C }
-    ? C extends { supabase: infer S }
-      ? S
-      : never
-    : never,
+  supabase: unknown,
   userId: string,
 ): Promise<void> {
   const { data, error } = await (supabase as any).rpc("has_role", {
@@ -26,8 +20,8 @@ export async function assertAdmin(
 }
 
 /**
- * Convenience: server fn that returns whether the caller is an admin.
- * Used by client UI to gate the dashboard shell without another round trip.
+ * Server fn used by client UI to gate the dashboard shell without a round
+ * trip through the full listAllOrders call.
  */
 export const amIAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
