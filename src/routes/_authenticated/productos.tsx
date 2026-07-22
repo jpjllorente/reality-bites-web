@@ -81,6 +81,15 @@ function ProductsPage() {
   const list = useServerFn(listProductsAdmin);
   const save = useServerFn(upsertProduct);
   const remove = useServerFn(deleteProduct);
+  const syncOne = useServerFn(forceSyncProduct);
+  const reconcile = useServerFn(reconcileProductsWithStripe);
+  const [syncing, setSyncing] = useState<string | null>(null);
+  const [reconciling, setReconciling] = useState(false);
+  const [reconcileResult, setReconcileResult] = useState<
+    | { checked: number; discrepancies: ProductDiscrepancy[] }
+    | { error: string }
+    | null
+  >(null);
   const [editing, setEditing] = useState<Row | null>(null);
   const [dirty, setDirty] = useState<{ slug: boolean; seo_title: boolean; seo_description: boolean }>({
     slug: false,
