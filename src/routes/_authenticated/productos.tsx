@@ -35,6 +35,7 @@ type Row = {
   image_url: string;
   sort_order: number;
   is_active: boolean;
+  in_stock: boolean;
   tags: string[];
   seo_title: string;
   seo_description: string;
@@ -50,6 +51,7 @@ const EMPTY: Row = {
   image_url: "",
   sort_order: 0,
   is_active: true,
+  in_stock: true,
   tags: [],
   seo_title: "",
   seo_description: "",
@@ -157,6 +159,7 @@ function ProductsPage() {
           image_url: editing.image_url,
           sort_order: editing.sort_order,
           is_active: editing.is_active,
+          in_stock: editing.in_stock,
           tags: editing.tags.map((t) => t.trim()).filter(Boolean),
           seo_title: editing.seo_title.trim(),
           seo_description: editing.seo_description.trim(),
@@ -231,6 +234,11 @@ function ProductsPage() {
                     {!r.is_active && (
                       <span className="ml-1 rounded bg-muted px-1 text-[10px] uppercase text-muted-foreground">
                         oculto
+                      </span>
+                    )}
+                    {r.is_active && !r.in_stock && (
+                      <span className="ml-1 rounded bg-destructive/15 px-1 text-[10px] uppercase text-destructive">
+                        agotado
                       </span>
                     )}
                   </p>
@@ -354,6 +362,14 @@ function ProductsPage() {
                     onChange={(e) => setEditing((s) => (s ? { ...s, is_active: e.target.checked } : s))}
                   />
                   <span className="text-xs uppercase tracking-widest">Visible</span>
+                </label>
+                <label className="flex items-end gap-2 pb-2">
+                  <input
+                    type="checkbox"
+                    checked={editing.in_stock}
+                    onChange={(e) => setEditing((s) => (s ? { ...s, in_stock: e.target.checked } : s))}
+                  />
+                  <span className="text-xs uppercase tracking-widest">En stock</span>
                 </label>
               </div>
               <Text

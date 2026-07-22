@@ -47,7 +47,7 @@ export const createShopCheckoutSession = createServerFn({ method: "POST" })
       const slugs = Array.from(new Set(data.items.map((i) => i.slug)));
       const { data: dbProducts, error: productsError } = await supabaseAdmin
         .from("products")
-        .select("slug, name, price_cents, image_url, is_active")
+        .select("slug, name, price_cents, image_url, is_active, in_stock")
         .in("slug", slugs);
 
       if (productsError) throw new Error(productsError.message);
@@ -67,9 +67,9 @@ export const createShopCheckoutSession = createServerFn({ method: "POST" })
 
       for (const item of data.items) {
         const product = bySlug.get(item.slug);
-        if (!product || !product.is_active) {
+        if (!product || !product.is_active || !product.in_stock) {
           return {
-            error: `El producto "${item.slug}" ya no está disponible.`,
+            error: !product ? `El producto "${item.slug}" ya no está disponible.` : `"${product.name}" está agotado o inactivo.`,
           };
         }
         const unitAmount = product.price_cents ?? 0;
@@ -288,7 +288,7 @@ export const createInStoreOrder = createServerFn({ method: "POST" })
       const slugs = Array.from(new Set(data.items.map((i) => i.slug)));
       const { data: dbProducts, error: productsError } = await supabaseAdmin
         .from("products")
-        .select("slug, name, price_cents, image_url, is_active")
+        .select("slug, name, price_cents, image_url, is_active, in_stock")
         .in("slug", slugs);
       if (productsError) throw new Error(productsError.message);
       if (!dbProducts || dbProducts.length === 0) {
@@ -305,8 +305,8 @@ export const createInStoreOrder = createServerFn({ method: "POST" })
       let totalCents = 0;
       for (const item of data.items) {
         const product = bySlug.get(item.slug);
-        if (!product || !product.is_active) {
-          return { error: `El producto "${item.slug}" ya no está disponible.` };
+        if (!product || !product.is_active || !product.in_stock) {
+          return { error: !product ? `El producto "${item.slug}" ya no está disponible.` : `"${product.name}" está agotado o inactivo.` };
         }
         const unit = product.price_cents ?? 0;
         totalCents += unit * item.qty;
@@ -352,4 +352,167 @@ export const createInStoreOrder = createServerFn({ method: "POST" })
           error instanceof Error ? error.message : "No se pudo crear la reserva.",
       };
     }
+  });
+
+// ============ Admin lifecycle ops ============
+
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertAdmin as assertAdminRole } from "./auth-admin.functions";
+
+const OrderIdSchema = z.object({ orderId: z.string().uuid() });
+
+export const markInStorePaid = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => OrderIdSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdminRole(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: order, error } = await supabaseAdmin
+      .from("shop_orders")
+      .select("id, payment_status, total_cents")
+      .eq("id", data.orderId)
+      .single();
+    if (error || !order) return { error: "Pedido no encontrado." };
+    if (order.payment_status === "paid" || order.payment_status === "refunded") {
+      return { error: "El pedido ya está cerrado." };
+    }
+    const now = new Date().toISOString();
+    const { error: uErr } = await (supabaseAdmin.from("shop_orders") as any)
+      .update({
+        payment_status: "paid",
+        amount_paid_cents: order.total_cents,
+        payment_confirmed_at: now,
+        in_store_paid_at: now,
+        status: "completed",
+      })
+      .eq("id", data.orderId);
+    if (uErr) return { error: uErr.message };
+    try {
+      const { sendInStorePaidNotification } = await import("./shop-order-mailer.server");
+      await sendInStorePaidNotification(data.orderId);
+    } catch (e) { console.error("[markInStorePaid] mail failed", e); }
+    return { ok: true };
+  });
+
+const RefundSchema = z.object({
+  orderId: z.string().uuid(),
+  amountCents: z.number().int().min(1).max(100_000_000).optional(),
+  reason: z.string().trim().max(500).optional(),
+  environment: StripeEnvSchema.default("sandbox"),
+});
+
+export const refundShopOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => RefundSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdminRole(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: order } = await supabaseAdmin
+      .from("shop_orders")
+      .select("id, stripe_payment_intent_id, amount_paid_cents, amount_refunded_cents, payment_status")
+      .eq("id", data.orderId)
+      .single();
+    if (!order) return { error: "Pedido no encontrado." };
+    if (!order.stripe_payment_intent_id) {
+      return { error: "Este pedido no tiene pago en Stripe (posible cobro en tienda)." };
+    }
+    if (order.payment_status !== "paid" && order.payment_status !== "partially_refunded") {
+      return { error: "El pedido no está en un estado reembolsable." };
+    }
+    try {
+      const stripe = createStripeClient(data.environment);
+      await stripe.refunds.create({
+        payment_intent: order.stripe_payment_intent_id,
+        ...(data.amountCents ? { amount: data.amountCents } : {}),
+        ...(data.reason ? { metadata: { reason: data.reason } } : {}),
+      });
+      // The webhook charge.refunded will update the row + notify the customer.
+      return { ok: true };
+    } catch (e) {
+      console.error("[refundShopOrder]", e);
+      return { error: getStripeErrorMessage(e) };
+    }
+  });
+
+const CancelSchema = z.object({
+  orderId: z.string().uuid(),
+  reason: z.string().trim().max(500).optional(),
+  refundAmountCents: z.number().int().min(0).max(100_000_000).optional(),
+  environment: StripeEnvSchema.default("sandbox"),
+});
+
+export const cancelShopOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => CancelSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdminRole(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: order } = await supabaseAdmin
+      .from("shop_orders")
+      .select("id, stripe_payment_intent_id, amount_paid_cents, amount_refunded_cents, payment_status")
+      .eq("id", data.orderId)
+      .single();
+    if (!order) return { error: "Pedido no encontrado." };
+
+    let refundedCents = 0;
+    const isPaid = order.payment_status === "paid" || order.payment_status === "partially_refunded";
+    const wantRefund = (data.refundAmountCents ?? 0) > 0;
+
+    if (isPaid && wantRefund && order.stripe_payment_intent_id) {
+      try {
+        const stripe = createStripeClient(data.environment);
+        const refund = await stripe.refunds.create({
+          payment_intent: order.stripe_payment_intent_id,
+          amount: data.refundAmountCents,
+          ...(data.reason ? { metadata: { reason: data.reason } } : {}),
+        });
+        refundedCents = refund.amount ?? data.refundAmountCents ?? 0;
+      } catch (e) {
+        console.error("[cancelShopOrder refund]", e);
+        return { error: getStripeErrorMessage(e) };
+      }
+    }
+
+    const now = new Date().toISOString();
+    const updates: Record<string, unknown> = {
+      status: "cancelled",
+      cancelled_at: now,
+      cancellation_reason: data.reason || null,
+    };
+    // If unpaid or pay_in_store, mark payment as cancelled outright.
+    if (!isPaid) {
+      updates.payment_status = "cancelled";
+    }
+    const { error: uErr } = await (supabaseAdmin.from("shop_orders") as any)
+      .update(updates)
+      .eq("id", data.orderId);
+    if (uErr) return { error: uErr.message };
+
+    try {
+      const { sendCancellationNotification } = await import("./shop-order-mailer.server");
+      // Refund email is sent by the webhook when Stripe confirms; here we send
+      // a cancellation notice with the intended refund amount for context.
+      await sendCancellationNotification({
+        orderId: data.orderId,
+        reason: data.reason,
+        refundedCents,
+      });
+    } catch (e) { console.error("[cancelShopOrder] mail failed", e); }
+
+    return { ok: true, refundedCents };
+  });
+
+// ============ Product ↔ Stripe mirror ============
+
+const SyncProductSchema = z.object({ productId: z.string().uuid() });
+
+export const syncProductToStripe = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => SyncProductSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdminRole(context.supabase, context.userId);
+    const { syncProductToStripeInternal } = await import(
+      "./stripe-product-sync.server"
+    );
+    return syncProductToStripeInternal(data.productId);
   });

@@ -124,6 +124,29 @@ async function handleChargeRefunded(charge: any, env: StripeEnv) {
   });
 }
 
+async function handlePaymentFailed(
+  session: any,
+  reason: string | null,
+) {
+  const orderId = session?.metadata?.shop_order_id as string | undefined;
+  if (!orderId) return;
+  const { supabaseAdmin } = await import(
+    "@/integrations/supabase/client.server"
+  );
+  const { sendPaymentFailedNotification } = await import(
+    "@/lib/shop-order-mailer.server"
+  );
+  await (supabaseAdmin.from("shop_orders") as any)
+    .update({
+      payment_status: "failed",
+      payment_failed_at: new Date().toISOString(),
+      payment_failure_reason: reason || "Pago no completado",
+    })
+    .eq("id", orderId)
+    .not("payment_status", "in", "(paid,refunded,partially_refunded)");
+  await sendPaymentFailedNotification({ orderId, reason: reason || undefined });
+}
+
 async function handleWebhookEvent(request: Request, env: StripeEnv) {
   const event = await verifyWebhook(request, env);
   switch (event.type) {
@@ -135,6 +158,23 @@ async function handleWebhookEvent(request: Request, env: StripeEnv) {
     case "charge.refund.updated":
       await handleChargeRefunded(event.data.object, env);
       break;
+    case "checkout.session.async_payment_failed":
+      await handlePaymentFailed(event.data.object, "Pago asíncrono rechazado");
+      break;
+    case "checkout.session.expired":
+      await handlePaymentFailed(event.data.object, "Checkout expirado sin completar");
+      break;
+    case "payment_intent.payment_failed": {
+      const pi = event.data.object;
+      const orderId = pi?.metadata?.shop_order_id as string | undefined;
+      if (orderId) {
+        await handlePaymentFailed(
+          { metadata: { shop_order_id: orderId } },
+          pi?.last_payment_error?.message || "Pago rechazado",
+        );
+      }
+      break;
+    }
     default:
       console.log("[stripe webhook] unhandled event", event.type);
   }

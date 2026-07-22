@@ -18,6 +18,7 @@ export interface Product {
   tags: string[];
   seoTitle: string;
   seoDescription: string;
+  inStock?: boolean;
 }
 
 // Fallback local si la BD está vacía. Los admins gestionan los productos reales
@@ -36,7 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 export async function fetchPublicProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
-    .select("id, slug, name, description, price_cents, category, image_url, sort_order, tags, seo_title, seo_description")
+    .select("id, slug, name, description, price_cents, category, image_url, sort_order, tags, seo_title, seo_description, in_stock")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
   if (error || !data) return [];
@@ -51,6 +52,7 @@ export async function fetchPublicProducts(): Promise<Product[]> {
     tags: (r.tags as string[] | null) ?? [],
     seoTitle: (r as { seo_title?: string }).seo_title ?? "",
     seoDescription: (r as { seo_description?: string }).seo_description ?? "",
+    inStock: (r as { in_stock?: boolean }).in_stock ?? true,
   }));
 }
 

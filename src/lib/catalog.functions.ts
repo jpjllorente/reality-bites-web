@@ -19,6 +19,7 @@ const ProductSchema = z.object({
   image_url: z.string().trim().max(1000).default(""),
   sort_order: z.number().int().default(0),
   is_active: z.boolean().default(true),
+  in_stock: z.boolean().default(true),
   tags: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
   seo_title: z.string().trim().max(70).default(""),
   seo_description: z.string().trim().max(200).default(""),
@@ -44,19 +45,31 @@ export const upsertProduct = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let productId: string;
     if (data.id) {
       const { id, ...rest } = data;
       const { error } = await supabaseAdmin.from("products").update(rest).eq("id", id);
       if (error) throw new Error(error.message);
-      return { ok: true, id };
+      productId = id;
+    } else {
+      const { data: inserted, error } = await supabaseAdmin
+        .from("products")
+        .insert(data)
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      productId = inserted.id;
     }
-    const { data: inserted, error } = await supabaseAdmin
-      .from("products")
-      .insert(data)
-      .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    return { ok: true, id: inserted.id };
+    // Fire-and-forget mirror to Stripe. Never block save on Stripe errors.
+    try {
+      const { syncProductToStripeInternal } = await import(
+        "./stripe-product-sync.server"
+      );
+      await syncProductToStripeInternal(productId);
+    } catch (e) {
+      console.warn("[upsertProduct] Stripe sync failed", e);
+    }
+    return { ok: true, id: productId };
   });
 
 export const deleteProduct = createServerFn({ method: "POST" })

@@ -279,3 +279,116 @@ export async function sendInStoreOrderEmails(orderId: string): Promise<void> {
     }
   }
 }
+
+/* ---------- In-store paid (registered from dashboard) ---------- */
+
+export async function sendInStorePaidNotification(orderId: string): Promise<void> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: order, error } = await supabaseAdmin
+    .from("shop_orders")
+    .select("id, name, email, items, total_cents, confirmation_sent_at")
+    .eq("id", orderId)
+    .single();
+  if (error || !order) return;
+  const row = order as unknown as {
+    id: string; name: string; email: string | null;
+    items: Array<{ id: string; name: string; qty: number; price_cents: number }>;
+    total_cents: number; confirmation_sent_at: string | null;
+  };
+  if (!row.email) return;
+  // Claim (idempotent) — reuse confirmation_sent_at slot; if already sent, skip.
+  const claim = await (supabaseAdmin.from("shop_orders") as any)
+    .update({ confirmation_sent_at: new Date().toISOString() })
+    .eq("id", row.id)
+    .is("confirmation_sent_at", null)
+    .select("id");
+  if (!claim.data || claim.data.length === 0) return;
+  try {
+    await sendTemplateEmail("shop-order-in-store-paid", row.email, {
+      idempotencyKey: `shop-instore-paid-${row.id}`,
+      templateData: {
+        name: row.name, orderId: row.id,
+        items: row.items ?? [], totalCents: row.total_cents,
+      },
+    });
+  } catch (e) {
+    console.error("[mailer] in-store paid send failed", row.id, e);
+    await (supabaseAdmin.from("shop_orders") as any)
+      .update({ confirmation_sent_at: null })
+      .eq("id", row.id);
+  }
+}
+
+/* ---------- Payment failed ---------- */
+
+export async function sendPaymentFailedNotification(input: {
+  orderId: string; reason?: string;
+}): Promise<void> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: order } = await supabaseAdmin
+    .from("shop_orders")
+    .select("id, name, email, failure_notified_at")
+    .eq("id", input.orderId)
+    .single();
+  if (!order) return;
+  const row = order as unknown as {
+    id: string; name: string; email: string | null; failure_notified_at: string | null;
+  };
+  if (!row.email || row.failure_notified_at) return;
+  const claim = await (supabaseAdmin.from("shop_orders") as any)
+    .update({ failure_notified_at: new Date().toISOString() })
+    .eq("id", row.id)
+    .is("failure_notified_at", null)
+    .select("id");
+  if (!claim.data || claim.data.length === 0) return;
+  try {
+    await sendTemplateEmail("shop-order-failed", row.email, {
+      idempotencyKey: `shop-failed-${row.id}`,
+      templateData: { name: row.name, orderId: row.id, reason: input.reason ?? "" },
+    });
+  } catch (e) {
+    console.error("[mailer] failed-payment send error", row.id, e);
+    await (supabaseAdmin.from("shop_orders") as any)
+      .update({ failure_notified_at: null })
+      .eq("id", row.id);
+  }
+}
+
+/* ---------- Cancellation ---------- */
+
+export async function sendCancellationNotification(input: {
+  orderId: string; reason?: string; refundedCents?: number;
+}): Promise<void> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: order } = await supabaseAdmin
+    .from("shop_orders")
+    .select("id, name, email, cancellation_notified_at")
+    .eq("id", input.orderId)
+    .single();
+  if (!order) return;
+  const row = order as unknown as {
+    id: string; name: string; email: string | null; cancellation_notified_at: string | null;
+  };
+  if (!row.email || row.cancellation_notified_at) return;
+  const claim = await (supabaseAdmin.from("shop_orders") as any)
+    .update({ cancellation_notified_at: new Date().toISOString() })
+    .eq("id", row.id)
+    .is("cancellation_notified_at", null)
+    .select("id");
+  if (!claim.data || claim.data.length === 0) return;
+  try {
+    await sendTemplateEmail("shop-order-cancelled", row.email, {
+      idempotencyKey: `shop-cancelled-${row.id}`,
+      templateData: {
+        name: row.name, orderId: row.id,
+        reason: input.reason ?? "",
+        refundedCents: input.refundedCents ?? 0,
+      },
+    });
+  } catch (e) {
+    console.error("[mailer] cancellation send failed", row.id, e);
+    await (supabaseAdmin.from("shop_orders") as any)
+      .update({ cancellation_notified_at: null })
+      .eq("id", row.id);
+  }
+}
