@@ -20,6 +20,7 @@ export function MediaUpload({
       return;
     }
     setBusy(true);
+    const toastId = toast.loading("Mejorando imagen con IA… esto puede tardar hasta 1 min");
     try {
       const buf = await file.arrayBuffer();
       let binary = "";
@@ -34,10 +35,13 @@ export function MediaUpload({
         },
       });
       onChange(res.url);
-      toast.success("Imagen subida");
+      toast.success(
+        res.enhanced ? "Imagen mejorada y subida" : "Imagen subida (sin mejora IA)",
+        { id: toastId },
+      );
     } catch (e) {
       console.error(e);
-      toast.error("Error al subir");
+      toast.error("Error al subir", { id: toastId });
     } finally {
       setBusy(false);
     }
