@@ -55,6 +55,7 @@ export const Route = createFileRoute("/tienda/$slug")({
     const origin = loaderData?.origin ?? "";
     const p = loaderData?.product;
     const path = `/tienda/${params.slug}`;
+    const canonical = `https://144reality.com${path}`;
     const title = p?.seoTitle?.trim() || (p ? `${p.name} — 144 Reality` : "Producto — 144 Reality");
     const description =
       p?.seoDescription?.trim() ||
@@ -67,7 +68,7 @@ export const Route = createFileRoute("/tienda/$slug")({
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "product" },
-      { property: "og:url", content: path },
+      { property: "og:url", content: canonical },
       ...(image
         ? [
             { property: "og:image", content: image },
@@ -99,7 +100,7 @@ export const Route = createFileRoute("/tienda/$slug")({
                   price: p.price.toFixed(2),
                   priceCurrency: "EUR",
                   availability: "https://schema.org/InStock",
-                  url: `${origin}${path}`,
+                  url: canonical,
                 },
               }),
             },
@@ -113,7 +114,7 @@ export const Route = createFileRoute("/tienda/$slug")({
     ];
     return {
       meta,
-      links: [{ rel: "canonical", href: path }],
+      links: [{ rel: "canonical", href: canonical }],
       scripts,
     };
   },

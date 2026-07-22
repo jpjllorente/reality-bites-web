@@ -17,9 +17,10 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
       },
-      { property: "og:url", content: "/" },
+      { property: "og:url", content: "https://144reality.com/" },
+      { property: "og:type", content: "website" },
     ],
-    links: [{ rel: "canonical", href: "/" }],
+    links: [{ rel: "canonical", href: "https://144reality.com/" }],
   }),
   component: Home,
 });
