@@ -13,6 +13,7 @@ import {
   cancelShopOrder,
 } from "@/lib/payments.functions";
 import { amIAdmin } from "@/lib/auth-admin.functions";
+import { sendCustomOrderQuote } from "@/lib/custom-orders.functions";
 import { NavTabs } from "./productos";
 
 
@@ -257,6 +258,14 @@ type CustomRow = {
   flavors: string | null;
   allergens: string | null;
   message: string | null;
+  quote_total_cents?: number | null;
+  deposit_percent?: number | null;
+  quote_notes?: string | null;
+  quote_sent_at?: string | null;
+  payment_status?: string | null;
+  payment_mode?: "deposit" | "full" | null;
+  amount_paid_cents?: number | null;
+  payment_token?: string | null;
 };
 
 function CustomOrdersTable({
@@ -310,9 +319,138 @@ function CustomOrdersTable({
               </p>
             </div>
           )}
+          <QuotePanel row={r} />
         </details>
       ))}
     </div>
+  );
+}
+
+function QuotePanel({ row }: { row: CustomRow }) {
+  const sendQuote = useServerFn(sendCustomOrderQuote);
+  const router = useRouter();
+  const [total, setTotal] = useState(
+    row.quote_total_cents != null ? (row.quote_total_cents / 100).toFixed(2) : "",
+  );
+  const [pct, setPct] = useState(String(row.deposit_percent ?? 30));
+  const [notes, setNotes] = useState(row.quote_notes ?? "");
+  const [busy, setBusy] = useState(false);
+  const paymentUrl =
+    typeof window !== "undefined" && row.payment_token
+      ? `${window.location.origin}/encargos/pagar/${row.payment_token}`
+      : "";
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const cents = Math.round(parseFloat(total.replace(",", ".")) * 100);
+    const percent = parseInt(pct, 10);
+    if (!Number.isFinite(cents) || cents < 50) {
+      toast.error("Introduce un total válido (mínimo 0,50 €).");
+      return;
+    }
+    if (!Number.isFinite(percent) || percent < 1 || percent > 100) {
+      toast.error("El porcentaje de anticipo debe estar entre 1 y 100.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await sendQuote({
+        data: {
+          orderId: row.id,
+          totalCents: cents,
+          depositPercent: percent,
+          notes,
+          publicOrigin: window.location.origin,
+        },
+      });
+      if ("error" in res && res.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Presupuesto enviado al cliente.");
+        router.invalidate();
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al enviar.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form
+      onSubmit={submit}
+      className="mt-4 rounded-sm border border-primary/30 bg-primary/5 p-4"
+    >
+      <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
+        Presupuesto y link de pago
+      </p>
+      {row.quote_sent_at && (
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Enviado el {formatDate(row.quote_sent_at)}
+          {row.payment_status && row.payment_status !== "unpaid"
+            ? ` · Estado: ${row.payment_status}${row.amount_paid_cents ? ` (${formatEUR(row.amount_paid_cents)})` : ""}`
+            : ""}
+        </p>
+      )}
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <label className="text-xs">
+          <span className="block text-muted-foreground">Total (EUR)</span>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={total}
+            onChange={(e) => setTotal(e.target.value)}
+            className="mt-1 w-full rounded-sm border border-foreground/20 bg-background px-2 py-1.5 text-sm"
+            placeholder="120.00"
+          />
+        </label>
+        <label className="text-xs">
+          <span className="block text-muted-foreground">Anticipo mínimo (%)</span>
+          <input
+            type="number"
+            min={1}
+            max={100}
+            value={pct}
+            onChange={(e) => setPct(e.target.value)}
+            className="mt-1 w-full rounded-sm border border-foreground/20 bg-background px-2 py-1.5 text-sm"
+          />
+        </label>
+        <div className="flex items-end">
+          <button
+            type="submit"
+            disabled={busy}
+            className="w-full rounded-sm bg-secondary px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-secondary-foreground hover:bg-secondary/90 disabled:opacity-50"
+          >
+            {busy ? "Enviando…" : row.quote_sent_at ? "Reenviar presupuesto" : "Enviar presupuesto"}
+          </button>
+        </div>
+      </div>
+      <label className="mt-3 block text-xs">
+        <span className="block text-muted-foreground">Notas para el cliente</span>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={2}
+          className="mt-1 w-full rounded-sm border border-foreground/20 bg-background px-2 py-1.5 text-sm"
+        />
+      </label>
+      {paymentUrl && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <p className="text-[11px] text-muted-foreground">Link de pago:</p>
+          <code className="rounded-sm bg-background px-2 py-1 text-[11px]">{paymentUrl}</code>
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(paymentUrl);
+              toast.success("Enlace copiado.");
+            }}
+            className="rounded-sm border border-foreground/20 px-2 py-1 text-[10px] uppercase tracking-widest hover:bg-muted"
+          >
+            Copiar
+          </button>
+        </div>
+      )}
+    </form>
   );
 }
 
