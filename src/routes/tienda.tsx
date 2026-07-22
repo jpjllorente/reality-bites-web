@@ -101,6 +101,23 @@ export const Route = createFileRoute("/tienda")({
             ],
           }),
         },
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: "Catálogo 144 Reality",
+            url: "https://144reality.com/tienda",
+            numberOfItems: products.length,
+            itemListElement: products.map((p, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              url: `https://144reality.com/tienda/${p.slug ?? p.id}`,
+              name: p.name,
+              image: `${origin}${p.image}`,
+            })),
+          }),
+        },
         breadcrumbJsonLd(origin, [
           { name: "Inicio", path: "/" },
           { name: "Tienda", path: "/tienda" },

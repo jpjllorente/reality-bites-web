@@ -129,8 +129,24 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+const CANONICAL_HOST = "144reality.com";
+
+function useCanonicalRedirect() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const { hostname, protocol, pathname, search, hash } = window.location;
+    const isWww = hostname === `www.${CANONICAL_HOST}`;
+    const isLovable = hostname.endsWith(".lovable.app");
+    const isHttp = protocol === "http:" && hostname === CANONICAL_HOST;
+    if (isWww || isLovable || isHttp) {
+      window.location.replace(`https://${CANONICAL_HOST}${pathname}${search}${hash}`);
+    }
+  }, []);
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useCanonicalRedirect();
 
   return (
     <QueryClientProvider client={queryClient}>
