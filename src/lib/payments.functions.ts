@@ -195,13 +195,23 @@ const FinalizeSchema = z.object({
   sessionId: z.string().min(1).max(200),
 });
 
+type FinalizeItem = {
+  id: string;
+  name: string;
+  qty: number;
+  price_cents: number;
+  variant_name?: string | null;
+  portion?: boolean | null;
+};
+
 type FinalizeResult =
   | {
       status: "paid" | "pending" | "failed";
       orderId: string | null;
       total_cents: number;
-      items: Array<{ id: string; name: string; qty: number; price_cents: number }>;
+      items: FinalizeItem[];
       customer: { name: string; phone: string; email: string | null; notes: string | null };
+      timeline: import("@/lib/order-timeline").TimelineEvent[];
     }
   | { error: string };
 
@@ -253,12 +263,13 @@ export const finalizeShopCheckout = createServerFn({ method: "POST" })
           total_cents: session.amount_total ?? 0,
           items: [],
           customer: { name: "", phone: "", email: null, notes: null },
+          timeline: [],
         };
       }
 
       const { data: order, error } = await supabaseAdmin
         .from("shop_orders")
-        .select("id, name, phone, email, notes, items, total_cents, payment_status")
+        .select("*")
         .eq("id", orderId)
         .single();
 
@@ -273,22 +284,20 @@ export const finalizeShopCheckout = createServerFn({ method: "POST" })
             ? "pending"
             : "failed";
 
+      const { buildShopOrderTimeline } = await import("@/lib/order-timeline");
+
       return {
         status,
         orderId: order.id,
         total_cents: order.total_cents,
-        items: (order.items as Array<{
-          id: string;
-          name: string;
-          qty: number;
-          price_cents: number;
-        }>) ?? [],
+        items: (order.items as FinalizeItem[]) ?? [],
         customer: {
           name: order.name,
           phone: order.phone,
           email: order.email,
           notes: order.notes,
         },
+        timeline: buildShopOrderTimeline(order as any),
       };
     } catch (error) {
       console.error("[stripe] finalizeShopCheckout", error);
@@ -319,21 +328,24 @@ export const createInStoreOrder = createServerFn({ method: "POST" })
       );
 
       const slugs = Array.from(new Set(data.items.map((i) => i.slug)));
-      const { data: dbProducts, error: productsError } = await supabaseAdmin
-        .from("products")
-        .select("slug, name, price_cents, image_url, is_active, in_stock")
+      const { data: dbProducts, error: productsError } = await (supabaseAdmin
+        .from("products") as any)
+        .select("slug, name, price_cents, portion_price_cents, image_url, is_active, in_stock, variants")
         .in("slug", slugs);
       if (productsError) throw new Error(productsError.message);
       if (!dbProducts || dbProducts.length === 0) {
         return { error: "No se encontraron los productos del pedido." };
       }
 
-      const bySlug = new Map(dbProducts.map((p) => [p.slug, p]));
+      const bySlug = new Map<string, any>(dbProducts.map((p: any) => [p.slug, p]));
       const lineItems: Array<{
         id: string;
         name: string;
         qty: number;
         price_cents: number;
+        variant_id: string | null;
+        variant_name: string | null;
+        portion: boolean;
       }> = [];
       let totalCents = 0;
       for (const item of data.items) {
@@ -341,13 +353,33 @@ export const createInStoreOrder = createServerFn({ method: "POST" })
         if (!product || !product.is_active || !product.in_stock) {
           return { error: !product ? `El producto "${item.slug}" ya no está disponible.` : `"${product.name}" está agotado o inactivo.` };
         }
-        const unit = product.price_cents ?? 0;
+        const wantsPortion = item.portion === true;
+        const portionCents = product.portion_price_cents as number | null;
+        if (wantsPortion && (portionCents == null || portionCents <= 0)) {
+          return { error: `"${product.name}" no tiene precio por porción.` };
+        }
+        const unit = wantsPortion ? (portionCents as number) : (product.price_cents ?? 0);
+        let variantLabel: string | null = null;
+        if (item.variantId) {
+          variantLabel = resolveVariantName(product.variants, item.variantId);
+          if (!variantLabel) {
+            return { error: `La variante seleccionada de "${product.name}" ya no está disponible.` };
+          }
+        }
+        const displayName = [
+          product.name,
+          variantLabel ? `— ${variantLabel}` : null,
+          wantsPortion ? "(porción)" : null,
+        ].filter(Boolean).join(" ");
         totalCents += unit * item.qty;
         lineItems.push({
           id: product.slug,
-          name: product.name,
+          name: displayName,
           qty: item.qty,
           price_cents: unit,
+          variant_id: item.variantId ?? null,
+          variant_name: variantLabel,
+          portion: wantsPortion,
         });
       }
 

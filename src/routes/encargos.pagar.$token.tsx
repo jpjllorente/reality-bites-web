@@ -11,6 +11,8 @@ import {
   getCustomOrderQuote,
   createCustomOrderPayment,
 } from "@/lib/custom-orders.functions";
+import { OrderTimeline } from "@/components/site/OrderTimeline";
+import type { TimelineEvent } from "@/lib/order-timeline";
 
 export const Route = createFileRoute("/encargos/pagar/$token")({
   head: () => ({
@@ -44,6 +46,7 @@ type Quote = {
 function PayQuotePage() {
   const { token } = Route.useParams();
   const [quote, setQuote] = useState<Quote | null>(null);
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [mode, setMode] = useState<"deposit" | "full">("deposit");
   const [payOpen, setPayOpen] = useState(false);
@@ -52,7 +55,10 @@ function PayQuotePage() {
     getCustomOrderQuote({ data: { token } })
       .then((r) => {
         if ("error" in r) setErr(r.error ?? "Error");
-        else setQuote(r.quote as Quote);
+        else {
+          setQuote(r.quote as Quote);
+          setTimeline((r.timeline ?? []) as TimelineEvent[]);
+        }
       })
       .catch((e) => setErr(e instanceof Error ? e.message : "Error"));
   }, [token]);
@@ -119,6 +125,12 @@ function PayQuotePage() {
               <p className="mt-2 text-sm text-foreground/80">
                 Nos pondremos en contacto contigo para los últimos detalles.
               </p>
+            </div>
+          )}
+
+          {quote && timeline.length > 0 && (
+            <div className="mt-6">
+              <OrderTimeline events={timeline} />
             </div>
           )}
 

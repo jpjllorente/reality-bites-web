@@ -15,6 +15,8 @@ import {
 import { amIAdmin } from "@/lib/auth-admin.functions";
 import { sendCustomOrderQuote } from "@/lib/custom-orders.functions";
 import { NavTabs } from "./productos";
+import { OrderTimeline } from "@/components/site/OrderTimeline";
+import { buildShopOrderTimeline, buildCustomOrderTimeline } from "@/lib/order-timeline";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -320,6 +322,9 @@ function CustomOrdersTable({
             </div>
           )}
           <QuotePanel row={r} />
+          <div className="mt-4">
+            <OrderTimeline events={buildCustomOrderTimeline(r as any)} />
+          </div>
         </details>
       ))}
     </div>
@@ -454,7 +459,14 @@ function QuotePanel({ row }: { row: CustomRow }) {
   );
 }
 
-type ShopItem = { id: string; name: string; qty: number; price_cents: number };
+type ShopItem = {
+  id: string;
+  name: string;
+  qty: number;
+  price_cents: number;
+  variant_name?: string | null;
+  portion?: boolean | null;
+};
 type ShopRow = {
   id: string;
   created_at: string;
@@ -600,21 +612,28 @@ function ShopOrdersTable({
             </summary>
             <ul className="mt-4 divide-y divide-foreground/10 text-sm">
               {items.map((it, i) => (
-                <li key={i} className="flex items-center justify-between py-2">
-                  <span>{it.qty} × {it.name}</span>
+                <li key={i} className="flex items-start justify-between gap-3 py-2">
+                  <div>
+                    <span>{it.qty} × {it.name}</span>
+                    {(it.variant_name || it.portion) && (
+                      <p className="text-xs text-muted-foreground">
+                        {it.variant_name ? `Variante: ${it.variant_name}` : ""}
+                        {it.variant_name && it.portion ? " · " : ""}
+                        {it.portion ? "Tamaño: porción" : ""}
+                      </p>
+                    )}
+                  </div>
                   <span className="font-mono">{formatEUR(it.qty * it.price_cents)}</span>
                 </li>
               ))}
             </ul>
-            {(r.stripe_payment_intent_id || r.payment_confirmed_at) && (
-              <div className="mt-3 rounded-sm bg-muted/40 px-3 py-2 font-mono text-[11px] text-muted-foreground">
-                {r.payment_confirmed_at ? (
-                  <div>Pago confirmado: {formatDate(r.payment_confirmed_at)}</div>
-                ) : null}
-                {r.stripe_payment_intent_id ? (
-                  <div>PaymentIntent: {r.stripe_payment_intent_id}</div>
-                ) : null}
-              </div>
+            <div className="mt-4">
+              <OrderTimeline events={buildShopOrderTimeline(r as any)} />
+            </div>
+            {r.stripe_payment_intent_id && (
+              <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+                PaymentIntent: {r.stripe_payment_intent_id}
+              </p>
             )}
             {r.notes && (
               <div className="mt-3">

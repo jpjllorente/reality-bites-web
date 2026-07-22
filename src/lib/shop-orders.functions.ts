@@ -8,6 +8,8 @@ const ItemSchema = z.object({
   name: z.string().max(120),
   qty: z.number().int().min(1).max(999),
   price_cents: z.number().int().min(0).max(1_000_000),
+  variant_name: z.string().max(120).nullable().optional(),
+  portion: z.boolean().nullable().optional(),
 });
 
 const ShopOrderSchema = z.object({
@@ -92,4 +94,30 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+// Public timeline endpoint (uses UUID as bearer capability — 128-bit unguessable).
+export const getShopOrderPublicTimeline = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ orderId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { data: row, error } = await supabaseAdmin
+      .from("shop_orders")
+      .select("*")
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (error || !row) return { error: "Pedido no encontrado." };
+    const { buildShopOrderTimeline } = await import("@/lib/order-timeline");
+    return {
+      ok: true as const,
+      orderId: row.id,
+      total_cents: row.total_cents,
+      payment_status: row.payment_status,
+      items: (row.items as any[]) ?? [],
+      timeline: buildShopOrderTimeline(row as any),
+    };
   });

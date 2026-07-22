@@ -4,6 +4,8 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { finalizeCustomOrderPayment } from "@/lib/custom-orders.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import { OrderTimeline } from "@/components/site/OrderTimeline";
+import type { TimelineEvent } from "@/lib/order-timeline";
 
 export const Route = createFileRoute("/encargos/pago-completado")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -27,7 +29,13 @@ function fmt(cents: number) {
 type State =
   | { kind: "loading" }
   | { kind: "error"; message: string }
-  | { kind: "ok"; status: "paid" | "pending" | "failed"; mode: "deposit" | "full"; amountCents: number };
+  | {
+      kind: "ok";
+      status: "paid" | "pending" | "failed";
+      mode: "deposit" | "full";
+      amountCents: number;
+      timeline: TimelineEvent[];
+    };
 
 function Page() {
   const { session_id } = Route.useSearch();
@@ -49,6 +57,7 @@ function Page() {
             status: r.status,
             mode: r.mode,
             amountCents: r.amountCents,
+            timeline: (r.timeline ?? []) as TimelineEvent[],
           });
       })
       .catch((e) =>
@@ -89,6 +98,11 @@ function Page() {
                 {state.mode === "deposit" ? "como anticipo de tu encargo" : "por el encargo completo"}.
                 Te enviamos la confirmación por email y nos pondremos en contacto contigo.
               </p>
+              {state.timeline.length > 0 && (
+                <div className="mt-6">
+                  <OrderTimeline events={state.timeline} />
+                </div>
+              )}
             </div>
           )}
           {state.kind === "ok" && state.status !== "paid" && (
