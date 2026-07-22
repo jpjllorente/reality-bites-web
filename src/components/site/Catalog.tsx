@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { fetchPublicProducts, type Category, type Product } from "@/lib/products";
 import { useCart } from "@/hooks/use-cart";
 import { StripeEmbeddedCheckout } from "@/components/site/StripeEmbeddedCheckout";
+import { createInStoreOrder } from "@/lib/payments.functions";
 import { toast } from "sonner";
 
 const categories: Array<Category | "Todo"> = ["Todo", "Repostería", "Café", "Bites"];
