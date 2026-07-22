@@ -214,24 +214,14 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
                   </ul>
                 )}
                 <p className="text-sm text-muted-foreground">{p.description}</p>
-                {p.inStock === false ? (
-                  <button
-                    disabled
-                    className="mt-auto inline-flex cursor-not-allowed items-center justify-center rounded-sm border border-foreground/20 bg-muted px-4 py-2.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground"
-                  >
-                    Agotado
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      cart.add(p);
-                      setCartOpen(true);
-                    }}
-                    className="mt-auto inline-flex items-center justify-center rounded-sm border border-primary/30 bg-transparent px-4 py-2.5 text-xs font-semibold uppercase tracking-widest text-primary transition hover:bg-primary hover:text-primary-foreground"
-                  >
-                    + Añadir al pedido
-                  </button>
-                )}
+                <ProductAddForm
+                  product={p}
+                  onAdd={(opts) => {
+                    cart.add(p, opts);
+                    setCartOpen(true);
+                  }}
+                />
+
               </div>
             </li>
           ))}
