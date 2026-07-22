@@ -48,9 +48,9 @@ function Reservado() {
     getShopOrderPublicTimeline({ data: { orderId: order_id } })
       .then((r) => {
         if ("ok" in r) {
-          setTimeline(r.timeline);
-          setItems(r.items as Item[]);
-          setTotalCents(r.total_cents);
+          setTimeline((r.timeline ?? []) as TimelineEvent[]);
+          setItems((r.items ?? []) as Item[]);
+          setTotalCents(r.total_cents ?? 0);
         }
       })
       .catch(() => {});
