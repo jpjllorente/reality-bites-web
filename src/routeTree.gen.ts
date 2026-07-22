@@ -19,6 +19,7 @@ import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TiendaPagoCompletadoRouteImport } from './routes/tienda.pago-completado'
 import { Route as TiendaSlugRouteImport } from './routes/tienda.$slug'
 import { Route as AuthenticatedProductosRouteImport } from './routes/_authenticated/productos'
 import { Route as AuthenticatedGaleriaAdminRouteImport } from './routes/_authenticated/galeria-admin'
@@ -77,6 +78,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TiendaPagoCompletadoRoute = TiendaPagoCompletadoRouteImport.update({
+  id: '/pago-completado',
+  path: '/pago-completado',
+  getParentRoute: () => TiendaRoute,
+} as any)
 const TiendaSlugRoute = TiendaSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/productos': typeof AuthenticatedProductosRoute
   '/tienda/$slug': typeof TiendaSlugRoute
+  '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/productos': typeof AuthenticatedProductosRoute
   '/tienda/$slug': typeof TiendaSlugRoute
+  '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/_authenticated/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/_authenticated/productos': typeof AuthenticatedProductosRoute
   '/tienda/$slug': typeof TiendaSlugRoute
+  '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
     | '/galeria-admin'
     | '/productos'
     | '/tienda/$slug'
+    | '/tienda/pago-completado'
     | '/api/public/media/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/galeria-admin'
     | '/productos'
     | '/tienda/$slug'
+    | '/tienda/pago-completado'
     | '/api/public/media/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/_authenticated/galeria-admin'
     | '/_authenticated/productos'
     | '/tienda/$slug'
+    | '/tienda/pago-completado'
     | '/api/public/media/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -329,6 +341,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tienda/pago-completado': {
+      id: '/tienda/pago-completado'
+      path: '/pago-completado'
+      fullPath: '/tienda/pago-completado'
+      preLoaderRoute: typeof TiendaPagoCompletadoRouteImport
+      parentRoute: typeof TiendaRoute
+    }
     '/tienda/$slug': {
       id: '/tienda/$slug'
       path: '/$slug'
@@ -405,10 +424,12 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface TiendaRouteChildren {
   TiendaSlugRoute: typeof TiendaSlugRoute
+  TiendaPagoCompletadoRoute: typeof TiendaPagoCompletadoRoute
 }
 
 const TiendaRouteChildren: TiendaRouteChildren = {
   TiendaSlugRoute: TiendaSlugRoute,
+  TiendaPagoCompletadoRoute: TiendaPagoCompletadoRoute,
 }
 
 const TiendaRouteWithChildren =

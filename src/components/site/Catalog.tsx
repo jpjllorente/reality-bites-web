@@ -2,16 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { fetchPublicProducts, products as fallback, type Category, type Product } from "@/lib/products";
 import { useCart } from "@/hooks/use-cart";
-import { submitShopOrder } from "@/lib/shop-orders.functions";
+import { StripeEmbeddedCheckout } from "@/components/site/StripeEmbeddedCheckout";
 import { toast } from "sonner";
 
 const categories: Array<Category | "Todo"> = ["Todo", "Repostería", "Café", "Bites"];
 
-const WHATSAPP_NUMBER = "34681634623";
-
 function formatPrice(v: number) {
   return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 }
+
 
 export function Catalog() {
   const [filter, setFilter] = useState<Category | "Todo">("Todo");
@@ -32,54 +31,40 @@ export function Catalog() {
   );
 
 
-  function buildWhatsappHref() {
-    const lines = cart.items.map(
-      (i) => `• ${i.qty} × ${i.product.name} — ${formatPrice(i.qty * i.product.price)}`,
-    );
-    const msg =
-      `Hola 144 Reality, soy ${form.name}. Me gustaría hacer este pedido:%0A%0A` +
-      lines.join("%0A") +
-      `%0A%0ATotal: ${formatPrice(cart.total)}` +
-      (form.notes ? `%0A%0ANotas: ${encodeURIComponent(form.notes)}` : "");
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
-  }
+  const [payOpen, setPayOpen] = useState(false);
+  const [checkoutPayload, setCheckoutPayload] = useState<{
+    items: { slug: string; qty: number }[];
+    customer: { name: string; phone: string; email?: string; notes?: string };
+  } | null>(null);
 
-  async function onConfirmOrder() {
+  function onGoToPayment() {
     if (!form.name.trim() || !form.phone.trim()) {
       toast.error("Nombre y teléfono son obligatorios");
       return;
     }
     if (cart.items.length === 0) return;
     setSubmitting(true);
-    try {
-      await submitShopOrder({
-        data: {
-          name: form.name.trim(),
-          phone: form.phone.trim(),
-          email: form.email.trim() || null,
-          notes: form.notes.trim() || null,
-          items: cart.items.map((i) => ({
-            id: i.product.id,
-            name: i.product.name,
-            qty: i.qty,
-            price_cents: Math.round(i.product.price * 100),
-          })),
-          total_cents: Math.round(cart.total * 100),
-        },
-      });
-      const href = buildWhatsappHref();
-      cart.clear();
-      setCheckoutOpen(false);
-      setCartOpen(false);
-      setForm({ name: "", phone: "", email: "", notes: "" });
-      toast.success("Pedido registrado. Abriendo WhatsApp…");
-      window.open(href, "_blank", "noopener");
-    } catch {
-      toast.error("No se pudo registrar el pedido. Inténtalo de nuevo.");
-    } finally {
-      setSubmitting(false);
-    }
+    setCheckoutPayload({
+      items: cart.items.map((i) => ({ slug: i.product.slug, qty: i.qty })),
+      customer: {
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim() || undefined,
+        notes: form.notes.trim() || undefined,
+      },
+    });
+    setCheckoutOpen(false);
+    setCartOpen(false);
+    setPayOpen(true);
+    setSubmitting(false);
   }
+
+  const returnUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/tienda/pago-completado?session_id={CHECKOUT_SESSION_ID}`
+      : "";
+
+
 
 
   return (
@@ -321,18 +306,42 @@ export function Catalog() {
               <span className="font-display text-2xl text-primary">{formatPrice(cart.total)}</span>
               <button
                 disabled={submitting}
-                onClick={onConfirmOrder}
+                onClick={onGoToPayment}
                 className="rounded-sm bg-secondary px-5 py-3 text-xs font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 disabled:opacity-50"
               >
-                {submitting ? "Enviando…" : "Guardar y abrir WhatsApp"}
+                {submitting ? "Cargando…" : "Pagar con tarjeta"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {payOpen && checkoutPayload && (
+        <div className="fixed inset-0 z-[70] grid place-items-start overflow-y-auto bg-primary/80 p-4" role="dialog" aria-modal="true">
+          <div className="mx-auto my-8 w-full max-w-3xl rounded-sm border border-foreground/15 bg-background p-4 shadow-2xl">
+            <div className="flex items-start justify-between gap-3 pb-3">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-secondary">— Pago seguro</p>
+                <h3 className="mt-1 font-display text-2xl text-primary">Completa tu pedido</h3>
+              </div>
+              <button
+                onClick={() => { setPayOpen(false); setCheckoutPayload(null); }}
+                className="rounded-sm p-2 text-foreground/60 hover:bg-muted"
+                aria-label="Cerrar"
+              >✕</button>
+            </div>
+            <StripeEmbeddedCheckout
+              items={checkoutPayload.items}
+              customer={checkoutPayload.customer}
+              returnUrl={returnUrl}
+            />
           </div>
         </div>
       )}
     </section>
   );
 }
+
 
 function Field({
   label,
