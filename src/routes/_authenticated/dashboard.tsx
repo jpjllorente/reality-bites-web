@@ -13,7 +13,11 @@ import {
   cancelShopOrder,
 } from "@/lib/payments.functions";
 import { amIAdmin } from "@/lib/auth-admin.functions";
-import { sendCustomOrderQuote } from "@/lib/custom-orders.functions";
+import {
+  sendCustomOrderQuote,
+  markCustomOrderReadyForPickup,
+  markCustomOrderInStorePaid,
+} from "@/lib/custom-orders.functions";
 import { NavTabs } from "./productos";
 import { OrderTimeline } from "@/components/site/OrderTimeline";
 import { buildShopOrderTimeline, buildCustomOrderTimeline } from "@/lib/order-timeline";
