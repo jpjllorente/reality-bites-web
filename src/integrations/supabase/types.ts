@@ -111,15 +111,18 @@ export type Database = {
           in_stock: boolean
           is_active: boolean
           name: string
+          portion_price_cents: number | null
           price_cents: number
           seo_description: string
           seo_title: string
           slug: string
           sort_order: number
+          stripe_portion_price_id: string | null
           stripe_price_id: string | null
           stripe_product_id: string | null
           tags: string[]
           updated_at: string
+          variants: Json
         }
         Insert: {
           category: string
@@ -130,15 +133,18 @@ export type Database = {
           in_stock?: boolean
           is_active?: boolean
           name: string
+          portion_price_cents?: number | null
           price_cents?: number
           seo_description?: string
           seo_title?: string
           slug: string
           sort_order?: number
+          stripe_portion_price_id?: string | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           tags?: string[]
           updated_at?: string
+          variants?: Json
         }
         Update: {
           category?: string
@@ -149,15 +155,18 @@ export type Database = {
           in_stock?: boolean
           is_active?: boolean
           name?: string
+          portion_price_cents?: number | null
           price_cents?: number
           seo_description?: string
           seo_title?: string
           slug?: string
           sort_order?: number
+          stripe_portion_price_id?: string | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           tags?: string[]
           updated_at?: string
+          variants?: Json
         }
         Relationships: []
       }
