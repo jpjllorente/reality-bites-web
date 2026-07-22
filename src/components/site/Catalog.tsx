@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { fetchPublicProducts, type Category, type Product } from "@/lib/products";
 import { useCart } from "@/hooks/use-cart";
 import { StripeEmbeddedCheckout } from "@/components/site/StripeEmbeddedCheckout";
+import { createInStoreOrder } from "@/lib/payments.functions";
 import { toast } from "sonner";
 
 const categories: Array<Category | "Todo"> = ["Todo", "Repostería", "Café", "Bites"];
@@ -13,6 +14,7 @@ function formatPrice(v: number) {
 
 
 export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {}) {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<Category | "Todo">("Todo");
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -22,7 +24,6 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
   const cart = useCart();
 
   useEffect(() => {
-    // Only refetch on the client if the loader didn't already give us data.
     if (initialProducts && initialProducts.length > 0) return;
     fetchPublicProducts().then(setItems).catch(() => setItems([]));
   }, [initialProducts]);
@@ -39,14 +40,17 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
     customer: { name: string; phone: string; email?: string; notes?: string };
   } | null>(null);
 
-  function onGoToPayment() {
+  function validateForm() {
     if (!form.name.trim() || !form.phone.trim()) {
       toast.error("Nombre y teléfono son obligatorios");
-      return;
+      return false;
     }
-    if (cart.items.length === 0) return;
-    setSubmitting(true);
-    setCheckoutPayload({
+    if (cart.items.length === 0) return false;
+    return true;
+  }
+
+  function buildPayload() {
+    return {
       items: cart.items.map((i) => ({ slug: i.product.slug, qty: i.qty })),
       customer: {
         name: form.name.trim(),
@@ -54,11 +58,48 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
         email: form.email.trim() || undefined,
         notes: form.notes.trim() || undefined,
       },
-    });
+    };
+  }
+
+  function onGoToPayment() {
+    if (!validateForm()) return;
+    setSubmitting(true);
+    setCheckoutPayload(buildPayload());
     setCheckoutOpen(false);
     setCartOpen(false);
     setPayOpen(true);
     setSubmitting(false);
+  }
+
+  async function onPayInStore() {
+    if (!validateForm()) return;
+    setSubmitting(true);
+    try {
+      const payload = buildPayload();
+      const res = await createInStoreOrder({
+        data: {
+          items: payload.items,
+          customer: {
+            name: payload.customer.name,
+            phone: payload.customer.phone,
+            email: payload.customer.email || "",
+            notes: payload.customer.notes || "",
+          },
+        },
+      });
+      if ("error" in res) {
+        toast.error(res.error);
+        return;
+      }
+      cart.clear();
+      setCheckoutOpen(false);
+      setCartOpen(false);
+      navigate({ to: "/tienda/reservado", search: { order_id: res.orderId } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo crear la reserva.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const returnUrl =
@@ -271,7 +312,7 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
                 Continuar pedido
               </button>
               <p className="mt-3 text-center text-[11px] text-muted-foreground">
-                Te pedimos unos datos y abrimos WhatsApp para confirmar.
+                Elige pagar ahora con tarjeta/Bizum o reservar y pagar en tienda.
               </p>
             </div>
           </aside>
@@ -304,15 +345,28 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
                 />
               </label>
             </div>
-            <div className="mt-6 flex items-center justify-between gap-3">
-              <span className="font-display text-2xl text-primary">{formatPrice(cart.total)}</span>
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Total</span>
+                <span className="font-display text-2xl text-primary">{formatPrice(cart.total)}</span>
+              </div>
               <button
                 disabled={submitting}
                 onClick={onGoToPayment}
-                className="rounded-sm bg-secondary px-5 py-3 text-xs font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 disabled:opacity-50"
+                className="w-full rounded-sm bg-secondary px-5 py-3 text-xs font-bold uppercase tracking-widest text-secondary-foreground transition hover:bg-secondary/90 disabled:opacity-50"
               >
-                {submitting ? "Cargando…" : "Pagar con tarjeta"}
+                {submitting ? "Cargando…" : "Pagar ahora online"}
               </button>
+              <button
+                disabled={submitting}
+                onClick={onPayInStore}
+                className="w-full rounded-sm border border-primary bg-transparent px-5 py-3 text-xs font-bold uppercase tracking-widest text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+              >
+                {submitting ? "Enviando…" : "Reservar y pagar en tienda"}
+              </button>
+              <p className="text-center text-[11px] text-muted-foreground">
+                Pago online seguro con tarjeta, Bizum o Apple/Google Pay (según lo que tengas activo).
+              </p>
             </div>
           </div>
         </div>
