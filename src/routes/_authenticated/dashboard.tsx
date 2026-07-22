@@ -263,7 +263,7 @@ type CustomRow = {
   quote_notes?: string | null;
   quote_sent_at?: string | null;
   payment_status?: string | null;
-  payment_mode?: "deposit" | "full" | null;
+  payment_mode?: string | null;
   amount_paid_cents?: number | null;
   payment_token?: string | null;
 };
