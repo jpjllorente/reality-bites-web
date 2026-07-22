@@ -322,6 +322,9 @@ function CustomOrdersTable({
             </div>
           )}
           <QuotePanel row={r} />
+          <div className="mt-4">
+            <OrderTimeline events={buildCustomOrderTimeline(r as any)} />
+          </div>
         </details>
       ))}
     </div>
