@@ -140,3 +140,142 @@ export async function sendOrphanPaymentAlert(input: {
     console.error("[mailer] orphan alert failed", input.sessionId, e);
   }
 }
+
+interface RefundInput {
+  orderId: string;
+  amountRefundedCents: number;
+  amountPaidCents: number;
+  isPartial: boolean;
+}
+
+export async function sendRefundNotification(input: RefundInput): Promise<void> {
+  const { supabaseAdmin } = await import(
+    "@/integrations/supabase/client.server"
+  );
+  const { data: order, error } = await supabaseAdmin
+    .from("shop_orders")
+    .select("id, name, email, refund_notified_at")
+    .eq("id", input.orderId)
+    .single();
+  if (error || !order) return;
+  const row = order as unknown as {
+    id: string;
+    name: string;
+    email: string | null;
+    refund_notified_at: string | null;
+  };
+  if (!row.email || row.refund_notified_at) return;
+
+  const claim = await (supabaseAdmin.from("shop_orders") as any)
+    .update({ refund_notified_at: new Date().toISOString() })
+    .eq("id", row.id)
+    .is("refund_notified_at", null)
+    .select("id");
+  if (!claim.data || claim.data.length === 0) return;
+
+  try {
+    await sendTemplateEmail("shop-order-refund", row.email, {
+      idempotencyKey: `shop-refund-${row.id}-${input.amountRefundedCents}`,
+      templateData: {
+        name: row.name,
+        orderId: row.id,
+        amountRefundedCents: input.amountRefundedCents,
+        amountPaidCents: input.amountPaidCents,
+        isPartial: input.isPartial,
+      },
+    });
+  } catch (e) {
+    console.error("[mailer] refund send failed", row.id, e);
+    await (supabaseAdmin.from("shop_orders") as any)
+      .update({ refund_notified_at: null })
+      .eq("id", row.id);
+  }
+}
+
+export async function sendInStoreOrderEmails(orderId: string): Promise<void> {
+  const { supabaseAdmin } = await import(
+    "@/integrations/supabase/client.server"
+  );
+  const { data: order, error } = await supabaseAdmin
+    .from("shop_orders")
+    .select(
+      "id, name, phone, email, notes, items, total_cents, confirmation_sent_at, notification_sent_at",
+    )
+    .eq("id", orderId)
+    .single();
+  if (error || !order) return;
+  const row = order as unknown as {
+    id: string;
+    name: string;
+    phone: string;
+    email: string | null;
+    notes: string | null;
+    items: Array<{ id: string; name: string; qty: number; price_cents: number }>;
+    total_cents: number;
+    confirmation_sent_at: string | null;
+    notification_sent_at: string | null;
+  };
+
+  if (row.email && !row.confirmation_sent_at) {
+    const claim = await (supabaseAdmin.from("shop_orders") as any)
+      .update({ confirmation_sent_at: new Date().toISOString() })
+      .eq("id", row.id)
+      .is("confirmation_sent_at", null)
+      .select("id");
+    if (claim.data && claim.data.length > 0) {
+      try {
+        await sendTemplateEmail("shop-order-in-store", row.email, {
+          idempotencyKey: `shop-instore-${row.id}`,
+          templateData: {
+            name: row.name,
+            orderId: row.id,
+            items: row.items ?? [],
+            totalCents: row.total_cents,
+            whatsappHref: WHATSAPP_HREF,
+          },
+        });
+      } catch (e) {
+        console.error("[mailer] in-store confirmation failed", row.id, e);
+        await (supabaseAdmin.from("shop_orders") as any)
+          .update({ confirmation_sent_at: null })
+          .eq("id", row.id);
+      }
+    }
+  }
+
+  if (!row.notification_sent_at) {
+    const claim = await (supabaseAdmin.from("shop_orders") as any)
+      .update({ notification_sent_at: new Date().toISOString() })
+      .eq("id", row.id)
+      .is("notification_sent_at", null)
+      .select("id");
+    if (claim.data && claim.data.length > 0) {
+      try {
+        await sendTemplateEmail(
+          "shop-order-notification",
+          "hola@144reality.com",
+          {
+            idempotencyKey: `shop-notification-instore-${row.id}`,
+            replyTo: row.email || undefined,
+            templateData: {
+              orderId: row.id,
+              name: row.name,
+              phone: row.phone,
+              email: row.email,
+              notes: `[RESERVA · PAGO EN TIENDA] ${row.notes ?? ""}`.trim(),
+              items: row.items ?? [],
+              totalCents: row.total_cents,
+              amountPaidCents: undefined,
+              paymentIntentId: undefined,
+            },
+          },
+        );
+      } catch (e) {
+        console.error("[mailer] in-store notification failed", row.id, e);
+        await (supabaseAdmin.from("shop_orders") as any)
+          .update({ notification_sent_at: null })
+          .eq("id", row.id);
+      }
+    }
+  }
+}
