@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TiendaRouteImport } from './routes/tienda'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
@@ -19,6 +18,7 @@ import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TiendaIndexRouteImport } from './routes/tienda.index'
 import { Route as EncargosIndexRouteImport } from './routes/encargos.index'
 import { Route as TiendaReservadoRouteImport } from './routes/tienda.reservado'
 import { Route as TiendaPagoCompletadoRouteImport } from './routes/tienda.pago-completado'
@@ -35,11 +35,6 @@ import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/em
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 
-const TiendaRoute = TiendaRouteImport.update({
-  id: '/tienda',
-  path: '/tienda',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -84,25 +79,30 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TiendaIndexRoute = TiendaIndexRouteImport.update({
+  id: '/tienda/',
+  path: '/tienda/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EncargosIndexRoute = EncargosIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => EncargosRoute,
 } as any)
 const TiendaReservadoRoute = TiendaReservadoRouteImport.update({
-  id: '/reservado',
-  path: '/reservado',
-  getParentRoute: () => TiendaRoute,
+  id: '/tienda/reservado',
+  path: '/tienda/reservado',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const TiendaPagoCompletadoRoute = TiendaPagoCompletadoRouteImport.update({
-  id: '/pago-completado',
-  path: '/pago-completado',
-  getParentRoute: () => TiendaRoute,
+  id: '/tienda/pago-completado',
+  path: '/tienda/pago-completado',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const TiendaSlugRoute = TiendaSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => TiendaRoute,
+  id: '/tienda/$slug',
+  path: '/tienda/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EncargosPagoCompletadoRoute = EncargosPagoCompletadoRouteImport.update({
   id: '/pago-completado',
@@ -172,7 +172,6 @@ export interface FileRoutesByFullPath {
   '/privacidad': typeof PrivacidadRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tienda': typeof TiendaRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/pagos': typeof AuthenticatedPagosRoute
@@ -182,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/tienda/reservado': typeof TiendaReservadoRoute
   '/encargos/': typeof EncargosIndexRoute
+  '/tienda/': typeof TiendaIndexRoute
   '/encargos/pagar/$token': typeof EncargosPagarTokenRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -197,7 +197,6 @@ export interface FileRoutesByTo {
   '/privacidad': typeof PrivacidadRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tienda': typeof TiendaRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/pagos': typeof AuthenticatedPagosRoute
@@ -207,6 +206,7 @@ export interface FileRoutesByTo {
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/tienda/reservado': typeof TiendaReservadoRoute
   '/encargos': typeof EncargosIndexRoute
+  '/tienda': typeof TiendaIndexRoute
   '/encargos/pagar/$token': typeof EncargosPagarTokenRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -225,7 +225,6 @@ export interface FileRoutesById {
   '/privacidad': typeof PrivacidadRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tienda': typeof TiendaRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/_authenticated/pagos': typeof AuthenticatedPagosRoute
@@ -235,6 +234,7 @@ export interface FileRoutesById {
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
   '/tienda/reservado': typeof TiendaReservadoRoute
   '/encargos/': typeof EncargosIndexRoute
+  '/tienda/': typeof TiendaIndexRoute
   '/encargos/pagar/$token': typeof EncargosPagarTokenRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -253,7 +253,6 @@ export interface FileRouteTypes {
     | '/privacidad'
     | '/reset-password'
     | '/sitemap.xml'
-    | '/tienda'
     | '/dashboard'
     | '/galeria-admin'
     | '/pagos'
@@ -263,6 +262,7 @@ export interface FileRouteTypes {
     | '/tienda/pago-completado'
     | '/tienda/reservado'
     | '/encargos/'
+    | '/tienda/'
     | '/encargos/pagar/$token'
     | '/api/public/media/$'
     | '/api/public/payments/webhook'
@@ -278,7 +278,6 @@ export interface FileRouteTypes {
     | '/privacidad'
     | '/reset-password'
     | '/sitemap.xml'
-    | '/tienda'
     | '/dashboard'
     | '/galeria-admin'
     | '/pagos'
@@ -288,6 +287,7 @@ export interface FileRouteTypes {
     | '/tienda/pago-completado'
     | '/tienda/reservado'
     | '/encargos'
+    | '/tienda'
     | '/encargos/pagar/$token'
     | '/api/public/media/$'
     | '/api/public/payments/webhook'
@@ -305,7 +305,6 @@ export interface FileRouteTypes {
     | '/privacidad'
     | '/reset-password'
     | '/sitemap.xml'
-    | '/tienda'
     | '/_authenticated/dashboard'
     | '/_authenticated/galeria-admin'
     | '/_authenticated/pagos'
@@ -315,6 +314,7 @@ export interface FileRouteTypes {
     | '/tienda/pago-completado'
     | '/tienda/reservado'
     | '/encargos/'
+    | '/tienda/'
     | '/encargos/pagar/$token'
     | '/api/public/media/$'
     | '/api/public/payments/webhook'
@@ -333,7 +333,10 @@ export interface RootRouteChildren {
   PrivacidadRoute: typeof PrivacidadRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  TiendaRoute: typeof TiendaRouteWithChildren
+  TiendaSlugRoute: typeof TiendaSlugRoute
+  TiendaPagoCompletadoRoute: typeof TiendaPagoCompletadoRoute
+  TiendaReservadoRoute: typeof TiendaReservadoRoute
+  TiendaIndexRoute: typeof TiendaIndexRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -343,13 +346,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tienda': {
-      id: '/tienda'
-      path: '/tienda'
-      fullPath: '/tienda'
-      preLoaderRoute: typeof TiendaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -413,6 +409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tienda/': {
+      id: '/tienda/'
+      path: '/tienda'
+      fullPath: '/tienda/'
+      preLoaderRoute: typeof TiendaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/encargos/': {
       id: '/encargos/'
       path: '/'
@@ -422,24 +425,24 @@ declare module '@tanstack/react-router' {
     }
     '/tienda/reservado': {
       id: '/tienda/reservado'
-      path: '/reservado'
+      path: '/tienda/reservado'
       fullPath: '/tienda/reservado'
       preLoaderRoute: typeof TiendaReservadoRouteImport
-      parentRoute: typeof TiendaRoute
+      parentRoute: typeof rootRouteImport
     }
     '/tienda/pago-completado': {
       id: '/tienda/pago-completado'
-      path: '/pago-completado'
+      path: '/tienda/pago-completado'
       fullPath: '/tienda/pago-completado'
       preLoaderRoute: typeof TiendaPagoCompletadoRouteImport
-      parentRoute: typeof TiendaRoute
+      parentRoute: typeof rootRouteImport
     }
     '/tienda/$slug': {
       id: '/tienda/$slug'
-      path: '/$slug'
+      path: '/tienda/$slug'
       fullPath: '/tienda/$slug'
       preLoaderRoute: typeof TiendaSlugRouteImport
-      parentRoute: typeof TiendaRoute
+      parentRoute: typeof rootRouteImport
     }
     '/encargos/pago-completado': {
       id: '/encargos/pago-completado'
@@ -554,21 +557,6 @@ const EncargosRouteWithChildren = EncargosRoute._addFileChildren(
   EncargosRouteChildren,
 )
 
-interface TiendaRouteChildren {
-  TiendaSlugRoute: typeof TiendaSlugRoute
-  TiendaPagoCompletadoRoute: typeof TiendaPagoCompletadoRoute
-  TiendaReservadoRoute: typeof TiendaReservadoRoute
-}
-
-const TiendaRouteChildren: TiendaRouteChildren = {
-  TiendaSlugRoute: TiendaSlugRoute,
-  TiendaPagoCompletadoRoute: TiendaPagoCompletadoRoute,
-  TiendaReservadoRoute: TiendaReservadoRoute,
-}
-
-const TiendaRouteWithChildren =
-  TiendaRoute._addFileChildren(TiendaRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -579,7 +567,10 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadRoute: PrivacidadRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  TiendaRoute: TiendaRouteWithChildren,
+  TiendaSlugRoute: TiendaSlugRoute,
+  TiendaPagoCompletadoRoute: TiendaPagoCompletadoRoute,
+  TiendaReservadoRoute: TiendaReservadoRoute,
+  TiendaIndexRoute: TiendaIndexRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

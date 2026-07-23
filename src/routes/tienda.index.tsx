@@ -9,7 +9,7 @@ import { fetchPublicProductsServer } from "@/lib/products-public.functions";
 
 const SOCIAL_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/2aTFzYNJqUYfQfMni6aWXLFYWj02/social-images/social-1784650264228-07408EC5-D139-47C6-8B5A-98C8F730DE42.webp";
 
-export const Route = createFileRoute("/tienda")({
+export const Route = createFileRoute("/tienda/")({
   loader: async () => ({
     origin: await getRequestOrigin(),
     products: await fetchPublicProductsServer(),
