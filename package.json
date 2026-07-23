@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
+    "build": "node scripts/check-canonicals.mjs && vite build",
+    "build:dev": "node scripts/check-canonicals.mjs && vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
+    "check:canonicals": "node scripts/check-canonicals.mjs",
     "format": "prettier --write ."
   },
   "dependencies": {

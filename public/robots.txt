@@ -1,10 +1,16 @@
 User-agent: *
 Allow: /
+Allow: /tienda
+Allow: /tienda/
 Disallow: /auth
 Disallow: /reset-password
 Disallow: /dashboard
 Disallow: /productos
 Disallow: /galeria-admin
 Disallow: /lovable/
+Disallow: /encargos/pagar/
+Disallow: /encargos/pago-completado
+Disallow: /tienda/pago-completado
+Disallow: /tienda/reservado
 
 Sitemap: https://144reality.com/sitemap.xml
