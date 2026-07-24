@@ -128,6 +128,40 @@ function ProductsPage() {
     setEditing(r);
   }
 
+  // Draft prellenado desde Galería ("Convertir en producto")
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = window.sessionStorage.getItem("144reality_product_draft");
+    if (!raw) return;
+    window.sessionStorage.removeItem("144reality_product_draft");
+    try {
+      const d = JSON.parse(raw) as {
+        image_url?: string;
+        name?: string;
+        description?: string;
+        tags?: string[];
+      };
+      const name = (d.name ?? "").trim();
+      const description = (d.description ?? "").trim();
+      setDirty({ slug: false, seo_title: false, seo_description: false });
+      setPriceInput("0.00");
+      setEditing({
+        ...EMPTY,
+        name,
+        description,
+        image_url: d.image_url ?? "",
+        tags: Array.isArray(d.tags) ? d.tags.filter(Boolean) : [],
+        slug: name ? slugify(name) : "",
+        seo_title: name ? truncate(`${name} — 144 Reality`, 70) : "",
+        seo_description: description ? truncate(description, 200) : "",
+      });
+      toast.info("Datos prellenados desde la galería. Revísalos y guarda.");
+    } catch {
+      // ignore
+    }
+  }, []);
+
+
   function onNameChange(v: string) {
     setEditing((s) => {
       if (!s) return s;
