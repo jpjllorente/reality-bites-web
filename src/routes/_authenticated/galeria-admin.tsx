@@ -186,12 +186,19 @@ function GalleryAdminPage() {
                   <p className="font-mono text-[10px] uppercase tracking-widest text-secondary">
                     {r.tag} {!r.is_active && "· oculto"}
                   </p>
-                  <div className="mt-2 flex gap-2">
+                  <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       onClick={() => setEditing(r)}
                       className="rounded-sm border border-foreground/20 px-2 py-1 text-[10px] uppercase tracking-widest hover:border-primary hover:text-primary"
                     >
                       Editar
+                    </button>
+                    <button
+                      onClick={() => onConvertToProduct(r)}
+                      title="Reutilizar imagen y textos para crear un producto"
+                      className="rounded-sm border border-secondary/60 bg-secondary/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-primary hover:bg-secondary/20"
+                    >
+                      → Producto
                     </button>
                     <button
                       onClick={() => onDelete(r.id)}
@@ -200,6 +207,7 @@ function GalleryAdminPage() {
                       Borrar
                     </button>
                   </div>
+
                 </div>
               </article>
             ))}
