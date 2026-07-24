@@ -1,115 +1,89 @@
-// Server-only helper: takes an original product photo and returns an
-// "enhanced" version composed with the 144 Reality logo using OpenAI's
-// image edits API (gpt-image-1). On any failure it returns null so the
-// caller keeps the original upload.
+// Server-only helper: takes an original product photo, redimensiona/comprime
+// para reducir coste y latencia, la envía a OpenAI (gpt-image-1, quality
+// "medium") junto con el logo de marca, y devuelve el resultado ya
+// re-encodeado a WebP listo para servir en la web. Si algo falla devuelve
+// null y el llamador conserva la imagen original.
+
+import { decode as decodeJpeg, encode as encodeJpeg } from "@jsquash/jpeg";
+import { decode as decodePng } from "@jsquash/png";
+import { decode as decodeWebp, encode as encodeWebp } from "@jsquash/webp";
+import resize from "@jsquash/resize";
 
 const LOGO_STORAGE_PATH = "branding/logo.png";
+const MAX_EDGE = 1024;
 
-const PROMPT = `Eres el director creativo y fotógrafo gastronómico oficial de la marca 144 Reality Bites & Coffee.
-Tu única función es transformar fotografías reales de productos en fotografías publicitarias premium manteniendo absoluta fidelidad al producto.
-La prioridad absoluta es conservar exactamente el producto original.
-Nunca debes modificar el alimento.
-Nunca debes reinterpretarlo.
-Nunca debes embellecerlo cambiando sus características.
+// Prompt reducido: mismas reglas, sin repeticiones. Preserva escenario,
+// logo blanco pintado en pared y fidelidad al producto.
+const PROMPT = `Director creativo y fotógrafo gastronómico de "144 Reality Bites & Coffee". Transforma la foto real del producto en imagen publicitaria premium sin alterar el alimento.
 
-==================================================
-PROHIBIDO
-Está absolutamente prohibido:
-• cambiar la receta
-• cambiar la forma
-• cambiar el tamaño
-• cambiar el volumen
-• cambiar el color real
-• añadir ingredientes
-• eliminar ingredientes
-• añadir chocolate
-• añadir frutas
-• añadir azúcar
-• añadir cacao
-• añadir hojas
-• añadir toppings
-• añadir decoración
-• modificar glaseados
-• crear nuevas texturas
-• inventar elementos
-Si para mejorar la fotografía necesitas modificar el producto, NO lo hagas.
+PRODUCTO — Prohibido cambiar receta, forma, tamaño, volumen, color real, ingredientes, glaseados o texturas; no añadir ni quitar toppings, frutas, chocolate, cacao, azúcar, hojas ni decoración. Si mejorar la foto exige modificar el producto, no lo hagas.
 
-==================================================
-ÚNICAMENTE PUEDES MEJORAR
-• iluminación
-• exposición
-• balance de blancos
-• nitidez
-• enfoque
-• contraste
-• profundidad de campo
-• reducción de ruido
-• pequeñas imperfecciones naturales
+MEJORAS PERMITIDAS — solo iluminación, exposición, balance de blancos, nitidez, enfoque, contraste, profundidad de campo, reducción de ruido y pequeñas imperfecciones naturales.
 
-==================================================
-ESCENARIO CORPORATIVO OBLIGATORIO
-ESTA PARTE ES OBLIGATORIA.
-NO ES UNA SUGERENCIA.
-TODAS LAS IMÁGENES DEBEN GENERARSE SIEMPRE EN ESTE MISMO ESCENARIO.
-NO EXISTEN EXCEPCIONES.
-El producto debe estar apoyado sobre una mesa de madera natural.
-Detrás del producto debe existir SIEMPRE una pared de ladrillo pintada en verde militar.
-Está absolutamente prohibido utilizar:
-• fondos blancos
-• fondos grises
-• fondos lisos
-• fondos de estudio
-• fondos transparentes
-• escenarios diferentes
-• paredes de otro color
-El escenario corporativo nunca debe cambiar.
+ESCENARIO OBLIGATORIO (sin excepciones) — producto sobre mesa de madera natural, con pared de ladrillo pintada en verde militar detrás. Prohibidos fondos blancos, grises, lisos, de estudio, transparentes o cualquier otro escenario/color de pared.
 
-==================================================
-LOGOTIPO
-El logotipo (segunda imagen adjunta) debe aparecer integrado en la pared de ladrillo verde militar.
-Debe parecer pintado directamente sobre el ladrillo, siguiendo las irregularidades y textura de la pared.
-Debe ser completamente BLANCO.
-Nunca negro.
-Nunca gris.
-Nunca de otro color.
-No modificar su diseño.
-No modificar sus proporciones.
-No moverlo a otra ubicación distinta de la pared.
+LOGOTIPO (segunda imagen adjunta) — integrado en la pared de ladrillo verde militar, aparentando estar pintado sobre el ladrillo siguiendo su textura. Color BLANCO puro, nunca negro, gris ni otro color. Mantén su diseño y proporciones, siempre en la pared.
 
-==================================================
-COMPOSICIÓN
-Mantener el mismo ángulo de cámara siempre que sea posible.
-Mantener la composición original.
-Mantener la perspectiva.
-Mantener el tamaño del producto.
+COMPOSICIÓN — conserva ángulo, composición, perspectiva y tamaño del producto originales.
 
-==================================================
-ESTILO
-Fotografía gastronómica premium.
-Realista.
-Artesanal.
-Muy apetecible.
-Alta gama.
-Lista para publicidad.
-Lista para Instagram.
-Lista para Facebook.
-Debe parecer realizada con una cámara Full Frame profesional y un objetivo macro luminoso.
+ESTILO — fotografía gastronómica premium, realista, artesanal, muy apetecible, alta gama, apta para publicidad e Instagram/Facebook; aspecto de cámara Full Frame con objetivo macro luminoso.
 
-==================================================
-CRITERIOS DE VALIDACIÓN
-La imagen generada será INCORRECTA si ocurre cualquiera de las siguientes situaciones:
-- aparece un fondo blanco
-- aparece un fondo gris
-- desaparece la mesa de madera
-- desaparece la pared verde militar
-- el logotipo aparece negro
-- el logotipo aparece gris
-- el logotipo no parece pintado en la pared
-- el producto cambia de forma
-- el producto cambia de tamaño
-- el producto cambia de color
-- aparecen ingredientes nuevos
-- desaparecen ingredientes`;
+INVÁLIDA si aparece fondo blanco/gris, desaparece la mesa o la pared verde militar, el logo no es blanco o no parece pintado en la pared, o el producto cambia de forma/tamaño/color/ingredientes.`;
+
+async function decodeToImageData(bytes: Uint8Array, contentType: string) {
+  const ct = contentType.toLowerCase();
+  const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  if (ct.includes("png")) return decodePng(buf);
+  if (ct.includes("webp")) return decodeWebp(buf);
+  // Trata todo lo demás (jpeg, jpg, heic exportado como jpeg, octet-stream) como JPEG.
+  return decodeJpeg(buf);
+}
+
+async function shrinkForOpenAI(
+  bytes: Uint8Array,
+  contentType: string,
+): Promise<{ bytes: Uint8Array; contentType: string; filename: string }> {
+  try {
+    const img = await decodeToImageData(bytes, contentType);
+    const { width, height } = img;
+    const maxSide = Math.max(width, height);
+    let out = img;
+    if (maxSide > MAX_EDGE) {
+      const scale = MAX_EDGE / maxSide;
+      out = await resize(img, {
+        width: Math.round(width * scale),
+        height: Math.round(height * scale),
+        method: "lanczos3",
+      });
+    }
+    // Recodifica a JPEG q82 sin metadatos EXIF (jsquash no los preserva).
+    const encoded = await encodeJpeg(out, { quality: 82 });
+    return {
+      bytes: new Uint8Array(encoded),
+      contentType: "image/jpeg",
+      filename: "product.jpg",
+    };
+  } catch (e) {
+    console.warn("[image-enhance] shrink falló, envío original", e);
+    return { bytes, contentType: contentType || "image/jpeg", filename: "product" };
+  }
+}
+
+async function toWebp(pngBytes: Uint8Array): Promise<Uint8Array | null> {
+  try {
+    const img = await decodePng(
+      pngBytes.buffer.slice(
+        pngBytes.byteOffset,
+        pngBytes.byteOffset + pngBytes.byteLength,
+      ) as ArrayBuffer,
+    );
+    const encoded = await encodeWebp(img, { quality: 80 });
+    return new Uint8Array(encoded);
+  } catch (e) {
+    console.warn("[image-enhance] webp encode falló", e);
+    return null;
+  }
+}
 
 async function fetchLogoBytes(): Promise<{
   bytes: Uint8Array;
@@ -132,28 +106,34 @@ async function fetchLogoBytes(): Promise<{
   }
 }
 
+export type EnhancedImage = { bytes: Uint8Array; contentType: string; extension: string };
+
 export async function enhanceProductImage(
   originalBytes: Uint8Array,
   originalContentType: string,
-): Promise<Uint8Array | null> {
+): Promise<EnhancedImage | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     console.warn("[image-enhance] OPENAI_API_KEY no configurada");
     return null;
   }
 
-  const logo = await fetchLogoBytes();
+  const [shrunk, logo] = await Promise.all([
+    shrinkForOpenAI(originalBytes, originalContentType),
+    fetchLogoBytes(),
+  ]);
 
   try {
     const form = new FormData();
     form.append("model", "gpt-image-1");
     form.append("prompt", PROMPT);
     form.append("size", "1024x1024");
+    form.append("quality", "medium");
     form.append("n", "1");
     form.append(
       "image[]",
-      new Blob([originalBytes as BlobPart], { type: originalContentType || "image/png" }),
-      "product.png",
+      new Blob([shrunk.bytes as BlobPart], { type: shrunk.contentType }),
+      shrunk.filename,
     );
     if (logo) {
       form.append(
@@ -181,7 +161,13 @@ export async function enhanceProductImage(
       console.warn("[image-enhance] respuesta sin b64_json");
       return null;
     }
-    return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const pngBytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const webp = await toWebp(pngBytes);
+    if (webp) {
+      return { bytes: webp, contentType: "image/webp", extension: "webp" };
+    }
+    // Fallback: si el reencoder WebP falló, servimos el PNG original de OpenAI.
+    return { bytes: pngBytes, contentType: "image/png", extension: "png" };
   } catch (e) {
     console.warn("[image-enhance] excepción", e);
     return null;

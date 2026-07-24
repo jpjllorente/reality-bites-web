@@ -200,9 +200,10 @@ export const uploadMedia = createServerFn({ method: "POST" })
       const { enhanceProductImage } = await import("./product-image-enhance.server");
       const improved = await enhanceProductImage(originalBytes, data.content_type);
       if (improved) {
-        bytesToStore = improved;
-        contentType = "image/png";
-        filename = safe.replace(/\.[a-z0-9]+$/i, "") + ".enhanced.png";
+        bytesToStore = improved.bytes;
+        contentType = improved.contentType;
+        filename =
+          safe.replace(/\.[a-z0-9]+$/i, "") + `.enhanced.${improved.extension}`;
         enhanced = true;
       }
     } catch (e) {
@@ -217,3 +218,4 @@ export const uploadMedia = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, url: `/api/public/media/${path}`, path, enhanced };
   });
+
