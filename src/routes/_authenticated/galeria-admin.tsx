@@ -132,7 +132,7 @@ function GalleryAdminPage() {
       toast.error("No se pudo preparar el borrador");
       return;
     }
-    navigate({ to: "/dashboard" === "/dashboard" ? "/productos" as any : "/productos" as any });
+    navigate({ to: "/productos" });
   }
 
 
