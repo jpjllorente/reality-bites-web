@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import { toast } from "sonner";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
@@ -126,6 +127,40 @@ function ProductsPage() {
     setPriceInput((r.price_cents / 100).toFixed(2));
     setEditing(r);
   }
+
+  // Draft prellenado desde Galería ("Convertir en producto")
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = window.sessionStorage.getItem("144reality_product_draft");
+    if (!raw) return;
+    window.sessionStorage.removeItem("144reality_product_draft");
+    try {
+      const d = JSON.parse(raw) as {
+        image_url?: string;
+        name?: string;
+        description?: string;
+        tags?: string[];
+      };
+      const name = (d.name ?? "").trim();
+      const description = (d.description ?? "").trim();
+      setDirty({ slug: false, seo_title: false, seo_description: false });
+      setPriceInput("0.00");
+      setEditing({
+        ...EMPTY,
+        name,
+        description,
+        image_url: d.image_url ?? "",
+        tags: Array.isArray(d.tags) ? d.tags.filter(Boolean) : [],
+        slug: name ? slugify(name) : "",
+        seo_title: name ? truncate(`${name} — 144 Reality`, 70) : "",
+        seo_description: description ? truncate(description, 200) : "",
+      });
+      toast.info("Datos prellenados desde la galería. Revísalos y guarda.");
+    } catch {
+      // ignore
+    }
+  }, []);
+
 
   function onNameChange(v: string) {
     setEditing((s) => {
