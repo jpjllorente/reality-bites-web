@@ -118,6 +118,24 @@ function GalleryAdminPage() {
     }
   }
 
+  function onConvertToProduct(r: Row) {
+    const name = (r.caption || r.alt || "").trim();
+    const draft = {
+      image_url: r.image_url,
+      name,
+      description: r.caption || "",
+      tags: r.tag ? [r.tag.replace(/^#/, "").trim()].filter(Boolean) : [],
+    };
+    try {
+      window.sessionStorage.setItem("144reality_product_draft", JSON.stringify(draft));
+    } catch {
+      toast.error("No se pudo preparar el borrador");
+      return;
+    }
+    navigate({ to: "/dashboard" === "/dashboard" ? "/productos" as any : "/productos" as any });
+  }
+
+
   const rows = (data ?? []) as Row[];
 
   return (
