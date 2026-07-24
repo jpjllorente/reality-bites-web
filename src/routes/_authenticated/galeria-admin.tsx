@@ -49,6 +49,8 @@ const EMPTY: Row = {
 
 function GalleryAdminPage() {
   const { user } = Route.useRouteContext();
+  const navigate = useNavigate();
+
   const fetchAmIAdmin = useServerFn(amIAdmin);
   const { data: adminCheck } = useQuery({
     queryKey: ["am-i-admin", user?.id],
