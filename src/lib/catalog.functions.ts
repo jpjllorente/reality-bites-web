@@ -31,6 +31,9 @@ const ProductSchema = z.object({
   seo_title: z.string().trim().max(70).default(""),
   seo_description: z.string().trim().max(200).default(""),
   variants: z.array(VariantSchema).max(30).default([]),
+  wholesale_price_cents: z.number().int().min(0).max(100_000_000).nullable().optional(),
+  visible_pro: z.boolean().default(false),
+  tax_rate_percent: z.union([z.literal(0), z.literal(4), z.literal(10), z.literal(21)]).default(21),
 });
 
 export const listProductsAdmin = createServerFn({ method: "GET" })
@@ -63,7 +66,11 @@ export const upsertProduct = createServerFn({ method: "POST" })
     const portion = data.portion_price_cents && data.portion_price_cents > 0
       ? data.portion_price_cents
       : null;
-    const payload = { ...data, portion_price_cents: portion } as any;
+    // Normalize wholesale price: null when 0 or missing.
+    const wholesale = data.wholesale_price_cents && data.wholesale_price_cents > 0
+      ? data.wholesale_price_cents
+      : null;
+    const payload = { ...data, portion_price_cents: portion, wholesale_price_cents: wholesale } as any;
     let productId: string;
     if (data.id) {
       const { id, ...rest } = payload;

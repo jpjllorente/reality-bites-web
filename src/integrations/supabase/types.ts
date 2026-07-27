@@ -149,6 +149,173 @@ export type Database = {
         }
         Relationships: []
       }
+      pro_customers: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          billing_email: string
+          city: string
+          contact_name: string | null
+          country: string
+          created_at: string
+          default_payment_method_id: string | null
+          discount_percent: number
+          id: string
+          is_active: boolean
+          legal_name: string
+          notes: string | null
+          payment_terms_days: number
+          phone: string | null
+          postal_code: string
+          province: string | null
+          stripe_customer_id: string | null
+          tax_id: string
+          trade_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          billing_email: string
+          city: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string
+          default_payment_method_id?: string | null
+          discount_percent?: number
+          id?: string
+          is_active?: boolean
+          legal_name: string
+          notes?: string | null
+          payment_terms_days?: number
+          phone?: string | null
+          postal_code: string
+          province?: string | null
+          stripe_customer_id?: string | null
+          tax_id: string
+          trade_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          billing_email?: string
+          city?: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string
+          default_payment_method_id?: string | null
+          discount_percent?: number
+          id?: string
+          is_active?: boolean
+          legal_name?: string
+          notes?: string | null
+          payment_terms_days?: number
+          phone?: string | null
+          postal_code?: string
+          province?: string | null
+          stripe_customer_id?: string | null
+          tax_id?: string
+          trade_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pro_orders: {
+        Row: {
+          admin_notes: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          currency: string
+          delivered_at: string | null
+          id: string
+          invoiced_at: string | null
+          items: Json
+          notes: string | null
+          paid_at: string | null
+          pro_customer_id: string
+          requested_delivery_date: string | null
+          status: Database["public"]["Enums"]["pro_order_status"]
+          stripe_invoice_id: string | null
+          stripe_invoice_pdf: string | null
+          stripe_invoice_status: string | null
+          stripe_invoice_url: string | null
+          stripe_payment_intent_id: string | null
+          subtotal_cents: number
+          tax_cents: number
+          total_cents: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          currency?: string
+          delivered_at?: string | null
+          id?: string
+          invoiced_at?: string | null
+          items?: Json
+          notes?: string | null
+          paid_at?: string | null
+          pro_customer_id: string
+          requested_delivery_date?: string | null
+          status?: Database["public"]["Enums"]["pro_order_status"]
+          stripe_invoice_id?: string | null
+          stripe_invoice_pdf?: string | null
+          stripe_invoice_status?: string | null
+          stripe_invoice_url?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal_cents?: number
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          currency?: string
+          delivered_at?: string | null
+          id?: string
+          invoiced_at?: string | null
+          items?: Json
+          notes?: string | null
+          paid_at?: string | null
+          pro_customer_id?: string
+          requested_delivery_date?: string | null
+          status?: Database["public"]["Enums"]["pro_order_status"]
+          stripe_invoice_id?: string | null
+          stripe_invoice_pdf?: string | null
+          stripe_invoice_status?: string | null
+          stripe_invoice_url?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal_cents?: number
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pro_orders_pro_customer_id_fkey"
+            columns: ["pro_customer_id"]
+            isOneToOne: false
+            referencedRelation: "pro_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string
@@ -169,8 +336,11 @@ export type Database = {
           stripe_price_id: string | null
           stripe_product_id: string | null
           tags: string[]
+          tax_rate_percent: number
           updated_at: string
           variants: Json
+          visible_pro: boolean
+          wholesale_price_cents: number | null
         }
         Insert: {
           category: string
@@ -191,8 +361,11 @@ export type Database = {
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           tags?: string[]
+          tax_rate_percent?: number
           updated_at?: string
           variants?: Json
+          visible_pro?: boolean
+          wholesale_price_cents?: number | null
         }
         Update: {
           category?: string
@@ -213,8 +386,11 @@ export type Database = {
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           tags?: string[]
+          tax_rate_percent?: number
           updated_at?: string
           variants?: Json
+          visible_pro?: boolean
+          wholesale_price_cents?: number | null
         }
         Relationships: []
       }
@@ -366,15 +542,23 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_pro: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "admin"
+      app_role: "admin" | "pro"
       custom_order_status:
         | "new"
         | "reviewing"
         | "confirmed"
         | "declined"
         | "completed"
+      pro_order_status:
+        | "nuevo"
+        | "confirmado"
+        | "facturado"
+        | "pagado"
+        | "entregado"
+        | "cancelado"
       shop_order_status:
         | "new"
         | "contacted"
@@ -508,13 +692,21 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin"],
+      app_role: ["admin", "pro"],
       custom_order_status: [
         "new",
         "reviewing",
         "confirmed",
         "declined",
         "completed",
+      ],
+      pro_order_status: [
+        "nuevo",
+        "confirmado",
+        "facturado",
+        "pagado",
+        "entregado",
+        "cancelado",
       ],
       shop_order_status: [
         "new",
