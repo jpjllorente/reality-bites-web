@@ -66,7 +66,11 @@ export const upsertProduct = createServerFn({ method: "POST" })
     const portion = data.portion_price_cents && data.portion_price_cents > 0
       ? data.portion_price_cents
       : null;
-    const payload = { ...data, portion_price_cents: portion } as any;
+    // Normalize wholesale price: null when 0 or missing.
+    const wholesale = data.wholesale_price_cents && data.wholesale_price_cents > 0
+      ? data.wholesale_price_cents
+      : null;
+    const payload = { ...data, portion_price_cents: portion, wholesale_price_cents: wholesale } as any;
     let productId: string;
     if (data.id) {
       const { id, ...rest } = payload;
