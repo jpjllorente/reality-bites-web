@@ -595,10 +595,18 @@ function ProductsPage() {
                 onChange={(cents) => setEditing((s) => (s ? { ...s, portion_price_cents: cents } : s))}
               />
 
+              <ProPricingEditor
+                wholesaleCents={editing.wholesale_price_cents}
+                visiblePro={editing.visible_pro}
+                taxRate={editing.tax_rate_percent}
+                onChange={(patch) => setEditing((s) => (s ? { ...s, ...patch } : s))}
+              />
+
               <VariantsEditor
                 variants={editing.variants}
                 onChange={(vs) => setEditing((s) => (s ? { ...s, variants: vs } : s))}
               />
+
 
               <Text
                 label="Etiquetas (separadas por comas)"
