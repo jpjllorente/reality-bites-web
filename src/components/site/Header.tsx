@@ -28,6 +28,8 @@ function useIsPro() {
 
 export function Header({ variant = "solid" }: { variant?: "solid" | "overlay" }) {
   const isOverlay = variant === "overlay";
+  const isPro = useIsPro();
+
   const base = isOverlay
     ? "absolute inset-x-0 top-0 z-20 text-primary-foreground"
     : "relative z-20 border-b border-foreground/10 bg-background text-foreground";
