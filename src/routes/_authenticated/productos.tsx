@@ -239,7 +239,14 @@ function ProductsPage() {
           variants: editing.variants
             .map((v) => ({ id: v.id.trim(), name: v.name.trim(), active: v.active }))
             .filter((v) => v.id && v.name),
+          wholesale_price_cents:
+            editing.wholesale_price_cents && editing.wholesale_price_cents > 0
+              ? Math.round(editing.wholesale_price_cents)
+              : null,
+          visible_pro: editing.visible_pro,
+          tax_rate_percent: editing.tax_rate_percent as 0 | 4 | 10 | 21,
         },
+
       });
       toast.success("Guardado");
       setEditing(null);
