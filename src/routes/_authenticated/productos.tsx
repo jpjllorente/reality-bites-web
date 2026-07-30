@@ -322,7 +322,11 @@ function ProductsPage() {
     seo_title: r.seo_title ?? "",
     seo_description: r.seo_description ?? "",
     variants: variantsFromDb(r.variants),
+    wholesale_price_cents: r.wholesale_price_cents ?? null,
+    visible_pro: r.visible_pro ?? false,
+    tax_rate_percent: r.tax_rate_percent ?? 21,
   }));
+
 
 
   return (
