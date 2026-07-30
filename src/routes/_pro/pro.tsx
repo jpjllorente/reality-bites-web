@@ -26,7 +26,7 @@ import {
   listProCatalog,
 } from "@/lib/pro.functions";
 
-export const Route = createFileRoute("/_pro/")({
+export const Route = createFileRoute("/_pro/pro")({
   head: () => ({
     meta: [
       { title: "Área Profesional — 144 Reality" },
