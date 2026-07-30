@@ -68,7 +68,13 @@ export function Header({ variant = "solid" }: { variant?: "solid" | "overlay" })
           <NavItem to="/contacto" overlay={isOverlay}>
             Contacto
           </NavItem>
+          {isPro && (
+            <NavItem to="/pro" overlay={isOverlay}>
+              Área PRO
+            </NavItem>
+          )}
         </nav>
+
 
         <Link
           to="/tienda"
