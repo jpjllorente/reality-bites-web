@@ -27,6 +27,7 @@ import { Route as TiendaSlugRouteImport } from './routes/tienda.$slug'
 import { Route as EncargosPagoCompletadoRouteImport } from './routes/encargos.pago-completado'
 import { Route as ProProRouteImport } from './routes/_pro/pro'
 import { Route as AuthenticatedProductosRouteImport } from './routes/_authenticated/productos'
+import { Route as AuthenticatedProAdminRouteImport } from './routes/_authenticated/pro-admin'
 import { Route as AuthenticatedPagosRouteImport } from './routes/_authenticated/pagos'
 import { Route as AuthenticatedGaleriaAdminRouteImport } from './routes/_authenticated/galeria-admin'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -125,6 +126,11 @@ const AuthenticatedProductosRoute = AuthenticatedProductosRouteImport.update({
   path: '/productos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProAdminRoute = AuthenticatedProAdminRouteImport.update({
+  id: '/pro-admin',
+  path: '/pro-admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPagosRoute = AuthenticatedPagosRouteImport.update({
   id: '/pagos',
   path: '/pagos',
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/pagos': typeof AuthenticatedPagosRoute
+  '/pro-admin': typeof AuthenticatedProAdminRoute
   '/productos': typeof AuthenticatedProductosRoute
   '/pro': typeof ProProRoute
   '/encargos/pago-completado': typeof EncargosPagoCompletadoRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/pagos': typeof AuthenticatedPagosRoute
+  '/pro-admin': typeof AuthenticatedProAdminRoute
   '/productos': typeof AuthenticatedProductosRoute
   '/pro': typeof ProProRoute
   '/encargos/pago-completado': typeof EncargosPagoCompletadoRoute
@@ -242,6 +250,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/_authenticated/pagos': typeof AuthenticatedPagosRoute
+  '/_authenticated/pro-admin': typeof AuthenticatedProAdminRoute
   '/_authenticated/productos': typeof AuthenticatedProductosRoute
   '/_pro/pro': typeof ProProRoute
   '/encargos/pago-completado': typeof EncargosPagoCompletadoRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/galeria-admin'
     | '/pagos'
+    | '/pro-admin'
     | '/productos'
     | '/pro'
     | '/encargos/pago-completado'
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/galeria-admin'
     | '/pagos'
+    | '/pro-admin'
     | '/productos'
     | '/pro'
     | '/encargos/pago-completado'
@@ -326,6 +337,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/galeria-admin'
     | '/_authenticated/pagos'
+    | '/_authenticated/pro-admin'
     | '/_authenticated/productos'
     | '/_pro/pro'
     | '/encargos/pago-completado'
@@ -492,6 +504,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pro-admin': {
+      id: '/_authenticated/pro-admin'
+      path: '/pro-admin'
+      fullPath: '/pro-admin'
+      preLoaderRoute: typeof AuthenticatedProAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pagos': {
       id: '/_authenticated/pagos'
       path: '/pagos'
@@ -562,6 +581,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGaleriaAdminRoute: typeof AuthenticatedGaleriaAdminRoute
   AuthenticatedPagosRoute: typeof AuthenticatedPagosRoute
+  AuthenticatedProAdminRoute: typeof AuthenticatedProAdminRoute
   AuthenticatedProductosRoute: typeof AuthenticatedProductosRoute
 }
 
@@ -569,6 +589,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGaleriaAdminRoute: AuthenticatedGaleriaAdminRoute,
   AuthenticatedPagosRoute: AuthenticatedPagosRoute,
+  AuthenticatedProAdminRoute: AuthenticatedProAdminRoute,
   AuthenticatedProductosRoute: AuthenticatedProductosRoute,
 }
 
