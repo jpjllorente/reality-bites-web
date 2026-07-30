@@ -201,7 +201,50 @@ async function handleCustomOrderCheckoutCompleted(session: any) {
   }
 }
 
+/**
+ * PRO orders are billed with Stripe Invoices. The invoice lines carry
+ * metadata.pro_order_id, so we resolve the order from the invoice itself.
+ */
+async function handleProInvoiceEvent(invoice: any) {
+  const proOrderId: string | undefined =
+    invoice?.metadata?.pro_order_id ??
+    (invoice?.lines?.data ?? [])
+      .map((l: any) => l?.metadata?.pro_order_id)
+      .find((v: any) => typeof v === "string" && v.length > 0);
+  if (!proOrderId) return;
+
+  const { supabaseAdmin } = await import(
+    "@/integrations/supabase/client.server"
+  );
+
+  const stripeStatus: string = invoice?.status ?? "open";
+  const paid = stripeStatus === "paid";
+  const patch: Record<string, unknown> = {
+    stripe_invoice_id: invoice?.id ?? null,
+    stripe_invoice_url: invoice?.hosted_invoice_url ?? null,
+    stripe_invoice_pdf: invoice?.invoice_pdf ?? null,
+    stripe_invoice_status: stripeStatus,
+    stripe_payment_intent_id:
+      typeof invoice?.payment_intent === "string"
+        ? invoice.payment_intent
+        : invoice?.payment_intent?.id ?? null,
+    updated_at: new Date().toISOString(),
+  };
+  if (paid) {
+    patch.status = "pagado";
+    patch.paid_at = new Date().toISOString();
+  }
+
+  const query = (supabaseAdmin.from("pro_orders") as any)
+    .update(patch)
+    .eq("id", proOrderId);
+  // Never move a delivered/cancelled order backwards.
+  const { error } = await query.not("status", "in", "(entregado,cancelado)");
+  if (error) console.error("[stripe webhook] pro invoice update", error.message);
+}
+
 async function dispatchEvent(event: any, env: StripeEnv) {
+
   switch (event.type) {
     case "checkout.session.completed":
     case "checkout.session.async_payment_succeeded": {
@@ -234,7 +277,16 @@ async function dispatchEvent(event: any, env: StripeEnv) {
       }
       break;
     }
+    case "invoice.finalized":
+    case "invoice.paid":
+    case "invoice.payment_succeeded":
+    case "invoice.payment_failed":
+    case "invoice.voided":
+    case "invoice.marked_uncollectible":
+      await handleProInvoiceEvent(event.data.object);
+      break;
     default:
+
       console.log("[stripe webhook] unhandled event", event.type);
   }
 }

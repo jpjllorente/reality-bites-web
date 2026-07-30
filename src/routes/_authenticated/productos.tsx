@@ -50,6 +50,9 @@ type Row = {
   seo_title: string;
   seo_description: string;
   variants: Variant[];
+  wholesale_price_cents: number | null;
+  visible_pro: boolean;
+  tax_rate_percent: number;
 };
 
 const EMPTY: Row = {
@@ -68,7 +71,11 @@ const EMPTY: Row = {
   seo_title: "",
   seo_description: "",
   variants: [],
+  wholesale_price_cents: null,
+  visible_pro: false,
+  tax_rate_percent: 21,
 };
+
 
 
 function ProductsPage() {
@@ -232,7 +239,14 @@ function ProductsPage() {
           variants: editing.variants
             .map((v) => ({ id: v.id.trim(), name: v.name.trim(), active: v.active }))
             .filter((v) => v.id && v.name),
+          wholesale_price_cents:
+            editing.wholesale_price_cents && editing.wholesale_price_cents > 0
+              ? Math.round(editing.wholesale_price_cents)
+              : null,
+          visible_pro: editing.visible_pro,
+          tax_rate_percent: editing.tax_rate_percent as 0 | 4 | 10 | 21,
         },
+
       });
       toast.success("Guardado");
       setEditing(null);
@@ -315,7 +329,11 @@ function ProductsPage() {
     seo_title: r.seo_title ?? "",
     seo_description: r.seo_description ?? "",
     variants: variantsFromDb(r.variants),
+    wholesale_price_cents: r.wholesale_price_cents ?? null,
+    visible_pro: r.visible_pro ?? false,
+    tax_rate_percent: r.tax_rate_percent ?? 21,
   }));
+
 
 
   return (
@@ -577,10 +595,18 @@ function ProductsPage() {
                 onChange={(cents) => setEditing((s) => (s ? { ...s, portion_price_cents: cents } : s))}
               />
 
+              <ProPricingEditor
+                wholesaleCents={editing.wholesale_price_cents}
+                visiblePro={editing.visible_pro}
+                taxRate={editing.tax_rate_percent}
+                onChange={(patch) => setEditing((s) => (s ? { ...s, ...patch } : s))}
+              />
+
               <VariantsEditor
                 variants={editing.variants}
                 onChange={(vs) => setEditing((s) => (s ? { ...s, variants: vs } : s))}
               />
+
 
               <Text
                 label="Etiquetas (separadas por comas)"
@@ -732,6 +758,88 @@ function PortionPriceEditor({
   );
 }
 
+function ProPricingEditor({
+  wholesaleCents,
+  visiblePro,
+  taxRate,
+  onChange,
+}: {
+  wholesaleCents: number | null;
+  visiblePro: boolean;
+  taxRate: number;
+  onChange: (patch: {
+    wholesale_price_cents?: number | null;
+    visible_pro?: boolean;
+    tax_rate_percent?: number;
+  }) => void;
+}) {
+  const [input, setInput] = useState(
+    wholesaleCents && wholesaleCents > 0 ? (wholesaleCents / 100).toFixed(2) : "",
+  );
+
+  return (
+    <div className="rounded-sm border border-dashed border-secondary/50 p-3">
+      <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-secondary">
+        Catálogo profesional (B2B)
+      </p>
+      <label className="mb-3 flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={visiblePro}
+          onChange={(e) => onChange({ visible_pro: e.target.checked })}
+        />
+        <span className="text-xs uppercase tracking-widest">
+          Visible en el catálogo PRO
+        </span>
+      </label>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Precio profesional (€, sin IVA)
+          </span>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={input}
+            placeholder="Sin precio PRO"
+            onChange={(e) => {
+              const raw = e.target.value.replace(",", ".");
+              if (raw !== "" && !/^\d*\.?\d{0,2}$/.test(raw)) return;
+              setInput(raw);
+              const parsed = parseFloat(raw);
+              onChange({
+                wholesale_price_cents: isNaN(parsed) ? null : Math.round(parsed * 100),
+              });
+            }}
+            className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            IVA aplicable
+          </span>
+          <select
+            value={taxRate}
+            onChange={(e) => onChange({ tax_rate_percent: Number(e.target.value) })}
+            className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          >
+            {[0, 4, 10, 21].map((p) => (
+              <option key={p} value={p}>
+                {p}%
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <p className="mt-2 text-[10px] text-muted-foreground">
+        Un producto puede estar solo en el catálogo público, solo en el PRO, o en ambos.
+        Si no hay precio profesional, se usará el precio público.
+      </p>
+    </div>
+  );
+}
+
+
 function VariantsEditor({
   variants,
   onChange,
@@ -834,13 +942,19 @@ function VariantsEditor({
   );
 }
 
-export function NavTabs({ current }: { current: "dashboard" | "productos" | "galeria" | "pagos" }) {
+export function NavTabs({
+  current,
+}: {
+  current: "dashboard" | "productos" | "galeria" | "pagos" | "pro";
+}) {
   const tabs = [
     { to: "/dashboard", key: "dashboard", label: "Pedidos" },
     { to: "/pagos", key: "pagos", label: "Pagos" },
     { to: "/productos", key: "productos", label: "Productos" },
     { to: "/galeria-admin", key: "galeria", label: "Galería" },
+    { to: "/pro-admin", key: "pro", label: "PRO" },
   ] as const;
+
 
   return (
     <div className="flex gap-2">

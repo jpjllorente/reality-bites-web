@@ -16,6 +16,7 @@ import { Route as GaleriaRouteImport } from './routes/galeria'
 import { Route as EncargosRouteImport } from './routes/encargos'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ProRouteRouteImport } from './routes/_pro/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TiendaIndexRouteImport } from './routes/tienda.index'
@@ -24,7 +25,9 @@ import { Route as TiendaReservadoRouteImport } from './routes/tienda.reservado'
 import { Route as TiendaPagoCompletadoRouteImport } from './routes/tienda.pago-completado'
 import { Route as TiendaSlugRouteImport } from './routes/tienda.$slug'
 import { Route as EncargosPagoCompletadoRouteImport } from './routes/encargos.pago-completado'
+import { Route as ProProRouteImport } from './routes/_pro/pro'
 import { Route as AuthenticatedProductosRouteImport } from './routes/_authenticated/productos'
+import { Route as AuthenticatedProAdminRouteImport } from './routes/_authenticated/pro-admin'
 import { Route as AuthenticatedPagosRouteImport } from './routes/_authenticated/pagos'
 import { Route as AuthenticatedGaleriaAdminRouteImport } from './routes/_authenticated/galeria-admin'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -70,6 +73,10 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProRouteRoute = ProRouteRouteImport.update({
+  id: '/_pro',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -109,9 +116,19 @@ const EncargosPagoCompletadoRoute = EncargosPagoCompletadoRouteImport.update({
   path: '/pago-completado',
   getParentRoute: () => EncargosRoute,
 } as any)
+const ProProRoute = ProProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
+  getParentRoute: () => ProRouteRoute,
+} as any)
 const AuthenticatedProductosRoute = AuthenticatedProductosRouteImport.update({
   id: '/productos',
   path: '/productos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProAdminRoute = AuthenticatedProAdminRouteImport.update({
+  id: '/pro-admin',
+  path: '/pro-admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPagosRoute = AuthenticatedPagosRouteImport.update({
@@ -175,7 +192,9 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/pagos': typeof AuthenticatedPagosRoute
+  '/pro-admin': typeof AuthenticatedProAdminRoute
   '/productos': typeof AuthenticatedProductosRoute
+  '/pro': typeof ProProRoute
   '/encargos/pago-completado': typeof EncargosPagoCompletadoRoute
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
@@ -200,7 +219,9 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/pagos': typeof AuthenticatedPagosRoute
+  '/pro-admin': typeof AuthenticatedProAdminRoute
   '/productos': typeof AuthenticatedProductosRoute
+  '/pro': typeof ProProRoute
   '/encargos/pago-completado': typeof EncargosPagoCompletadoRoute
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
@@ -218,6 +239,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_pro': typeof ProRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/contacto': typeof ContactoRoute
   '/encargos': typeof EncargosRouteWithChildren
@@ -228,7 +250,9 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/galeria-admin': typeof AuthenticatedGaleriaAdminRoute
   '/_authenticated/pagos': typeof AuthenticatedPagosRoute
+  '/_authenticated/pro-admin': typeof AuthenticatedProAdminRoute
   '/_authenticated/productos': typeof AuthenticatedProductosRoute
+  '/_pro/pro': typeof ProProRoute
   '/encargos/pago-completado': typeof EncargosPagoCompletadoRoute
   '/tienda/$slug': typeof TiendaSlugRoute
   '/tienda/pago-completado': typeof TiendaPagoCompletadoRoute
@@ -256,7 +280,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/galeria-admin'
     | '/pagos'
+    | '/pro-admin'
     | '/productos'
+    | '/pro'
     | '/encargos/pago-completado'
     | '/tienda/$slug'
     | '/tienda/pago-completado'
@@ -281,7 +307,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/galeria-admin'
     | '/pagos'
+    | '/pro-admin'
     | '/productos'
+    | '/pro'
     | '/encargos/pago-completado'
     | '/tienda/$slug'
     | '/tienda/pago-completado'
@@ -298,6 +326,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/_pro'
     | '/auth'
     | '/contacto'
     | '/encargos'
@@ -308,7 +337,9 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/galeria-admin'
     | '/_authenticated/pagos'
+    | '/_authenticated/pro-admin'
     | '/_authenticated/productos'
+    | '/_pro/pro'
     | '/encargos/pago-completado'
     | '/tienda/$slug'
     | '/tienda/pago-completado'
@@ -326,6 +357,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  ProRouteRoute: typeof ProRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ContactoRoute: typeof ContactoRoute
   EncargosRoute: typeof EncargosRouteWithChildren
@@ -395,6 +427,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_pro': {
+      id: '/_pro'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -451,11 +490,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EncargosPagoCompletadoRouteImport
       parentRoute: typeof EncargosRoute
     }
+    '/_pro/pro': {
+      id: '/_pro/pro'
+      path: '/pro'
+      fullPath: '/pro'
+      preLoaderRoute: typeof ProProRouteImport
+      parentRoute: typeof ProRouteRoute
+    }
     '/_authenticated/productos': {
       id: '/_authenticated/productos'
       path: '/productos'
       fullPath: '/productos'
       preLoaderRoute: typeof AuthenticatedProductosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pro-admin': {
+      id: '/_authenticated/pro-admin'
+      path: '/pro-admin'
+      fullPath: '/pro-admin'
+      preLoaderRoute: typeof AuthenticatedProAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/pagos': {
@@ -528,6 +581,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGaleriaAdminRoute: typeof AuthenticatedGaleriaAdminRoute
   AuthenticatedPagosRoute: typeof AuthenticatedPagosRoute
+  AuthenticatedProAdminRoute: typeof AuthenticatedProAdminRoute
   AuthenticatedProductosRoute: typeof AuthenticatedProductosRoute
 }
 
@@ -535,11 +589,24 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGaleriaAdminRoute: AuthenticatedGaleriaAdminRoute,
   AuthenticatedPagosRoute: AuthenticatedPagosRoute,
+  AuthenticatedProAdminRoute: AuthenticatedProAdminRoute,
   AuthenticatedProductosRoute: AuthenticatedProductosRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface ProRouteRouteChildren {
+  ProProRoute: typeof ProProRoute
+}
+
+const ProRouteRouteChildren: ProRouteRouteChildren = {
+  ProProRoute: ProProRoute,
+}
+
+const ProRouteRouteWithChildren = ProRouteRoute._addFileChildren(
+  ProRouteRouteChildren,
+)
 
 interface EncargosRouteChildren {
   EncargosPagoCompletadoRoute: typeof EncargosPagoCompletadoRoute
@@ -560,6 +627,7 @@ const EncargosRouteWithChildren = EncargosRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  ProRouteRoute: ProRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ContactoRoute: ContactoRoute,
   EncargosRoute: EncargosRouteWithChildren,

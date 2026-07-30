@@ -1,8 +1,35 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo-144reality.jpeg.asset.json";
+
+/** True when the signed-in user has the `pro` role. Public visitors: false. */
+function useIsPro() {
+  const [isPro, setIsPro] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      const userId = data.session?.user?.id;
+      if (!userId) return;
+      const { data: hasRole } = await (supabase as any).rpc("has_role", {
+        _user_id: userId,
+        _role: "pro",
+      });
+      if (!cancelled) setIsPro(Boolean(hasRole));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return isPro;
+}
+
 
 export function Header({ variant = "solid" }: { variant?: "solid" | "overlay" }) {
   const isOverlay = variant === "overlay";
+  const isPro = useIsPro();
+
   const base = isOverlay
     ? "absolute inset-x-0 top-0 z-20 text-primary-foreground"
     : "relative z-20 border-b border-foreground/10 bg-background text-foreground";
@@ -43,7 +70,13 @@ export function Header({ variant = "solid" }: { variant?: "solid" | "overlay" })
           <NavItem to="/contacto" overlay={isOverlay}>
             Contacto
           </NavItem>
+          {isPro && (
+            <NavItem to="/pro" overlay={isOverlay}>
+              Área PRO
+            </NavItem>
+          )}
         </nav>
+
 
         <Link
           to="/tienda"
