@@ -1,5 +1,30 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo-144reality.jpeg.asset.json";
+
+/** True when the signed-in user has the `pro` role. Public visitors: false. */
+function useIsPro() {
+  const [isPro, setIsPro] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      const userId = data.session?.user?.id;
+      if (!userId) return;
+      const { data: hasRole } = await (supabase as any).rpc("has_role", {
+        _user_id: userId,
+        _role: "pro",
+      });
+      if (!cancelled) setIsPro(Boolean(hasRole));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return isPro;
+}
+
 
 export function Header({ variant = "solid" }: { variant?: "solid" | "overlay" }) {
   const isOverlay = variant === "overlay";
