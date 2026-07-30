@@ -942,13 +942,19 @@ function VariantsEditor({
   );
 }
 
-export function NavTabs({ current }: { current: "dashboard" | "productos" | "galeria" | "pagos" }) {
+export function NavTabs({
+  current,
+}: {
+  current: "dashboard" | "productos" | "galeria" | "pagos" | "pro";
+}) {
   const tabs = [
     { to: "/dashboard", key: "dashboard", label: "Pedidos" },
     { to: "/pagos", key: "pagos", label: "Pagos" },
     { to: "/productos", key: "productos", label: "Productos" },
     { to: "/galeria-admin", key: "galeria", label: "Galería" },
+    { to: "/pro-admin", key: "pro", label: "PRO" },
   ] as const;
+
 
   return (
     <div className="flex gap-2">
