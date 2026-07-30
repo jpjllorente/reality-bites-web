@@ -50,6 +50,9 @@ type Row = {
   seo_title: string;
   seo_description: string;
   variants: Variant[];
+  wholesale_price_cents: number | null;
+  visible_pro: boolean;
+  tax_rate_percent: number;
 };
 
 const EMPTY: Row = {
@@ -68,7 +71,11 @@ const EMPTY: Row = {
   seo_title: "",
   seo_description: "",
   variants: [],
+  wholesale_price_cents: null,
+  visible_pro: false,
+  tax_rate_percent: 21,
 };
+
 
 
 function ProductsPage() {
