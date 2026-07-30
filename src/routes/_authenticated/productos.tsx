@@ -758,6 +758,88 @@ function PortionPriceEditor({
   );
 }
 
+function ProPricingEditor({
+  wholesaleCents,
+  visiblePro,
+  taxRate,
+  onChange,
+}: {
+  wholesaleCents: number | null;
+  visiblePro: boolean;
+  taxRate: number;
+  onChange: (patch: {
+    wholesale_price_cents?: number | null;
+    visible_pro?: boolean;
+    tax_rate_percent?: number;
+  }) => void;
+}) {
+  const [input, setInput] = useState(
+    wholesaleCents && wholesaleCents > 0 ? (wholesaleCents / 100).toFixed(2) : "",
+  );
+
+  return (
+    <div className="rounded-sm border border-dashed border-secondary/50 p-3">
+      <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-secondary">
+        Catálogo profesional (B2B)
+      </p>
+      <label className="mb-3 flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={visiblePro}
+          onChange={(e) => onChange({ visible_pro: e.target.checked })}
+        />
+        <span className="text-xs uppercase tracking-widest">
+          Visible en el catálogo PRO
+        </span>
+      </label>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Precio profesional (€, sin IVA)
+          </span>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={input}
+            placeholder="Sin precio PRO"
+            onChange={(e) => {
+              const raw = e.target.value.replace(",", ".");
+              if (raw !== "" && !/^\d*\.?\d{0,2}$/.test(raw)) return;
+              setInput(raw);
+              const parsed = parseFloat(raw);
+              onChange({
+                wholesale_price_cents: isNaN(parsed) ? null : Math.round(parsed * 100),
+              });
+            }}
+            className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            IVA aplicable
+          </span>
+          <select
+            value={taxRate}
+            onChange={(e) => onChange({ tax_rate_percent: Number(e.target.value) })}
+            className="w-full rounded-sm border border-foreground/20 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          >
+            {[0, 4, 10, 21].map((p) => (
+              <option key={p} value={p}>
+                {p}%
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <p className="mt-2 text-[10px] text-muted-foreground">
+        Un producto puede estar solo en el catálogo público, solo en el PRO, o en ambos.
+        Si no hay precio profesional, se usará el precio público.
+      </p>
+    </div>
+  );
+}
+
+
 function VariantsEditor({
   variants,
   onChange,
