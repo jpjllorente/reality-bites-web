@@ -277,7 +277,16 @@ async function dispatchEvent(event: any, env: StripeEnv) {
       }
       break;
     }
+    case "invoice.finalized":
+    case "invoice.paid":
+    case "invoice.payment_succeeded":
+    case "invoice.payment_failed":
+    case "invoice.voided":
+    case "invoice.marked_uncollectible":
+      await handleProInvoiceEvent(event.data.object);
+      break;
     default:
+
       console.log("[stripe webhook] unhandled event", event.type);
   }
 }
