@@ -10,7 +10,7 @@ export function Contact() {
               — Visítanos
             </p>
             <h2 className="font-display text-5xl leading-none text-primary sm:text-7xl">
-              Nos encontrarás <br /> en la <span className="text-secondary">calle 144</span>
+              Ven a <br /> <span className="text-secondary">visitarnos</span>
             </h2>
             <p className="mt-6 max-w-lg text-muted-foreground">
               Un espacio confortable y acogedor, con madera natural y buena luz.
@@ -18,10 +18,12 @@ export function Contact() {
             </p>
 
             <dl className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <InfoBlock label="Dirección">
-                Calle Francisco González Conde, 37
+              <InfoBlock label="Dirección" className="sm:col-span-2">
+                <span className="text-2xl font-semibold text-primary">
+                  Calle Francisco González Conde, 37
+                </span>
                 <br />
-                30180 Bullas, Murcia
+                <span className="text-lg">30180 Bullas, Murcia</span>
               </InfoBlock>
               <InfoBlock label="Horario">
                 Lun – Vie · 08:00 – 20:00
@@ -82,9 +84,17 @@ export function Contact() {
   );
 }
 
-function InfoBlock({ label, children }: { label: string; children: React.ReactNode }) {
+function InfoBlock({
+  label,
+  className = "",
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="border-l-2 border-secondary pl-4">
+    <div className={`border-l-2 border-secondary pl-4 ${className}`}>
       <dt className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
         {label}
       </dt>
