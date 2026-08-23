@@ -70,7 +70,9 @@ export function MediaUpload({
             <div className="absolute inset-0 grid place-items-center rounded-sm bg-background/80 backdrop-blur-sm">
               <div className="flex flex-col items-center gap-1">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                <span className="text-[9px] uppercase tracking-widest text-primary">IA</span>
+                <span className="text-[9px] uppercase tracking-widest text-primary">
+                  {enhance ? "IA" : "…"}
+                </span>
               </div>
             </div>
           )}
@@ -82,7 +84,7 @@ export function MediaUpload({
             disabled={busy}
             className="rounded-sm border border-primary px-3 py-1.5 text-xs uppercase tracking-widest text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
           >
-            {busy ? "Mejorando…" : "Subir imagen"}
+            {busy ? (enhance ? "Mejorando…" : "Subiendo…") : "Subir imagen"}
           </button>
           {value && (
             <button
