@@ -13,6 +13,7 @@ export function MediaUpload({
   const upload = useServerFn(uploadMedia);
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [enhance, setEnhance] = useState(true);
 
   async function onFile(file: File) {
     if (file.size > 10 * 1024 * 1024) {
@@ -20,7 +21,9 @@ export function MediaUpload({
       return;
     }
     setBusy(true);
-    const toastId = toast.loading("Mejorando imagen con IA… esto puede tardar hasta 1 min");
+    const toastId = toast.loading(
+      enhance ? "Mejorando imagen con IA… esto puede tardar hasta 1 min" : "Subiendo imagen…",
+    );
     try {
       const buf = await file.arrayBuffer();
       let binary = "";
@@ -32,11 +35,12 @@ export function MediaUpload({
           filename: file.name,
           content_type: file.type || "application/octet-stream",
           data_base64: b64,
+          enhance,
         },
       });
       onChange(res.url);
       toast.success(
-        res.enhanced ? "Imagen mejorada y subida" : "Imagen subida (sin mejora IA)",
+        res.enhanced ? "Imagen mejorada y subida" : "Imagen original subida (sin IA)",
         { id: toastId },
       );
     } catch (e) {
@@ -66,7 +70,9 @@ export function MediaUpload({
             <div className="absolute inset-0 grid place-items-center rounded-sm bg-background/80 backdrop-blur-sm">
               <div className="flex flex-col items-center gap-1">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                <span className="text-[9px] uppercase tracking-widest text-primary">IA</span>
+                <span className="text-[9px] uppercase tracking-widest text-primary">
+                  {enhance ? "IA" : "…"}
+                </span>
               </div>
             </div>
           )}
@@ -78,7 +84,7 @@ export function MediaUpload({
             disabled={busy}
             className="rounded-sm border border-primary px-3 py-1.5 text-xs uppercase tracking-widest text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
           >
-            {busy ? "Mejorando…" : "Subir imagen"}
+            {busy ? (enhance ? "Mejorando…" : "Subiendo…") : "Subir imagen"}
           </button>
           {value && (
             <button
@@ -91,6 +97,16 @@ export function MediaUpload({
           )}
         </div>
       </div>
+      <label className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={!enhance}
+          disabled={busy}
+          onChange={(e) => setEnhance(!e.target.checked)}
+          className="h-3.5 w-3.5 accent-primary"
+        />
+        Subir imagen original (sin mejora IA)
+      </label>
       <input
         ref={inputRef}
         type="file"

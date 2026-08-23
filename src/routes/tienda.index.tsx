@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Catalog } from "@/components/site/Catalog";
+import type { Product } from "@/lib/products";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { PaymentTestModeBanner } from "@/components/site/PaymentTestModeBanner";
@@ -109,7 +110,7 @@ function TiendaPage() {
       <PaymentTestModeBanner />
       <Header />
       <main className="grain">
-        <Catalog initialProducts={products} />
+        <Catalog initialProducts={products as unknown as Product[]} />
       </main>
       <Footer />
     </>
