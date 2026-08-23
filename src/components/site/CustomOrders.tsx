@@ -37,24 +37,13 @@ const emptyForm = {
 export function CustomOrders() {
   const submit = useServerFn(submitCustomOrder);
   const [form, setForm] = useState(emptyForm);
-  const [allergens, setAllergens] = useState<string[]>([]);
-  const [otherAllergen, setOtherAllergen] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-
-  const toggleAllergen = (a: string) =>
-    setAllergens((prev) =>
-      prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a],
-    );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      const allergensList = [
-        ...allergens,
-        ...(otherAllergen.trim() ? [otherAllergen.trim()] : []),
-      ].join(", ");
       await submit({
         data: {
           name: form.name,
