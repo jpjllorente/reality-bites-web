@@ -87,10 +87,9 @@ export function CustomOrders() {
 
 
 
-          <dl className="mt-8 grid grid-cols-3 gap-6 border-t border-primary-foreground/15 pt-6 text-sm">
+          <dl className="mt-8 grid grid-cols-2 gap-6 border-t border-primary-foreground/15 pt-6 text-sm">
             {[
               { k: "72h", v: "Antelación mínima" },
-              { k: "10+", v: "Personas mínimo" },
               { k: "100%", v: "Elaboración propia" },
             ].map((s) => (
               <div key={s.k}>
