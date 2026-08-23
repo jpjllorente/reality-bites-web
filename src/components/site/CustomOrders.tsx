@@ -53,7 +53,7 @@ export function CustomOrders() {
           eventDate: form.eventDate,
           servings: form.servings ? Number(form.servings) : null,
           flavors: form.flavors,
-          allergens: allergensList,
+          allergens: "",
           budgetRange: form.budgetRange,
           message: form.message,
         },
