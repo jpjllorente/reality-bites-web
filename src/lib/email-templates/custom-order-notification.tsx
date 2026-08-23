@@ -35,7 +35,7 @@ const rowFields: Array<{ key: keyof Props; label: string }> = [
   { key: "eventDate", label: "Fecha" },
   { key: "servings", label: "Personas" },
   { key: "flavors", label: "Sabores" },
-  { key: "allergens", label: "Alérgenos" },
+  
   { key: "budgetRange", label: "Presupuesto" },
 ];
 
