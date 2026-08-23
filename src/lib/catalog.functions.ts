@@ -187,6 +187,7 @@ const UploadSchema = z.object({
   filename: z.string().trim().min(1).max(200),
   content_type: z.string().trim().min(1).max(120),
   data_base64: z.string().min(1).max(15_000_000), // ~11MB decoded
+  enhance: z.boolean().default(true),
 });
 
 export const uploadMedia = createServerFn({ method: "POST" })
@@ -204,6 +205,7 @@ export const uploadMedia = createServerFn({ method: "POST" })
     let filename = safe;
     let enhanced = false;
     try {
+      if (!data.enhance) throw new Error("__skip_enhance__");
       const { enhanceProductImage } = await import("./product-image-enhance.server");
       const improved = await enhanceProductImage(originalBytes, data.content_type);
       if (improved) {
