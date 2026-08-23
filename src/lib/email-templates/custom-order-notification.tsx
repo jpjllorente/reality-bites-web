@@ -87,7 +87,7 @@ export const template = {
     eventDate: "2026-09-14",
     servings: "80",
     flavors: "Chocolate, frutos rojos",
-    allergens: "Gluten, frutos secos",
+    
     budgetRange: "200 – 400 €",
     message: "Tres pisos, temática botánica.",
   },
