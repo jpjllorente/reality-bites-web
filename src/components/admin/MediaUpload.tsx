@@ -21,7 +21,9 @@ export function MediaUpload({
       return;
     }
     setBusy(true);
-    const toastId = toast.loading("Mejorando imagen con IA… esto puede tardar hasta 1 min");
+    const toastId = toast.loading(
+      enhance ? "Mejorando imagen con IA… esto puede tardar hasta 1 min" : "Subiendo imagen…",
+    );
     try {
       const buf = await file.arrayBuffer();
       let binary = "";
@@ -33,11 +35,12 @@ export function MediaUpload({
           filename: file.name,
           content_type: file.type || "application/octet-stream",
           data_base64: b64,
+          enhance,
         },
       });
       onChange(res.url);
       toast.success(
-        res.enhanced ? "Imagen mejorada y subida" : "Imagen subida (sin mejora IA)",
+        res.enhanced ? "Imagen mejorada y subida" : "Imagen original subida (sin IA)",
         { id: toastId },
       );
     } catch (e) {
