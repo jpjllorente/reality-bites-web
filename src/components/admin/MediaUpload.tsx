@@ -97,6 +97,16 @@ export function MediaUpload({
           )}
         </div>
       </div>
+      <label className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={!enhance}
+          disabled={busy}
+          onChange={(e) => setEnhance(!e.target.checked)}
+          className="h-3.5 w-3.5 accent-primary"
+        />
+        Subir imagen original (sin mejora IA)
+      </label>
       <input
         ref={inputRef}
         type="file"
