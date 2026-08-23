@@ -12,13 +12,13 @@ import resize from "@jsquash/resize";
 const LOGO_STORAGE_PATH = "branding/logo.png";
 const MAX_EDGE = 1024;
 
-// Prompt reducido: mismas reglas, sin repeticiones. Preserva escenario,
-// logo blanco pintado en pared y fidelidad al producto.
-const PROMPT = `Director creativo y fotógrafo gastronómico de "144 Reality Bites & Coffee". Transforma la foto real del producto en imagen publicitaria premium sin alterar el alimento.
+// Prompt realista: conserva escenario, logo blanco pintado en pared y fidelidad
+// al producto, pero evita estilizar/reinterpretar el alimento.
+const PROMPT = `Retoca la foto real del producto de "144 Reality Bites & Coffee" respetando fielmente el alimento tal cual aparece en la imagen original. No lo reinterpretes, no lo estilices y no lo hagas más "perfecto" de lo que es.
 
-PRODUCTO — Prohibido cambiar receta, forma, tamaño, volumen, color real, ingredientes, glaseados o texturas; no añadir ni quitar toppings, frutas, chocolate, cacao, azúcar, hojas ni decoración. Si mejorar la foto exige modificar el producto, no lo hagas.
+PRODUCTO — Mantiene exactamente: receta, forma, tamaño, volumen, color real, ingredientes, glaseados, texturas, toppings, frutas, chocolate, cacao, azúcar, hojas y decoración. No añadas ni quites nada. No cambies el color, no lo hagas más brillante, más dorado, más esponjoso ni más atractivo artificialmente. El resultado debe seguir pareciendo el mismo producto real de la foto.
 
-MEJORAS PERMITIDAS — solo iluminación, exposición, balance de blancos, nitidez, enfoque, contraste, profundidad de campo, reducción de ruido y pequeñas imperfecciones naturales.
+RETOQUE PERMITIDO — ajustes técnicos únicamente: iluminación natural, exposición, balance de blancos, nitidez moderada, contraste suave, profundidad de campo y reducción de ruido. Sin filtros creativos, sin saturación exagerada, sin efectos de revista, sin retoque de belleza.
 
 ESCENARIO OBLIGATORIO (sin excepciones) — producto sobre mesa de madera natural, con pared de ladrillo pintada en verde militar detrás. Prohibidos fondos blancos, grises, lisos, de estudio, transparentes o cualquier otro escenario/color de pared.
 
@@ -26,9 +26,9 @@ LOGOTIPO (segunda imagen adjunta) — integrado en la pared de ladrillo verde mi
 
 COMPOSICIÓN — conserva ángulo, composición, perspectiva y tamaño del producto originales.
 
-ESTILO — fotografía gastronómica premium, realista, artesanal, muy apetecible, alta gama, apta para publicidad e Instagram/Facebook; aspecto de cámara Full Frame con objetivo macro luminoso.
+ESTILO — fotografía gastronómica realista y natural, sin sobreprocesar. Aspecto de foto tomada con cámara profesional pero fiel al producto real, no a publicidad exagerada.
 
-INVÁLIDA si aparece fondo blanco/gris, desaparece la mesa o la pared verde militar, el logo no es blanco o no parece pintado en la pared, o el producto cambia de forma/tamaño/color/ingredientes.`;
+INVÁLIDA si el producto parece diferente al original, si aparece fondo blanco/gris, si desaparece la mesa o la pared verde militar, si el logo no es blanco o no parece pintado en la pared, o si se añaden/quitan elementos al producto.`;
 
 async function decodeToImageData(bytes: Uint8Array, contentType: string) {
   const ct = contentType.toLowerCase();
