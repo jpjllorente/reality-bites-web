@@ -22,15 +22,6 @@ const BUDGETS = [
   "A definir",
 ];
 
-const ALLERGEN_OPTIONS = [
-  "Gluten",
-  "Lactosa",
-  "Frutos secos",
-  "Huevo",
-  "Soja",
-  "Fresa",
-];
-
 const emptyForm = {
   name: "",
   email: "",
@@ -46,24 +37,13 @@ const emptyForm = {
 export function CustomOrders() {
   const submit = useServerFn(submitCustomOrder);
   const [form, setForm] = useState(emptyForm);
-  const [allergens, setAllergens] = useState<string[]>([]);
-  const [otherAllergen, setOtherAllergen] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-
-  const toggleAllergen = (a: string) =>
-    setAllergens((prev) =>
-      prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a],
-    );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      const allergensList = [
-        ...allergens,
-        ...(otherAllergen.trim() ? [otherAllergen.trim()] : []),
-      ].join(", ");
       await submit({
         data: {
           name: form.name,
@@ -73,15 +53,13 @@ export function CustomOrders() {
           eventDate: form.eventDate,
           servings: form.servings ? Number(form.servings) : null,
           flavors: form.flavors,
-          allergens: allergensList,
+          allergens: "",
           budgetRange: form.budgetRange,
           message: form.message,
         },
       });
       toast.success("¡Solicitud enviada! Te contactamos en menos de 24h.");
       setForm(emptyForm);
-      setAllergens([]);
-      setOtherAllergen("");
       setDone(true);
     } catch (err) {
       console.error(err);
@@ -243,37 +221,6 @@ export function CustomOrders() {
               />
             </Field>
 
-            <div className="sm:col-span-2">
-              <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                Alérgenos / intolerancias
-              </span>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {ALLERGEN_OPTIONS.map((a) => {
-                  const active = allergens.includes(a);
-                  return (
-                    <button
-                      type="button"
-                      key={a}
-                      onClick={() => toggleAllergen(a)}
-                      className={`rounded-sm border px-3 py-1.5 text-xs uppercase tracking-widest transition ${
-                        active
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-background text-foreground hover:border-primary"
-                      }`}
-                    >
-                      {a}
-                    </button>
-                  );
-                })}
-              </div>
-              <input
-                maxLength={200}
-                value={otherAllergen}
-                onChange={(e) => setOtherAllergen(e.target.value)}
-                className="input mt-2"
-                placeholder="Otros alérgenos…"
-              />
-            </div>
 
             <Field label="Detalles adicionales" className="sm:col-span-2">
               <textarea

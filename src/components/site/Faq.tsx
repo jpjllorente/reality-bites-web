@@ -7,10 +7,6 @@ export const faqs = [
     a: "Recomendamos al menos 5 días de antelación para tartas personalizadas y 2 semanas para mesas dulces o eventos. Para fechas señaladas (San Valentín, Día de la Madre, Navidad) reserva con más tiempo.",
   },
   {
-    q: "¿Trabajáis con alergias e intolerancias?",
-    a: "Sí. Elaboramos opciones sin gluten, sin lactosa, sin huevo y veganas. Indícanoslo al hacer el encargo para adaptar la receta y evitar contaminación cruzada.",
-  },
-  {
     q: "¿Cuál es el precio mínimo de un encargo personalizado?",
     a: "Las tartas personalizadas parten desde 35€ (6-8 raciones). Mesas dulces y catering se cotizan a medida según número de invitados y tipo de producto.",
   },

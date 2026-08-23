@@ -318,7 +318,6 @@ function CustomOrdersTable({
             <Info label="Personas" value={r.servings ? String(r.servings) : "—"} />
             <Info label="Presupuesto" value={r.budget_range ?? "—"} />
             <Info label="Sabores" value={r.flavors ?? "—"} />
-            <Info label="Alérgenos" value={r.allergens ?? "—"} />
           </dl>
           {r.message && (
             <div className="mt-3">
