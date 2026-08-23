@@ -60,8 +60,6 @@ export function CustomOrders() {
       });
       toast.success("¡Solicitud enviada! Te contactamos en menos de 24h.");
       setForm(emptyForm);
-      setAllergens([]);
-      setOtherAllergen("");
       setDone(true);
     } catch (err) {
       console.error(err);
