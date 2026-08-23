@@ -13,6 +13,7 @@ export function MediaUpload({
   const upload = useServerFn(uploadMedia);
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [enhance, setEnhance] = useState(true);
 
   async function onFile(file: File) {
     if (file.size > 10 * 1024 * 1024) {
