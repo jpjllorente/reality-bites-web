@@ -16,11 +16,11 @@ export const faqs = [
   },
   {
     q: "¿Cómo se realiza el pago y la reserva?",
-    a: "Para confirmar el encargo pedimos un 30% de señal por Bizum o transferencia. El resto se abona en la recogida o entrega.",
+    a: "Para confirmar el encargo es necesario abonar el importe completo de manera anticipada por Bizum o transferencia.",
   },
   {
     q: "¿Puedo cancelar o modificar mi pedido?",
-    a: "Puedes modificarlo hasta 72h antes de la fecha de entrega. Cancelaciones con menos de 48h no permiten reembolso de la señal, ya que la producción ya está en marcha.",
+    a: "Puedes modificarlo hasta 72h antes de la fecha de entrega. Cancelaciones con menos de 48h no permiten reembolso, ya que la producción ya está en marcha.",
   },
 ];
 
