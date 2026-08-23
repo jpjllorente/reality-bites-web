@@ -84,9 +84,17 @@ export function Contact() {
   );
 }
 
-function InfoBlock({ label, children }: { label: string; children: React.ReactNode }) {
+function InfoBlock({
+  label,
+  className = "",
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="border-l-2 border-secondary pl-4">
+    <div className={`border-l-2 border-secondary pl-4 ${className}`}>
       <dt className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
         {label}
       </dt>
