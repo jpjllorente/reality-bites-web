@@ -243,37 +243,6 @@ export function CustomOrders() {
               />
             </Field>
 
-            <div className="sm:col-span-2">
-              <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                Alérgenos / intolerancias
-              </span>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {ALLERGEN_OPTIONS.map((a) => {
-                  const active = allergens.includes(a);
-                  return (
-                    <button
-                      type="button"
-                      key={a}
-                      onClick={() => toggleAllergen(a)}
-                      className={`rounded-sm border px-3 py-1.5 text-xs uppercase tracking-widest transition ${
-                        active
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-background text-foreground hover:border-primary"
-                      }`}
-                    >
-                      {a}
-                    </button>
-                  );
-                })}
-              </div>
-              <input
-                maxLength={200}
-                value={otherAllergen}
-                onChange={(e) => setOtherAllergen(e.target.value)}
-                className="input mt-2"
-                placeholder="Otros alérgenos…"
-              />
-            </div>
 
             <Field label="Detalles adicionales" className="sm:col-span-2">
               <textarea
