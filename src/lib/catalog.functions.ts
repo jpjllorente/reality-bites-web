@@ -204,19 +204,20 @@ export const uploadMedia = createServerFn({ method: "POST" })
     let contentType = data.content_type;
     let filename = safe;
     let enhanced = false;
-    try {
-      if (!data.enhance) throw new Error("__skip_enhance__");
-      const { enhanceProductImage } = await import("./product-image-enhance.server");
-      const improved = await enhanceProductImage(originalBytes, data.content_type);
-      if (improved) {
-        bytesToStore = improved.bytes;
-        contentType = improved.contentType;
-        filename =
-          safe.replace(/\.[a-z0-9]+$/i, "") + `.enhanced.${improved.extension}`;
-        enhanced = true;
+    if (data.enhance) {
+      try {
+        const { enhanceProductImage } = await import("./product-image-enhance.server");
+        const improved = await enhanceProductImage(originalBytes, data.content_type);
+        if (improved) {
+          bytesToStore = improved.bytes;
+          contentType = improved.contentType;
+          filename =
+            safe.replace(/\.[a-z0-9]+$/i, "") + `.enhanced.${improved.extension}`;
+          enhanced = true;
+        }
+      } catch (e) {
+        console.warn("[uploadMedia] enhance error, uso original", e);
       }
-    } catch (e) {
-      console.warn("[uploadMedia] enhance error, uso original", e);
     }
 
     const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${filename}`;

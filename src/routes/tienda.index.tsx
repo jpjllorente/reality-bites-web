@@ -109,7 +109,7 @@ function TiendaPage() {
       <PaymentTestModeBanner />
       <Header />
       <main className="grain">
-        <Catalog initialProducts={products} />
+        <Catalog initialProducts={products as unknown as Product[]} />
       </main>
       <Footer />
     </>
