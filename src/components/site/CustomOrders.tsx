@@ -22,15 +22,6 @@ const BUDGETS = [
   "A definir",
 ];
 
-const ALLERGEN_OPTIONS = [
-  "Gluten",
-  "Lactosa",
-  "Frutos secos",
-  "Huevo",
-  "Soja",
-  "Fresa",
-];
-
 const emptyForm = {
   name: "",
   email: "",
