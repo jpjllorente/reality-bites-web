@@ -1,0 +1,948 @@
+From bc2a67aded774fc4fac970caf977ad07e148307f Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Fri, 11 Sep 2026 18:23:04 +0300
+Subject: [PATCH] Improve local SEO and online ordering clarity
+
+---
+ src/components/site/Catalog.tsx     |  28 +-
+ src/components/site/Contact.tsx     |  10 +-
+ src/components/site/Faq.tsx         |   2 +-
+ src/components/site/Hero.tsx        |   6 +-
+ src/components/site/HomeTeasers.tsx |   4 +-
+ src/routeTree.gen.ts                | 482 ++++++++++++++--------------
+ src/routes/__root.tsx               |  12 +-
+ src/routes/index.tsx                |  22 +-
+ src/routes/tienda.$slug.tsx         |  15 +-
+ src/routes/tienda.index.tsx         |   4 +-
+ 10 files changed, 310 insertions(+), 275 deletions(-)
+
+diff --git a/src/components/site/Catalog.tsx b/src/components/site/Catalog.tsx
+index 324b06a..72b3942 100644
+--- a/src/components/site/Catalog.tsx
++++ b/src/components/site/Catalog.tsx
+@@ -12,6 +12,14 @@ function formatPrice(v: number) {
+   return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+ }
+ 
++function displayPrice(product: Product) {
++  if (product.price > 0) return formatPrice(product.price);
++  if (product.portionPrice && product.portionPrice > 0) {
++    return `Desde ${formatPrice(product.portionPrice)}`;
++  }
++  return "Consultar";
++}
++
+ 
+ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {}) {
+   const navigate = useNavigate();
+@@ -128,10 +136,16 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
+               CatÃ¡logo & <span className="text-secondary">tienda</span>
+             </h2>
+             <p className="mt-4 max-w-xl text-muted-foreground">
+-              Elige lo que te apetezca, arma tu pedido y te enviamos la confirmaciÃ³n por email.
+-              Sin trÃ¡mites raros.
++              Elige lo que te apetezca y prepara tu pedido para recoger en nuestro local de Bullas.
++              Para entregas en Bullas y pueblos cercanos, consÃºltanos disponibilidad.
+             </p>
+ 
++            <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-foreground/75">
++              <li>â Recogida sin coste</li>
++              <li>â Pago online o en tienda</li>
++              <li>â ConfirmaciÃ³n del pedido</li>
++            </ul>
++
+           </div>
+ 
+           <button
+@@ -198,7 +212,7 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
+                     </Link>
+                   </h3>
+                   <span className="shrink-0 font-display text-2xl text-secondary">
+-                    {formatPrice(p.price)}
++                    {displayPrice(p)}
+                   </span>
+                 </div>
+                 {p.tags && p.tags.length > 0 && (
+@@ -448,9 +462,12 @@ function ProductAddForm({
+   const activeVariants = (product.variants ?? []).filter((v) => v.active);
+   const hasVariants = activeVariants.length > 0;
+   const hasPortion = product.portionPrice != null && product.portionPrice > 0;
++  const hasPaidBase = product.price > 0;
+   // Force explicit selection: no defaults when there are options.
+   const [variantId, setVariantId] = useState<string | undefined>(undefined);
+-  const [portion, setPortion] = useState<boolean | null>(hasPortion ? null : false);
++  const [portion, setPortion] = useState<boolean | null>(
++    hasPortion && hasPaidBase ? null : hasPortion,
++  );
+   const [error, setError] = useState<string | null>(null);
+   const outOfStock = product.inStock === false;
+   const effectivePortion = portion === true;
+@@ -487,7 +504,7 @@ function ProductAddForm({
+ 
+   return (
+     <div className="mt-auto flex flex-col gap-3">
+-      {hasPortion && (
++      {hasPortion && hasPaidBase && (
+         <div>
+           <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+             TamaÃ±o <span className="text-destructive">*</span>
+@@ -544,4 +561,3 @@ function ProductAddForm({
+   );
+ }
+ 
+-
+diff --git a/src/components/site/Contact.tsx b/src/components/site/Contact.tsx
+index 9568ba0..0af3410 100644
+--- a/src/components/site/Contact.tsx
++++ b/src/components/site/Contact.tsx
+@@ -26,9 +26,13 @@ export function Contact() {
+                 <span className="text-lg">30180 Bullas, Murcia</span>
+               </InfoBlock>
+               <InfoBlock label="Horario">
+-                Lun â Vie Â· 08:00 â 20:00
++                Martes â Viernes Â· 08:30 â 13:00
+                 <br />
+-                SÃ¡b â Dom Â· 09:30 â 21:00
++                y 15:30 â 20:00
++                <br />
++                SÃ¡bado â Domingo Â· 08:30 â 13:00
++                <br />
++                y 15:30 â 21:00 Â· Lunes cerrado
+               </InfoBlock>
+               <InfoBlock label="Contacto">
+                 +34 681 63 46 23
+@@ -72,7 +76,7 @@ export function Contact() {
+                     144 REALITY
+                   </p>
+                   <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.25em] text-secondary">
+-                    Bites & Coffee Â· desde 2024
++                    Bites & Coffee Â· desde 2026
+                   </p>
+                 </div>
+               </div>
+diff --git a/src/components/site/Faq.tsx b/src/components/site/Faq.tsx
+index 8a8704d..5346600 100644
+--- a/src/components/site/Faq.tsx
++++ b/src/components/site/Faq.tsx
+@@ -16,7 +16,7 @@ export const faqs = [
+   },
+   {
+     q: "Â¿CÃ³mo se realiza el pago y la reserva?",
+-    a: "Para confirmar el encargo es necesario abonar el importe completo de manera anticipada por Bizum o transferencia.",
++    a: "Cuando aprobemos tu encargo recibirÃ¡s el presupuesto y las opciones de pago. Los pedidos de la tienda pueden pagarse online o reservarse para pagar en el local.",
+   },
+   {
+     q: "Â¿Puedo cancelar o modificar mi pedido?",
+diff --git a/src/components/site/Hero.tsx b/src/components/site/Hero.tsx
+index c1b5f84..37b7968 100644
+--- a/src/components/site/Hero.tsx
++++ b/src/components/site/Hero.tsx
+@@ -63,13 +63,13 @@ export function Hero() {
+         <div className="max-w-3xl">
+           <div className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-secondary">
+             <span className="h-px w-10 bg-secondary" />
+-            {current?.tag || "144 Reality"}
++            {current?.tag || "PastelerÃ­a Â· cafeterÃ­a en Bullas"}
+           </div>
+           <h1 className="font-display text-5xl leading-[0.95] sm:text-7xl lg:text-8xl">
+-            ReposterÃ­a que cruje, funde y sorprende
++            ReposterÃ­a americana y sabores del mundo
+           </h1>
+           <p className="mt-5 max-w-xl text-base text-primary-foreground/85 sm:text-lg">
+-            {current?.caption || "Piezas modernas horneadas cada maÃ±ana en nuestro obrador."}
++            {current?.caption || "Donuts, cookies, brownies y tartas elaborados en nuestro obrador de Bullas."}
+           </p>
+           <div className="mt-8 flex flex-wrap gap-3">
+             <Link
+diff --git a/src/components/site/HomeTeasers.tsx b/src/components/site/HomeTeasers.tsx
+index 70ed4bc..78c2ebd 100644
+--- a/src/components/site/HomeTeasers.tsx
++++ b/src/components/site/HomeTeasers.tsx
+@@ -109,8 +109,8 @@ export function HomeTeasers() {
+             <span className="text-secondary-foreground">Murcia.</span>
+           </h3>
+           <p className="mt-5 max-w-md text-primary/80">
+-            Un espacio confortable y acogedor, con madera natural y buena luz.
+-            Ven, disfruta de nuestra reposterÃ­a y quÃ©date a un cafÃ©.
++            PastelerÃ­a, cafeterÃ­a y obrador propio en Bullas. Ven a probar la carta
++            o haz tu pedido online para recoger en el local.
+           </p>
+           <Link
+             to="/contacto"
+diff --git a/src/routeTree.gen.ts b/src/routeTree.gen.ts
+index e0df72d..7199ff9 100644
+--- a/src/routeTree.gen.ts
++++ b/src/routeTree.gen.ts
+@@ -9,58 +9,51 @@
+ // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
+ 
+ import { Route as rootRouteImport } from './routes/__root'
+-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+-import { Route as PrivacidadRouteImport } from './routes/privacidad'
+-import { Route as GaleriaRouteImport } from './routes/galeria'
+-import { Route as EncargosRouteImport } from './routes/encargos'
+-import { Route as ContactoRouteImport } from './routes/contacto'
+-import { Route as AuthRouteImport } from './routes/auth'
+-import { Route as ProRouteRouteImport } from './routes/_pro/route'
+-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+ import { Route as IndexRouteImport } from './routes/index'
+-import { Route as TiendaIndexRouteImport } from './routes/tienda.index'
++import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
++import { Route as ProRouteRouteImport } from './routes/_pro/route'
++import { Route as AuthRouteImport } from './routes/auth'
++import { Route as ContactoRouteImport } from './routes/contacto'
++import { Route as EncargosRouteImport } from './routes/encargos'
++import { Route as GaleriaRouteImport } from './routes/galeria'
++import { Route as PrivacidadRouteImport } from './routes/privacidad'
++import { Route as ResetPasswordRouteImport } from './routes/reset-password'
++import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
++import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
++import { Route as AuthenticatedGaleriaAdminRouteImport } from './routes/_authenticated/galeria-admin'
++import { Route as AuthenticatedPagosRouteImport } from './routes/_authenticated/pagos'
++import { Route as AuthenticatedProAdminRouteImport } from './routes/_authenticated/pro-admin'
++import { Route as AuthenticatedProductosRouteImport } from './routes/_authenticated/productos'
++import { Route as ProProRouteImport } from './routes/_pro/pro'
+ import { Route as EncargosIndexRouteImport } from './routes/encargos.index'
+-import { Route as TiendaReservadoRouteImport } from './routes/tienda.reservado'
+-import { Route as TiendaPagoCompletadoRouteImport } from './routes/tienda.pago-completado'
+-import { Route as TiendaSlugRouteImport } from './routes/tienda.$slug'
+ import { Route as EncargosPagoCompletadoRouteImport } from './routes/encargos.pago-completado'
+-import { Route as ProProRouteImport } from './routes/_pro/pro'
+-import { Route as AuthenticatedProductosRouteImport } from './routes/_authenticated/productos'
+-import { Route as AuthenticatedProAdminRouteImport } from './routes/_authenticated/pro-admin'
+-import { Route as AuthenticatedPagosRouteImport } from './routes/_authenticated/pagos'
+-import { Route as AuthenticatedGaleriaAdminRouteImport } from './routes/_authenticated/galeria-admin'
+-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
++import { Route as TiendaIndexRouteImport } from './routes/tienda.index'
++import { Route as TiendaSlugRouteImport } from './routes/tienda.$slug'
++import { Route as TiendaPagoCompletadoRouteImport } from './routes/tienda.pago-completado'
++import { Route as TiendaReservadoRouteImport } from './routes/tienda.reservado'
+ import { Route as EncargosPagarTokenRouteImport } from './routes/encargos.pagar.$token'
+-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+ import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
++import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
++import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
++import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
++import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+ 
+-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+-  id: '/sitemap.xml',
+-  path: '/sitemap.xml',
+-  getParentRoute: () => rootRouteImport,
+-} as any)
+-const ResetPasswordRoute = ResetPasswordRouteImport.update({
+-  id: '/reset-password',
+-  path: '/reset-password',
++const IndexRoute = IndexRouteImport.update({
++  id: '/',
++  path: '/',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+-const PrivacidadRoute = PrivacidadRouteImport.update({
+-  id: '/privacidad',
+-  path: '/privacidad',
++const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
++  id: '/_authenticated',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+-const GaleriaRoute = GaleriaRouteImport.update({
+-  id: '/galeria',
+-  path: '/galeria',
++const ProRouteRoute = ProRouteRouteImport.update({
++  id: '/_pro',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+-const EncargosRoute = EncargosRouteImport.update({
+-  id: '/encargos',
+-  path: '/encargos',
++const AuthRoute = AuthRouteImport.update({
++  id: '/auth',
++  path: '/auth',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+ const ContactoRoute = ContactoRouteImport.update({
+@@ -68,42 +61,75 @@ const ContactoRoute = ContactoRouteImport.update({
+   path: '/contacto',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+-const AuthRoute = AuthRouteImport.update({
+-  id: '/auth',
+-  path: '/auth',
++const EncargosRoute = EncargosRouteImport.update({
++  id: '/encargos',
++  path: '/encargos',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+-const ProRouteRoute = ProRouteRouteImport.update({
+-  id: '/_pro',
++const GaleriaRoute = GaleriaRouteImport.update({
++  id: '/galeria',
++  path: '/galeria',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+-  id: '/_authenticated',
++const PrivacidadRoute = PrivacidadRouteImport.update({
++  id: '/privacidad',
++  path: '/privacidad',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+-const IndexRoute = IndexRouteImport.update({
+-  id: '/',
+-  path: '/',
++const ResetPasswordRoute = ResetPasswordRouteImport.update({
++  id: '/reset-password',
++  path: '/reset-password',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+-const TiendaIndexRoute = TiendaIndexRouteImport.update({
+-  id: '/tienda/',
+-  path: '/tienda/',
++const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
++  id: '/sitemap.xml',
++  path: '/sitemap.xml',
+   getParentRoute: () => rootRouteImport,
+ } as any)
++const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
++  id: '/dashboard',
++  path: '/dashboard',
++  getParentRoute: () => AuthenticatedRouteRoute,
++} as any)
++const AuthenticatedGaleriaAdminRoute =
++  AuthenticatedGaleriaAdminRouteImport.update({
++    id: '/galeria-admin',
++    path: '/galeria-admin',
++    getParentRoute: () => AuthenticatedRouteRoute,
++  } as any)
++const AuthenticatedPagosRoute = AuthenticatedPagosRouteImport.update({
++  id: '/pagos',
++  path: '/pagos',
++  getParentRoute: () => AuthenticatedRouteRoute,
++} as any)
++const AuthenticatedProAdminRoute = AuthenticatedProAdminRouteImport.update({
++  id: '/pro-admin',
++  path: '/pro-admin',
++  getParentRoute: () => AuthenticatedRouteRoute,
++} as any)
++const AuthenticatedProductosRoute = AuthenticatedProductosRouteImport.update({
++  id: '/productos',
++  path: '/productos',
++  getParentRoute: () => AuthenticatedRouteRoute,
++} as any)
++const ProProRoute = ProProRouteImport.update({
++  id: '/pro',
++  path: '/pro',
++  getParentRoute: () => ProRouteRoute,
++} as any)
+ const EncargosIndexRoute = EncargosIndexRouteImport.update({
+   id: '/',
+   path: '/',
+   getParentRoute: () => EncargosRoute,
+ } as any)
+-const TiendaReservadoRoute = TiendaReservadoRouteImport.update({
+-  id: '/tienda/reservado',
+-  path: '/tienda/reservado',
+-  getParentRoute: () => rootRouteImport,
++const EncargosPagoCompletadoRoute = EncargosPagoCompletadoRouteImport.update({
++  id: '/pago-completado',
++  path: '/pago-completado',
++  getParentRoute: () => EncargosRoute,
+ } as any)
+-const TiendaPagoCompletadoRoute = TiendaPagoCompletadoRouteImport.update({
+-  id: '/tienda/pago-completado',
+-  path: '/tienda/pago-completado',
++const TiendaIndexRoute = TiendaIndexRouteImport.update({
++  id: '/tienda/',
++  path: '/tienda/',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+ const TiendaSlugRoute = TiendaSlugRouteImport.update({
+@@ -111,61 +137,24 @@ const TiendaSlugRoute = TiendaSlugRouteImport.update({
+   path: '/tienda/$slug',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+-const EncargosPagoCompletadoRoute = EncargosPagoCompletadoRouteImport.update({
+-  id: '/pago-completado',
+-  path: '/pago-completado',
+-  getParentRoute: () => EncargosRoute,
+-} as any)
+-const ProProRoute = ProProRouteImport.update({
+-  id: '/pro',
+-  path: '/pro',
+-  getParentRoute: () => ProRouteRoute,
+-} as any)
+-const AuthenticatedProductosRoute = AuthenticatedProductosRouteImport.update({
+-  id: '/productos',
+-  path: '/productos',
+-  getParentRoute: () => AuthenticatedRouteRoute,
+-} as any)
+-const AuthenticatedProAdminRoute = AuthenticatedProAdminRouteImport.update({
+-  id: '/pro-admin',
+-  path: '/pro-admin',
+-  getParentRoute: () => AuthenticatedRouteRoute,
+-} as any)
+-const AuthenticatedPagosRoute = AuthenticatedPagosRouteImport.update({
+-  id: '/pagos',
+-  path: '/pagos',
+-  getParentRoute: () => AuthenticatedRouteRoute,
++const TiendaPagoCompletadoRoute = TiendaPagoCompletadoRouteImport.update({
++  id: '/tienda/pago-completado',
++  path: '/tienda/pago-completado',
++  getParentRoute: () => rootRouteImport,
+ } as any)
+-const AuthenticatedGaleriaAdminRoute =
+-  AuthenticatedGaleriaAdminRouteImport.update({
+-    id: '/galeria-admin',
+-    path: '/galeria-admin',
+-    getParentRoute: () => AuthenticatedRouteRoute,
+-  } as any)
+-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+-  id: '/dashboard',
+-  path: '/dashboard',
+-  getParentRoute: () => AuthenticatedRouteRoute,
++const TiendaReservadoRoute = TiendaReservadoRouteImport.update({
++  id: '/tienda/reservado',
++  path: '/tienda/reservado',
++  getParentRoute: () => rootRouteImport,
+ } as any)
+ const EncargosPagarTokenRoute = EncargosPagarTokenRouteImport.update({
+   id: '/pagar/$token',
+   path: '/pagar/$token',
+   getParentRoute: () => EncargosRoute,
+ } as any)
+-const LovableEmailTransactionalPreviewRoute =
+-  LovableEmailTransactionalPreviewRouteImport.update({
+-    id: '/lovable/email/transactional/preview',
+-    path: '/lovable/email/transactional/preview',
+-    getParentRoute: () => rootRouteImport,
+-  } as any)
+-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+-  id: '/lovable/email/auth/webhook',
+-  path: '/lovable/email/auth/webhook',
+-  getParentRoute: () => rootRouteImport,
+-} as any)
+-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+-  id: '/lovable/email/auth/preview',
+-  path: '/lovable/email/auth/preview',
++const ApiPublicMediaSplatRoute = ApiPublicMediaSplatRouteImport.update({
++  id: '/api/public/media/$',
++  path: '/api/public/media/$',
+   getParentRoute: () => rootRouteImport,
+ } as any)
+ const ApiPublicPaymentsWebhookRoute =
+@@ -174,11 +163,22 @@ const ApiPublicPaymentsWebhookRoute =
+     path: '/api/public/payments/webhook',
+     getParentRoute: () => rootRouteImport,
+   } as any)
+-const ApiPublicMediaSplatRoute = ApiPublicMediaSplatRouteImport.update({
+-  id: '/api/public/media/$',
+-  path: '/api/public/media/$',
++const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
++  id: '/lovable/email/auth/preview',
++  path: '/lovable/email/auth/preview',
+   getParentRoute: () => rootRouteImport,
+ } as any)
++const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
++  id: '/lovable/email/auth/webhook',
++  path: '/lovable/email/auth/webhook',
++  getParentRoute: () => rootRouteImport,
++} as any)
++const LovableEmailTransactionalPreviewRoute =
++  LovableEmailTransactionalPreviewRouteImport.update({
++    id: '/lovable/email/transactional/preview',
++    path: '/lovable/email/transactional/preview',
++    getParentRoute: () => rootRouteImport,
++  } as any)
+ 
+ export interface FileRoutesByFullPath {
+   '/': typeof IndexRoute
+@@ -378,39 +378,32 @@ export interface RootRouteChildren {
+ 
+ declare module '@tanstack/react-router' {
+   interface FileRoutesByPath {
+-    '/sitemap.xml': {
+-      id: '/sitemap.xml'
+-      path: '/sitemap.xml'
+-      fullPath: '/sitemap.xml'
+-      preLoaderRoute: typeof SitemapDotxmlRouteImport
+-      parentRoute: typeof rootRouteImport
+-    }
+-    '/reset-password': {
+-      id: '/reset-password'
+-      path: '/reset-password'
+-      fullPath: '/reset-password'
+-      preLoaderRoute: typeof ResetPasswordRouteImport
++    '/': {
++      id: '/'
++      path: '/'
++      fullPath: '/'
++      preLoaderRoute: typeof IndexRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/privacidad': {
+-      id: '/privacidad'
+-      path: '/privacidad'
+-      fullPath: '/privacidad'
+-      preLoaderRoute: typeof PrivacidadRouteImport
++    '/_authenticated': {
++      id: '/_authenticated'
++      path: ''
++      fullPath: '/'
++      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/galeria': {
+-      id: '/galeria'
+-      path: '/galeria'
+-      fullPath: '/galeria'
+-      preLoaderRoute: typeof GaleriaRouteImport
++    '/_pro': {
++      id: '/_pro'
++      path: ''
++      fullPath: '/'
++      preLoaderRoute: typeof ProRouteRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/encargos': {
+-      id: '/encargos'
+-      path: '/encargos'
+-      fullPath: '/encargos'
+-      preLoaderRoute: typeof EncargosRouteImport
++    '/auth': {
++      id: '/auth'
++      path: '/auth'
++      fullPath: '/auth'
++      preLoaderRoute: typeof AuthRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+     '/contacto': {
+@@ -420,41 +413,83 @@ declare module '@tanstack/react-router' {
+       preLoaderRoute: typeof ContactoRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/auth': {
+-      id: '/auth'
+-      path: '/auth'
+-      fullPath: '/auth'
+-      preLoaderRoute: typeof AuthRouteImport
++    '/encargos': {
++      id: '/encargos'
++      path: '/encargos'
++      fullPath: '/encargos'
++      preLoaderRoute: typeof EncargosRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/_pro': {
+-      id: '/_pro'
+-      path: ''
+-      fullPath: '/'
+-      preLoaderRoute: typeof ProRouteRouteImport
++    '/galeria': {
++      id: '/galeria'
++      path: '/galeria'
++      fullPath: '/galeria'
++      preLoaderRoute: typeof GaleriaRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/_authenticated': {
+-      id: '/_authenticated'
+-      path: ''
+-      fullPath: '/'
+-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
++    '/privacidad': {
++      id: '/privacidad'
++      path: '/privacidad'
++      fullPath: '/privacidad'
++      preLoaderRoute: typeof PrivacidadRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/': {
+-      id: '/'
+-      path: '/'
+-      fullPath: '/'
+-      preLoaderRoute: typeof IndexRouteImport
++    '/reset-password': {
++      id: '/reset-password'
++      path: '/reset-password'
++      fullPath: '/reset-password'
++      preLoaderRoute: typeof ResetPasswordRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/tienda/': {
+-      id: '/tienda/'
+-      path: '/tienda'
+-      fullPath: '/tienda/'
+-      preLoaderRoute: typeof TiendaIndexRouteImport
++    '/sitemap.xml': {
++      id: '/sitemap.xml'
++      path: '/sitemap.xml'
++      fullPath: '/sitemap.xml'
++      preLoaderRoute: typeof SitemapDotxmlRouteImport
+       parentRoute: typeof rootRouteImport
+     }
++    '/_authenticated/dashboard': {
++      id: '/_authenticated/dashboard'
++      path: '/dashboard'
++      fullPath: '/dashboard'
++      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
++      parentRoute: typeof AuthenticatedRouteRoute
++    }
++    '/_authenticated/galeria-admin': {
++      id: '/_authenticated/galeria-admin'
++      path: '/galeria-admin'
++      fullPath: '/galeria-admin'
++      preLoaderRoute: typeof AuthenticatedGaleriaAdminRouteImport
++      parentRoute: typeof AuthenticatedRouteRoute
++    }
++    '/_authenticated/pagos': {
++      id: '/_authenticated/pagos'
++      path: '/pagos'
++      fullPath: '/pagos'
++      preLoaderRoute: typeof AuthenticatedPagosRouteImport
++      parentRoute: typeof AuthenticatedRouteRoute
++    }
++    '/_authenticated/pro-admin': {
++      id: '/_authenticated/pro-admin'
++      path: '/pro-admin'
++      fullPath: '/pro-admin'
++      preLoaderRoute: typeof AuthenticatedProAdminRouteImport
++      parentRoute: typeof AuthenticatedRouteRoute
++    }
++    '/_authenticated/productos': {
++      id: '/_authenticated/productos'
++      path: '/productos'
++      fullPath: '/productos'
++      preLoaderRoute: typeof AuthenticatedProductosRouteImport
++      parentRoute: typeof AuthenticatedRouteRoute
++    }
++    '/_pro/pro': {
++      id: '/_pro/pro'
++      path: '/pro'
++      fullPath: '/pro'
++      preLoaderRoute: typeof ProProRouteImport
++      parentRoute: typeof ProRouteRoute
++    }
+     '/encargos/': {
+       id: '/encargos/'
+       path: '/'
+@@ -462,18 +497,18 @@ declare module '@tanstack/react-router' {
+       preLoaderRoute: typeof EncargosIndexRouteImport
+       parentRoute: typeof EncargosRoute
+     }
+-    '/tienda/reservado': {
+-      id: '/tienda/reservado'
+-      path: '/tienda/reservado'
+-      fullPath: '/tienda/reservado'
+-      preLoaderRoute: typeof TiendaReservadoRouteImport
+-      parentRoute: typeof rootRouteImport
++    '/encargos/pago-completado': {
++      id: '/encargos/pago-completado'
++      path: '/pago-completado'
++      fullPath: '/encargos/pago-completado'
++      preLoaderRoute: typeof EncargosPagoCompletadoRouteImport
++      parentRoute: typeof EncargosRoute
+     }
+-    '/tienda/pago-completado': {
+-      id: '/tienda/pago-completado'
+-      path: '/tienda/pago-completado'
+-      fullPath: '/tienda/pago-completado'
+-      preLoaderRoute: typeof TiendaPagoCompletadoRouteImport
++    '/tienda/': {
++      id: '/tienda/'
++      path: '/tienda'
++      fullPath: '/tienda/'
++      preLoaderRoute: typeof TiendaIndexRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+     '/tienda/$slug': {
+@@ -483,54 +518,19 @@ declare module '@tanstack/react-router' {
+       preLoaderRoute: typeof TiendaSlugRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/encargos/pago-completado': {
+-      id: '/encargos/pago-completado'
+-      path: '/pago-completado'
+-      fullPath: '/encargos/pago-completado'
+-      preLoaderRoute: typeof EncargosPagoCompletadoRouteImport
+-      parentRoute: typeof EncargosRoute
+-    }
+-    '/_pro/pro': {
+-      id: '/_pro/pro'
+-      path: '/pro'
+-      fullPath: '/pro'
+-      preLoaderRoute: typeof ProProRouteImport
+-      parentRoute: typeof ProRouteRoute
+-    }
+-    '/_authenticated/productos': {
+-      id: '/_authenticated/productos'
+-      path: '/productos'
+-      fullPath: '/productos'
+-      preLoaderRoute: typeof AuthenticatedProductosRouteImport
+-      parentRoute: typeof AuthenticatedRouteRoute
+-    }
+-    '/_authenticated/pro-admin': {
+-      id: '/_authenticated/pro-admin'
+-      path: '/pro-admin'
+-      fullPath: '/pro-admin'
+-      preLoaderRoute: typeof AuthenticatedProAdminRouteImport
+-      parentRoute: typeof AuthenticatedRouteRoute
+-    }
+-    '/_authenticated/pagos': {
+-      id: '/_authenticated/pagos'
+-      path: '/pagos'
+-      fullPath: '/pagos'
+-      preLoaderRoute: typeof AuthenticatedPagosRouteImport
+-      parentRoute: typeof AuthenticatedRouteRoute
+-    }
+-    '/_authenticated/galeria-admin': {
+-      id: '/_authenticated/galeria-admin'
+-      path: '/galeria-admin'
+-      fullPath: '/galeria-admin'
+-      preLoaderRoute: typeof AuthenticatedGaleriaAdminRouteImport
+-      parentRoute: typeof AuthenticatedRouteRoute
++    '/tienda/pago-completado': {
++      id: '/tienda/pago-completado'
++      path: '/tienda/pago-completado'
++      fullPath: '/tienda/pago-completado'
++      preLoaderRoute: typeof TiendaPagoCompletadoRouteImport
++      parentRoute: typeof rootRouteImport
+     }
+-    '/_authenticated/dashboard': {
+-      id: '/_authenticated/dashboard'
+-      path: '/dashboard'
+-      fullPath: '/dashboard'
+-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+-      parentRoute: typeof AuthenticatedRouteRoute
++    '/tienda/reservado': {
++      id: '/tienda/reservado'
++      path: '/tienda/reservado'
++      fullPath: '/tienda/reservado'
++      preLoaderRoute: typeof TiendaReservadoRouteImport
++      parentRoute: typeof rootRouteImport
+     }
+     '/encargos/pagar/$token': {
+       id: '/encargos/pagar/$token'
+@@ -539,18 +539,18 @@ declare module '@tanstack/react-router' {
+       preLoaderRoute: typeof EncargosPagarTokenRouteImport
+       parentRoute: typeof EncargosRoute
+     }
+-    '/lovable/email/transactional/preview': {
+-      id: '/lovable/email/transactional/preview'
+-      path: '/lovable/email/transactional/preview'
+-      fullPath: '/lovable/email/transactional/preview'
+-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
++    '/api/public/media/$': {
++      id: '/api/public/media/$'
++      path: '/api/public/media/$'
++      fullPath: '/api/public/media/$'
++      preLoaderRoute: typeof ApiPublicMediaSplatRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/lovable/email/auth/webhook': {
+-      id: '/lovable/email/auth/webhook'
+-      path: '/lovable/email/auth/webhook'
+-      fullPath: '/lovable/email/auth/webhook'
+-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
++    '/api/public/payments/webhook': {
++      id: '/api/public/payments/webhook'
++      path: '/api/public/payments/webhook'
++      fullPath: '/api/public/payments/webhook'
++      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+     '/lovable/email/auth/preview': {
+@@ -560,18 +560,18 @@ declare module '@tanstack/react-router' {
+       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/api/public/payments/webhook': {
+-      id: '/api/public/payments/webhook'
+-      path: '/api/public/payments/webhook'
+-      fullPath: '/api/public/payments/webhook'
+-      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
++    '/lovable/email/auth/webhook': {
++      id: '/lovable/email/auth/webhook'
++      path: '/lovable/email/auth/webhook'
++      fullPath: '/lovable/email/auth/webhook'
++      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+-    '/api/public/media/$': {
+-      id: '/api/public/media/$'
+-      path: '/api/public/media/$'
+-      fullPath: '/api/public/media/$'
+-      preLoaderRoute: typeof ApiPublicMediaSplatRouteImport
++    '/lovable/email/transactional/preview': {
++      id: '/lovable/email/transactional/preview'
++      path: '/lovable/email/transactional/preview'
++      fullPath: '/lovable/email/transactional/preview'
++      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+       parentRoute: typeof rootRouteImport
+     }
+   }
+diff --git a/src/routes/__root.tsx b/src/routes/__root.tsx
+index 6a3dc9d..194dcdd 100644
+--- a/src/routes/__root.tsx
++++ b/src/routes/__root.tsx
+@@ -78,24 +78,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+     meta: [
+       { charSet: "utf-8" },
+       { name: "viewport", content: "width=device-width, initial-scale=1" },
+-      { title: "144 Reality â Bites & Coffee | ReposterÃ­a moderna & cafÃ© de especialidad" },
++      { title: "PastelerÃ­a y cafeterÃ­a en Bullas | 144 Reality Bites & Coffee" },
+       {
+         name: "description",
+         content:
+-          "ReposterÃ­a moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
++          "ReposterÃ­a americana y del mundo en Bullas: tartas por encargo, donuts, cookies, brownies, cafÃ© y opciones saladas.",
+       },
+       { name: "author", content: "144 Reality" },
+       { name: "google-site-verification", content: "BoqAg7KSjlWtfzde9AcAAAkz4X7k4Dl5BeqCKIkcHMg" },
+-      { property: "og:title", content: "144 Reality â Bites & Coffee | ReposterÃ­a moderna & cafÃ© de especialidad" },
++      { property: "og:title", content: "PastelerÃ­a y cafeterÃ­a en Bullas | 144 Reality" },
+       {
+         property: "og:description",
+         content:
+-          "ReposterÃ­a moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
++          "Tartas por encargo, donuts, cookies, brownies, cafÃ© y sabores del mundo en Bullas, Murcia.",
+       },
+       { property: "og:type", content: "website" },
+       { name: "twitter:card", content: "summary_large_image" },
+-      { name: "twitter:title", content: "144 Reality â Bites & Coffee | ReposterÃ­a moderna & cafÃ© de especialidad" },
+-      { name: "twitter:description", content: "ReposterÃ­a moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia." },
++      { name: "twitter:title", content: "PastelerÃ­a y cafeterÃ­a en Bullas | 144 Reality" },
++      { name: "twitter:description", content: "Tartas por encargo, donuts, cookies, brownies, cafÃ© y sabores del mundo en Bullas, Murcia." },
+       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/2aTFzYNJqUYfQfMni6aWXLFYWj02/social-images/social-1784650264228-07408EC5-D139-47C6-8B5A-98C8F730DE42.webp" },
+       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/2aTFzYNJqUYfQfMni6aWXLFYWj02/social-images/social-1784650264228-07408EC5-D139-47C6-8B5A-98C8F730DE42.webp" },
+     ],
+diff --git a/src/routes/index.tsx b/src/routes/index.tsx
+index 7503b1e..be490e8 100644
+--- a/src/routes/index.tsx
++++ b/src/routes/index.tsx
+@@ -6,16 +6,16 @@ import { Footer } from "@/components/site/Footer";
+ export const Route = createFileRoute("/")({
+   head: () => ({
+     meta: [
+-      { title: "144 Reality â Bites & Coffee | ReposterÃ­a moderna & cafÃ© de especialidad" },
++      { title: "PastelerÃ­a y cafeterÃ­a en Bullas | 144 Reality Bites & Coffee" },
+       {
+         name: "description",
+         content:
+-          "ReposterÃ­a moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
++          "ReposterÃ­a americana y del mundo en Bullas: tartas por encargo, donuts, cookies, brownies, cafÃ© y opciones saladas. Compra online o recoge en el local.",
+       },
+-      { property: "og:title", content: "144 Reality â Bites & Coffee | ReposterÃ­a moderna & cafÃ© de especialidad" },
++      { property: "og:title", content: "PastelerÃ­a y cafeterÃ­a en Bullas | 144 Reality" },
+       {
+         property: "og:description",
+-        content: "ReposterÃ­a moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
++        content: "Tartas por encargo, donuts, cookies, brownies, cafÃ© y sabores del mundo. Compra online o visÃ­tanos en Bullas, Murcia.",
+       },
+       { property: "og:url", content: "https://144reality.com/" },
+       { property: "og:type", content: "website" },
+@@ -26,12 +26,24 @@ export const Route = createFileRoute("/")({
+         type: "application/ld+json",
+         children: JSON.stringify({
+           "@context": "https://schema.org",
+-          "@type": "Organization",
++          "@type": ["Organization", "LocalBusiness", "Bakery"],
+           "@id": "https://144reality.com/#organization",
+           name: "144 Reality â Bites & Coffee",
+           alternateName: "144 Reality",
+           url: "https://144reality.com/",
+           logo: "https://144reality.com/favicon.ico",
++          image: "https://storage.googleapis.com/gpt-engineer-file-uploads/2aTFzYNJqUYfQfMni6aWXLFYWj02/social-images/social-1784650264228-07408EC5-D139-47C6-8B5A-98C8F730DE42.webp",
++          telephone: "+34681634623",
++          priceRange: "â¬â¬",
++          address: {
++            "@type": "PostalAddress",
++            streetAddress: "Calle Francisco GonzÃ¡lez Conde, 37",
++            addressLocality: "Bullas",
++            addressRegion: "Murcia",
++            postalCode: "30180",
++            addressCountry: "ES",
++          },
++          hasMenu: "https://144reality.com/tienda",
+           sameAs: ["https://www.instagram.com/144reality_bitesandcoffee/"],
+           contactPoint: [
+             {
+diff --git a/src/routes/tienda.$slug.tsx b/src/routes/tienda.$slug.tsx
+index 950b38d..c90f5a9 100644
+--- a/src/routes/tienda.$slug.tsx
++++ b/src/routes/tienda.$slug.tsx
+@@ -65,6 +65,7 @@ export const Route = createFileRoute("/tienda/$slug")({
+       p?.description?.trim() ||
+       "ReposterÃ­a artesana y cafÃ© de especialidad en Bullas, Murcia.";
+     const image = p?.image ? (p.image.startsWith("http") ? p.image : `${origin}${p.image}`) : "";
++    const offerPrice = p ? (p.price > 0 ? p.price : p.portionPrice) : undefined;
+     const meta = [
+       { title },
+       { name: "description", content: description },
+@@ -98,13 +99,13 @@ export const Route = createFileRoute("/tienda/$slug")({
+                 category: p.category,
+                 keywords: p.tags?.join(", "),
+                 brand: { "@type": "Brand", name: "144 Reality Bites & Coffee" },
+-                offers: {
++                offers: offerPrice ? {
+                   "@type": "Offer",
+-                  price: p.price.toFixed(2),
++                  price: offerPrice.toFixed(2),
+                   priceCurrency: "EUR",
+                   availability: "https://schema.org/InStock",
+                   url: canonical,
+-                },
++                } : undefined,
+               }),
+             },
+           ]
+@@ -139,8 +140,11 @@ function ProductDetail({ product }: { product: Product }) {
+   const activeVariants = (product.variants ?? []).filter((v) => v.active);
+   const hasVariants = activeVariants.length > 0;
+   const hasPortion = product.portionPrice != null && product.portionPrice > 0;
++  const hasPaidBase = product.price > 0;
+   const [variantId, setVariantId] = useState<string | undefined>(undefined);
+-  const [portion, setPortion] = useState<boolean | null>(hasPortion ? null : false);
++  const [portion, setPortion] = useState<boolean | null>(
++    hasPortion && hasPaidBase ? null : hasPortion,
++  );
+   const [error, setError] = useState<string | null>(null);
+   const outOfStock = product.inStock === false;
+   const effectivePortion = portion === true;
+@@ -219,7 +223,7 @@ function ProductDetail({ product }: { product: Product }) {
+ 
+               <p className="text-lg leading-relaxed text-foreground/80">{product.description}</p>
+ 
+-              {hasPortion && (
++              {hasPortion && hasPaidBase && (
+                 <fieldset className="rounded-sm border border-foreground/15 p-3">
+                   <legend className="px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                     TamaÃ±o <span className="text-destructive">*</span>
+@@ -295,4 +299,3 @@ function ProductDetail({ product }: { product: Product }) {
+     </>
+   );
+ }
+-
+diff --git a/src/routes/tienda.index.tsx b/src/routes/tienda.index.tsx
+index ac2f55c..93ffc31 100644
+--- a/src/routes/tienda.index.tsx
++++ b/src/routes/tienda.index.tsx
+@@ -41,11 +41,11 @@ export const Route = createFileRoute("/tienda/")({
+ 
+     return {
+       meta: [
+-        { title: "Tienda â 144 Reality Bites & Coffee" },
++        { title: "Tienda de reposterÃ­a en Bullas | 144 Reality" },
+         {
+           name: "description",
+           content:
+-            "CatÃ¡logo online de reposterÃ­a, cafÃ© de especialidad y bites. Arma tu pedido y pÃ¡galo con tarjeta.",
++            "Compra donuts, cookies, brownies, porciones de tarta y productos salados en Bullas. Reserva online y recoge en el local o consulta entrega cercana.",
+         },
+         { property: "og:title", content: "Tienda â 144 Reality" },
+         {
+-- 
+2.51.1
