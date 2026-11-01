@@ -24,7 +24,7 @@ export const Route = createFileRoute("/tienda/$slug")({
         <div>
           <p className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-secondary">Error</p>
           <h1 className="font-display text-4xl text-primary">No pudimos cargar el producto</h1>
-          <p className="mt-3 text-sm text-muted-foreground">{error.message}</p>
+          <p className="mt-3 text-sm text-muted-foreground">{(error as Error).message}</p>
           <button
             onClick={() => reset()}
             className="mt-6 rounded-sm border border-primary px-5 py-2 text-xs uppercase tracking-widest hover:bg-primary hover:text-primary-foreground"
