@@ -6,16 +6,16 @@ import { Footer } from "@/components/site/Footer";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "144 Reality — Bites & Coffee | Repostería moderna & café de especialidad" },
+      { title: "Pastelería y cafetería en Bullas | 144 Reality Bites & Coffee" },
       {
         name: "description",
         content:
-          "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
+          "Repostería americana y del mundo en Bullas: tartas por encargo, donuts, cookies, brownies, café y opciones saladas. Compra online o recoge en el local.",
       },
-      { property: "og:title", content: "144 Reality — Bites & Coffee | Repostería moderna & café de especialidad" },
+      { property: "og:title", content: "Pastelería y cafetería en Bullas | 144 Reality" },
       {
         property: "og:description",
-        content: "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
+        content: "Tartas por encargo, donuts, cookies, brownies, café y sabores del mundo. Compra online o visítanos en Bullas, Murcia.",
       },
       { property: "og:url", content: "https://144reality.com/" },
       { property: "og:type", content: "website" },
@@ -26,12 +26,24 @@ export const Route = createFileRoute("/")({
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "Organization",
+          "@type": ["Organization", "LocalBusiness", "Bakery"],
           "@id": "https://144reality.com/#organization",
           name: "144 Reality — Bites & Coffee",
           alternateName: "144 Reality",
           url: "https://144reality.com/",
           logo: "https://144reality.com/favicon.ico",
+          image: "https://storage.googleapis.com/gpt-engineer-file-uploads/2aTFzYNJqUYfQfMni6aWXLFYWj02/social-images/social-1784650264228-07408EC5-D139-47C6-8B5A-98C8F730DE42.webp",
+          telephone: "+34681634623",
+          priceRange: "€€",
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "Calle Francisco González Conde, 37",
+            addressLocality: "Bullas",
+            addressRegion: "Murcia",
+            postalCode: "30180",
+            addressCountry: "ES",
+          },
+          hasMenu: "https://144reality.com/tienda",
           sameAs: ["https://www.instagram.com/144reality_bitesandcoffee/"],
           contactPoint: [
             {

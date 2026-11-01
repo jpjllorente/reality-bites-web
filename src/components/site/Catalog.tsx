@@ -13,6 +13,14 @@ function formatPrice(v: number) {
 }
 
 
+function displayPrice(product: Product) {
+  if (product.price > 0) return formatPrice(product.price);
+  if (product.portionPrice && product.portionPrice > 0) {
+    return `Desde ${formatPrice(product.portionPrice)}`;
+  }
+  return "Consultar";
+}
+
 export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {}) {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Category | "Todo">("Todo");
@@ -128,9 +136,15 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
               Catálogo & <span className="text-secondary">tienda</span>
             </h2>
             <p className="mt-4 max-w-xl text-muted-foreground">
-              Elige lo que te apetezca, arma tu pedido y te enviamos la confirmación por email.
-              Sin trámites raros.
+              Elige lo que te apetezca y prepara tu pedido para recoger en nuestro local de Bullas.
+              Para entregas en Bullas y pueblos cercanos, consúltanos disponibilidad.
             </p>
+
+            <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-foreground/75">
+              <li>✓ Recogida sin coste</li>
+              <li>✓ Pago online o en tienda</li>
+              <li>✓ Confirmación del pedido</li>
+            </ul>
 
           </div>
 
@@ -198,7 +212,7 @@ export function Catalog({ initialProducts }: { initialProducts?: Product[] } = {
                     </Link>
                   </h3>
                   <span className="shrink-0 font-display text-2xl text-secondary">
-                    {formatPrice(p.price)}
+                    {displayPrice(p)}
                   </span>
                 </div>
                 {p.tags && p.tags.length > 0 && (
@@ -450,7 +464,10 @@ function ProductAddForm({
   const hasPortion = product.portionPrice != null && product.portionPrice > 0;
   // Force explicit selection: no defaults when there are options.
   const [variantId, setVariantId] = useState<string | undefined>(undefined);
-  const [portion, setPortion] = useState<boolean | null>(hasPortion ? null : false);
+  const hasPaidBase = product.price > 0;
+  const [portion, setPortion] = useState<boolean | null>(
+    hasPortion && hasPaidBase ? null : hasPortion,
+  );
   const [error, setError] = useState<string | null>(null);
   const outOfStock = product.inStock === false;
   const effectivePortion = portion === true;
@@ -487,7 +504,7 @@ function ProductAddForm({
 
   return (
     <div className="mt-auto flex flex-col gap-3">
-      {hasPortion && (
+      {hasPortion && hasPaidBase && (
         <div>
           <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             Tamaño <span className="text-destructive">*</span>

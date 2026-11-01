@@ -9,63 +9,46 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as PrivacidadRouteImport } from './routes/privacidad'
-import { Route as GaleriaRouteImport } from './routes/galeria'
-import { Route as EncargosRouteImport } from './routes/encargos'
-import { Route as ContactoRouteImport } from './routes/contacto'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as ProRouteRouteImport } from './routes/_pro/route'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TiendaIndexRouteImport } from './routes/tienda.index'
-import { Route as EncargosIndexRouteImport } from './routes/encargos.index'
-import { Route as TiendaReservadoRouteImport } from './routes/tienda.reservado'
-import { Route as TiendaPagoCompletadoRouteImport } from './routes/tienda.pago-completado'
-import { Route as TiendaSlugRouteImport } from './routes/tienda.$slug'
-import { Route as EncargosPagoCompletadoRouteImport } from './routes/encargos.pago-completado'
-import { Route as ProProRouteImport } from './routes/_pro/pro'
-import { Route as AuthenticatedProductosRouteImport } from './routes/_authenticated/productos'
-import { Route as AuthenticatedProAdminRouteImport } from './routes/_authenticated/pro-admin'
-import { Route as AuthenticatedPagosRouteImport } from './routes/_authenticated/pagos'
-import { Route as AuthenticatedGaleriaAdminRouteImport } from './routes/_authenticated/galeria-admin'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as ProRouteRouteImport } from './routes/_pro/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContactoRouteImport } from './routes/contacto'
+import { Route as EncargosRouteImport } from './routes/encargos'
+import { Route as GaleriaRouteImport } from './routes/galeria'
+import { Route as PrivacidadRouteImport } from './routes/privacidad'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedGaleriaAdminRouteImport } from './routes/_authenticated/galeria-admin'
+import { Route as AuthenticatedPagosRouteImport } from './routes/_authenticated/pagos'
+import { Route as AuthenticatedProAdminRouteImport } from './routes/_authenticated/pro-admin'
+import { Route as AuthenticatedProductosRouteImport } from './routes/_authenticated/productos'
+import { Route as ProProRouteImport } from './routes/_pro/pro'
+import { Route as EncargosIndexRouteImport } from './routes/encargos.index'
+import { Route as EncargosPagoCompletadoRouteImport } from './routes/encargos.pago-completado'
+import { Route as TiendaIndexRouteImport } from './routes/tienda.index'
+import { Route as TiendaSlugRouteImport } from './routes/tienda.$slug'
+import { Route as TiendaPagoCompletadoRouteImport } from './routes/tienda.pago-completado'
+import { Route as TiendaReservadoRouteImport } from './routes/tienda.reservado'
 import { Route as EncargosPagarTokenRouteImport } from './routes/encargos.pagar.$token'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PrivacidadRoute = PrivacidadRouteImport.update({
-  id: '/privacidad',
-  path: '/privacidad',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GaleriaRoute = GaleriaRouteImport.update({
-  id: '/galeria',
-  path: '/galeria',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EncargosRoute = EncargosRouteImport.update({
-  id: '/encargos',
-  path: '/encargos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactoRoute = ContactoRouteImport.update({
-  id: '/contacto',
-  path: '/contacto',
+const ProRouteRoute = ProRouteRouteImport.update({
+  id: '/_pro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -73,67 +56,39 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProRouteRoute = ProRouteRouteImport.update({
-  id: '/_pro',
+const ContactoRoute = ContactoRouteImport.update({
+  id: '/contacto',
+  path: '/contacto',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const EncargosRoute = EncargosRouteImport.update({
+  id: '/encargos',
+  path: '/encargos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const GaleriaRoute = GaleriaRouteImport.update({
+  id: '/galeria',
+  path: '/galeria',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TiendaIndexRoute = TiendaIndexRouteImport.update({
-  id: '/tienda/',
-  path: '/tienda/',
+const PrivacidadRoute = PrivacidadRouteImport.update({
+  id: '/privacidad',
+  path: '/privacidad',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EncargosIndexRoute = EncargosIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => EncargosRoute,
-} as any)
-const TiendaReservadoRoute = TiendaReservadoRouteImport.update({
-  id: '/tienda/reservado',
-  path: '/tienda/reservado',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TiendaPagoCompletadoRoute = TiendaPagoCompletadoRouteImport.update({
-  id: '/tienda/pago-completado',
-  path: '/tienda/pago-completado',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TiendaSlugRoute = TiendaSlugRouteImport.update({
-  id: '/tienda/$slug',
-  path: '/tienda/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EncargosPagoCompletadoRoute = EncargosPagoCompletadoRouteImport.update({
-  id: '/pago-completado',
-  path: '/pago-completado',
-  getParentRoute: () => EncargosRoute,
-} as any)
-const ProProRoute = ProProRouteImport.update({
-  id: '/pro',
-  path: '/pro',
-  getParentRoute: () => ProRouteRoute,
-} as any)
-const AuthenticatedProductosRoute = AuthenticatedProductosRouteImport.update({
-  id: '/productos',
-  path: '/productos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedProAdminRoute = AuthenticatedProAdminRouteImport.update({
-  id: '/pro-admin',
-  path: '/pro-admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPagosRoute = AuthenticatedPagosRouteImport.update({
-  id: '/pagos',
-  path: '/pagos',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedGaleriaAdminRoute =
@@ -142,30 +97,64 @@ const AuthenticatedGaleriaAdminRoute =
     path: '/galeria-admin',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedPagosRoute = AuthenticatedPagosRouteImport.update({
+  id: '/pagos',
+  path: '/pagos',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProAdminRoute = AuthenticatedProAdminRouteImport.update({
+  id: '/pro-admin',
+  path: '/pro-admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProductosRoute = AuthenticatedProductosRouteImport.update({
+  id: '/productos',
+  path: '/productos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ProProRoute = ProProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
+  getParentRoute: () => ProRouteRoute,
+} as any)
+const EncargosIndexRoute = EncargosIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EncargosRoute,
+} as any)
+const EncargosPagoCompletadoRoute = EncargosPagoCompletadoRouteImport.update({
+  id: '/pago-completado',
+  path: '/pago-completado',
+  getParentRoute: () => EncargosRoute,
+} as any)
+const TiendaIndexRoute = TiendaIndexRouteImport.update({
+  id: '/tienda/',
+  path: '/tienda/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TiendaSlugRoute = TiendaSlugRouteImport.update({
+  id: '/tienda/$slug',
+  path: '/tienda/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TiendaPagoCompletadoRoute = TiendaPagoCompletadoRouteImport.update({
+  id: '/tienda/pago-completado',
+  path: '/tienda/pago-completado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TiendaReservadoRoute = TiendaReservadoRouteImport.update({
+  id: '/tienda/reservado',
+  path: '/tienda/reservado',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EncargosPagarTokenRoute = EncargosPagarTokenRouteImport.update({
   id: '/pagar/$token',
   path: '/pagar/$token',
   getParentRoute: () => EncargosRoute,
 } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
+const ApiPublicMediaSplatRoute = ApiPublicMediaSplatRouteImport.update({
+  id: '/api/public/media/$',
+  path: '/api/public/media/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPaymentsWebhookRoute =
@@ -174,11 +163,22 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicMediaSplatRoute = ApiPublicMediaSplatRouteImport.update({
-  id: '/api/public/media/$',
-  path: '/api/public/media/$',
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -378,60 +378,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacidad': {
-      id: '/privacidad'
-      path: '/privacidad'
-      fullPath: '/privacidad'
-      preLoaderRoute: typeof PrivacidadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/galeria': {
-      id: '/galeria'
-      path: '/galeria'
-      fullPath: '/galeria'
-      preLoaderRoute: typeof GaleriaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/encargos': {
-      id: '/encargos'
-      path: '/encargos'
-      fullPath: '/encargos'
-      preLoaderRoute: typeof EncargosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contacto': {
-      id: '/contacto'
-      path: '/contacto'
-      fullPath: '/contacto'
-      preLoaderRoute: typeof ContactoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_pro': {
-      id: '/_pro'
-      path: ''
+    '/': {
+      id: '/'
+      path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof ProRouteRouteImport
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -441,81 +392,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
+    '/_pro': {
+      id: '/_pro'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof ProRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tienda/': {
-      id: '/tienda/'
-      path: '/tienda'
-      fullPath: '/tienda/'
-      preLoaderRoute: typeof TiendaIndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/encargos/': {
-      id: '/encargos/'
-      path: '/'
-      fullPath: '/encargos/'
-      preLoaderRoute: typeof EncargosIndexRouteImport
-      parentRoute: typeof EncargosRoute
-    }
-    '/tienda/reservado': {
-      id: '/tienda/reservado'
-      path: '/tienda/reservado'
-      fullPath: '/tienda/reservado'
-      preLoaderRoute: typeof TiendaReservadoRouteImport
+    '/contacto': {
+      id: '/contacto'
+      path: '/contacto'
+      fullPath: '/contacto'
+      preLoaderRoute: typeof ContactoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tienda/pago-completado': {
-      id: '/tienda/pago-completado'
-      path: '/tienda/pago-completado'
-      fullPath: '/tienda/pago-completado'
-      preLoaderRoute: typeof TiendaPagoCompletadoRouteImport
+    '/encargos': {
+      id: '/encargos'
+      path: '/encargos'
+      fullPath: '/encargos'
+      preLoaderRoute: typeof EncargosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tienda/$slug': {
-      id: '/tienda/$slug'
-      path: '/tienda/$slug'
-      fullPath: '/tienda/$slug'
-      preLoaderRoute: typeof TiendaSlugRouteImport
+    '/galeria': {
+      id: '/galeria'
+      path: '/galeria'
+      fullPath: '/galeria'
+      preLoaderRoute: typeof GaleriaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/encargos/pago-completado': {
-      id: '/encargos/pago-completado'
-      path: '/pago-completado'
-      fullPath: '/encargos/pago-completado'
-      preLoaderRoute: typeof EncargosPagoCompletadoRouteImport
-      parentRoute: typeof EncargosRoute
+    '/privacidad': {
+      id: '/privacidad'
+      path: '/privacidad'
+      fullPath: '/privacidad'
+      preLoaderRoute: typeof PrivacidadRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_pro/pro': {
-      id: '/_pro/pro'
-      path: '/pro'
-      fullPath: '/pro'
-      preLoaderRoute: typeof ProProRouteImport
-      parentRoute: typeof ProRouteRoute
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/productos': {
-      id: '/_authenticated/productos'
-      path: '/productos'
-      fullPath: '/productos'
-      preLoaderRoute: typeof AuthenticatedProductosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/pro-admin': {
-      id: '/_authenticated/pro-admin'
-      path: '/pro-admin'
-      fullPath: '/pro-admin'
-      preLoaderRoute: typeof AuthenticatedProAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/pagos': {
-      id: '/_authenticated/pagos'
-      path: '/pagos'
-      fullPath: '/pagos'
-      preLoaderRoute: typeof AuthenticatedPagosRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/galeria-admin': {
@@ -525,12 +462,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGaleriaAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+    '/_authenticated/pagos': {
+      id: '/_authenticated/pagos'
+      path: '/pagos'
+      fullPath: '/pagos'
+      preLoaderRoute: typeof AuthenticatedPagosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pro-admin': {
+      id: '/_authenticated/pro-admin'
+      path: '/pro-admin'
+      fullPath: '/pro-admin'
+      preLoaderRoute: typeof AuthenticatedProAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/productos': {
+      id: '/_authenticated/productos'
+      path: '/productos'
+      fullPath: '/productos'
+      preLoaderRoute: typeof AuthenticatedProductosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_pro/pro': {
+      id: '/_pro/pro'
+      path: '/pro'
+      fullPath: '/pro'
+      preLoaderRoute: typeof ProProRouteImport
+      parentRoute: typeof ProRouteRoute
+    }
+    '/encargos/': {
+      id: '/encargos/'
+      path: '/'
+      fullPath: '/encargos/'
+      preLoaderRoute: typeof EncargosIndexRouteImport
+      parentRoute: typeof EncargosRoute
+    }
+    '/encargos/pago-completado': {
+      id: '/encargos/pago-completado'
+      path: '/pago-completado'
+      fullPath: '/encargos/pago-completado'
+      preLoaderRoute: typeof EncargosPagoCompletadoRouteImport
+      parentRoute: typeof EncargosRoute
+    }
+    '/tienda/': {
+      id: '/tienda/'
+      path: '/tienda'
+      fullPath: '/tienda/'
+      preLoaderRoute: typeof TiendaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tienda/$slug': {
+      id: '/tienda/$slug'
+      path: '/tienda/$slug'
+      fullPath: '/tienda/$slug'
+      preLoaderRoute: typeof TiendaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tienda/pago-completado': {
+      id: '/tienda/pago-completado'
+      path: '/tienda/pago-completado'
+      fullPath: '/tienda/pago-completado'
+      preLoaderRoute: typeof TiendaPagoCompletadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tienda/reservado': {
+      id: '/tienda/reservado'
+      path: '/tienda/reservado'
+      fullPath: '/tienda/reservado'
+      preLoaderRoute: typeof TiendaReservadoRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/encargos/pagar/$token': {
       id: '/encargos/pagar/$token'
@@ -539,25 +539,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EncargosPagarTokenRouteImport
       parentRoute: typeof EncargosRoute
     }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+    '/api/public/media/$': {
+      id: '/api/public/media/$'
+      path: '/api/public/media/$'
+      fullPath: '/api/public/media/$'
+      preLoaderRoute: typeof ApiPublicMediaSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/payments/webhook': {
@@ -567,11 +553,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/media/$': {
-      id: '/api/public/media/$'
-      path: '/api/public/media/$'
-      fullPath: '/api/public/media/$'
-      preLoaderRoute: typeof ApiPublicMediaSplatRouteImport
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

@@ -5,6 +5,7 @@ import {
   createRootRouteWithContext,
   useRouter,
   HeadContent,
+  type ErrorComponentProps,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
@@ -35,7 +36,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
@@ -78,24 +79,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "144 Reality — Bites & Coffee | Repostería moderna & café de especialidad" },
+      { title: "Pastelería y cafetería en Bullas | 144 Reality Bites & Coffee" },
       {
         name: "description",
         content:
-          "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
+          "Repostería americana y del mundo en Bullas: tartas por encargo, donuts, cookies, brownies, café y opciones saladas.",
       },
       { name: "author", content: "144 Reality" },
       { name: "google-site-verification", content: "BoqAg7KSjlWtfzde9AcAAAkz4X7k4Dl5BeqCKIkcHMg" },
-      { property: "og:title", content: "144 Reality — Bites & Coffee | Repostería moderna & café de especialidad" },
+      { property: "og:title", content: "Pastelería y cafetería en Bullas | 144 Reality" },
       {
         property: "og:description",
         content:
-          "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia.",
+          "Tartas por encargo, donuts, cookies, brownies, café y sabores del mundo en Bullas, Murcia.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "144 Reality — Bites & Coffee | Repostería moderna & café de especialidad" },
-      { name: "twitter:description", content: "Repostería moderna, servicio en sala y encargos a medida en un local confortable y acogedor en Bullas, Murcia." },
+      { name: "twitter:title", content: "Pastelería y cafetería en Bullas | 144 Reality" },
+      { name: "twitter:description", content: "Tartas por encargo, donuts, cookies, brownies, café y sabores del mundo en Bullas, Murcia." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/2aTFzYNJqUYfQfMni6aWXLFYWj02/social-images/social-1784650264228-07408EC5-D139-47C6-8B5A-98C8F730DE42.webp" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/2aTFzYNJqUYfQfMni6aWXLFYWj02/social-images/social-1784650264228-07408EC5-D139-47C6-8B5A-98C8F730DE42.webp" },
     ],
