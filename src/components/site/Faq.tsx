@@ -16,7 +16,7 @@ export const faqs = [
   },
   {
     q: "¿Cómo se realiza el pago y la reserva?",
-    a: "Para confirmar el encargo es necesario abonar el importe completo de manera anticipada por Bizum o transferencia.",
+    a: "Cuando aprobemos tu encargo recibirás el presupuesto con el enlace de pago; para confirmarlo es necesario abonar el importe completo de manera anticipada. Los pedidos de la tienda pueden pagarse online o reservarse para pagar en el local.",
   },
   {
     q: "¿Puedo cancelar o modificar mi pedido?",

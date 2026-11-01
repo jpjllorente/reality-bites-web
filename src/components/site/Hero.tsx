@@ -63,13 +63,13 @@ export function Hero() {
         <div className="max-w-3xl">
           <div className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-secondary">
             <span className="h-px w-10 bg-secondary" />
-            {current?.tag || "144 Reality"}
+            {current?.tag || "Pastelería · cafetería en Bullas"}
           </div>
           <h1 className="font-display text-5xl leading-[0.95] sm:text-7xl lg:text-8xl">
-            Repostería que cruje, funde y sorprende
+            Repostería americana y sabores del mundo
           </h1>
           <p className="mt-5 max-w-xl text-base text-primary-foreground/85 sm:text-lg">
-            {current?.caption || "Piezas modernas horneadas cada mañana en nuestro obrador."}
+            {current?.caption || "Donuts, cookies, brownies y tartas elaborados en nuestro obrador de Bullas."}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link

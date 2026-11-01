@@ -65,6 +65,7 @@ export const Route = createFileRoute("/tienda/$slug")({
       p?.description?.trim() ||
       "Repostería artesana y café de especialidad en Bullas, Murcia.";
     const image = p?.image ? (p.image.startsWith("http") ? p.image : `${origin}${p.image}`) : "";
+    const offerPrice = p ? (p.price > 0 ? p.price : p.portionPrice) : undefined;
     const meta = [
       { title },
       { name: "description", content: description },
@@ -98,13 +99,13 @@ export const Route = createFileRoute("/tienda/$slug")({
                 category: p.category,
                 keywords: p.tags?.join(", "),
                 brand: { "@type": "Brand", name: "144 Reality Bites & Coffee" },
-                offers: {
+                offers: offerPrice ? {
                   "@type": "Offer",
-                  price: p.price.toFixed(2),
+                  price: offerPrice.toFixed(2),
                   priceCurrency: "EUR",
                   availability: "https://schema.org/InStock",
                   url: canonical,
-                },
+                } : undefined,
               }),
             },
           ]
@@ -140,7 +141,10 @@ function ProductDetail({ product }: { product: Product }) {
   const hasVariants = activeVariants.length > 0;
   const hasPortion = product.portionPrice != null && product.portionPrice > 0;
   const [variantId, setVariantId] = useState<string | undefined>(undefined);
-  const [portion, setPortion] = useState<boolean | null>(hasPortion ? null : false);
+  const hasPaidBase = product.price > 0;
+  const [portion, setPortion] = useState<boolean | null>(
+    hasPortion && hasPaidBase ? null : hasPortion,
+  );
   const [error, setError] = useState<string | null>(null);
   const outOfStock = product.inStock === false;
   const effectivePortion = portion === true;
@@ -219,7 +223,7 @@ function ProductDetail({ product }: { product: Product }) {
 
               <p className="text-lg leading-relaxed text-foreground/80">{product.description}</p>
 
-              {hasPortion && (
+              {hasPortion && hasPaidBase && (
                 <fieldset className="rounded-sm border border-foreground/15 p-3">
                   <legend className="px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                     Tamaño <span className="text-destructive">*</span>

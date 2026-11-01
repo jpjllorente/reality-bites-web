@@ -109,8 +109,8 @@ export function HomeTeasers() {
             <span className="text-secondary-foreground">Murcia.</span>
           </h3>
           <p className="mt-5 max-w-md text-primary/80">
-            Un espacio confortable y acogedor, con madera natural y buena luz.
-            Ven, disfruta de nuestra repostería y quédate a un café.
+            Pastelería, cafetería y obrador propio en Bullas. Ven a probar la carta
+            o haz tu pedido online para recoger en el local.
           </p>
           <Link
             to="/contacto"

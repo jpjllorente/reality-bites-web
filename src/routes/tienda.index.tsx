@@ -33,7 +33,7 @@ export const Route = createFileRoute("/tienda/")({
           image: abs(p.image),
           offers: {
             "@type": "Offer",
-            price: p.price.toFixed(2),
+            price: (p.price > 0 ? p.price : p.portionPrice ?? 0).toFixed(2),
             priceCurrency: "EUR",
           },
         })),
@@ -41,11 +41,11 @@ export const Route = createFileRoute("/tienda/")({
 
     return {
       meta: [
-        { title: "Tienda — 144 Reality Bites & Coffee" },
+        { title: "Tienda de repostería en Bullas | 144 Reality" },
         {
           name: "description",
           content:
-            "Catálogo online de repostería, café de especialidad y bites. Arma tu pedido y págalo con tarjeta.",
+            "Compra donuts, cookies, brownies, porciones de tarta y productos salados en Bullas. Reserva online y recoge en el local o consulta entrega cercana.",
         },
         { property: "og:title", content: "Tienda — 144 Reality" },
         {

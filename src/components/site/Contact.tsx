@@ -26,9 +26,13 @@ export function Contact() {
                 <span className="text-lg">30180 Bullas, Murcia</span>
               </InfoBlock>
               <InfoBlock label="Horario">
-                Lun – Vie · 08:00 – 20:00
+                Martes – Viernes · 08:30 – 13:00
                 <br />
-                Sáb – Dom · 09:30 – 21:00
+                y 15:30 – 20:00
+                <br />
+                Sábado – Domingo · 08:30 – 13:00
+                <br />
+                y 15:30 – 21:00 · Lunes cerrado
               </InfoBlock>
               <InfoBlock label="Contacto">
                 +34 681 63 46 23
@@ -72,7 +76,7 @@ export function Contact() {
                     144 REALITY
                   </p>
                   <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.25em] text-secondary">
-                    Bites & Coffee · desde 2024
+                    Bites & Coffee · desde 2026
                   </p>
                 </div>
               </div>
